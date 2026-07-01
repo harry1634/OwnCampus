@@ -142,6 +142,27 @@ function StudentEditModal({ student, onSave, onClose }) {
     paidAmount: student.paidAmount != null ? String(student.paidAmount) : '',
   })
   const [saving, setSaving] = useState(false)
+  const [tempPwd, setTempPwd]     = useState(student.tempPassword || null)
+  const [showPwd, setShowPwd]     = useState(false)
+  const [resetting, setResetting] = useState(false)
+
+  const handleResetPassword = async () => {
+    if (!student.supabaseId) { toast.error('No user ID — cannot reset password.'); return }
+    setResetting(true)
+    try {
+      const res  = await fetch('/api/admin/users/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: student.supabaseId }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || 'Reset failed'); return }
+      setTempPwd(data.password)
+      setShowPwd(true)
+      toast.success('Password reset — copy it now!')
+    } catch (e) { toast.error(e.message) }
+    finally { setResetting(false) }
+  }
   const set = k => e => {
     const val = e.target.value
     setForm(f => {
@@ -285,6 +306,33 @@ function StudentEditModal({ student, onSave, onClose }) {
               </select>
             </div>
           )}
+
+          {/* ── Login Credentials ── */}
+          {sectionLabel('Login Credentials')}
+          <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: tempPwd ? 10 : 0 }}>
+              <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>Temporary Password</span>
+              <button onClick={handleResetPassword} disabled={resetting}
+                style={{ fontSize: 11, fontWeight: 700, color: '#FFF', background: '#EA580C', border: 'none', borderRadius: 7, padding: '4px 10px', cursor: resetting ? 'default' : 'pointer', opacity: resetting ? 0.7 : 1 }}>
+                {resetting ? 'Resetting…' : tempPwd ? 'Reset Password' : '+ Generate Password'}
+              </button>
+            </div>
+            {tempPwd ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                <span style={{ flex: 1, fontFamily: 'monospace', fontSize: 15, fontWeight: 700, color: '#C2410C', letterSpacing: showPwd ? '0.08em' : '0.2em', background: '#FFF', border: '1.5px dashed #FDBA74', borderRadius: 8, padding: '6px 12px' }}>
+                  {showPwd ? tempPwd : '•'.repeat(tempPwd.length)}
+                </span>
+                <button onClick={() => setShowPwd(v => !v)} title={showPwd ? 'Hide' : 'Show'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400E', display: 'flex', padding: 4 }}>
+                  {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+                <button onClick={() => { navigator.clipboard.writeText(tempPwd); toast.success('Password copied') }} title="Copy" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400E', display: 'flex', padding: 4 }}>
+                  <Copy size={15} />
+                </button>
+              </div>
+            ) : (
+              <p style={{ fontSize: 11, color: '#B45309', marginTop: 6 }}>No password on file — click "Generate Password" to create one.</p>
+            )}
+          </div>
 
           <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
             <button onClick={handleSave} disabled={saving}
