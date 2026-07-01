@@ -179,6 +179,7 @@ export async function POST(req, { params }) {
             roll_number:   request.roll_number   || null,
             department:    request.department     || null,
             designation:   request.designation    || null,
+            temp_password: password,
           },
         },
         { onConflict: 'id' }

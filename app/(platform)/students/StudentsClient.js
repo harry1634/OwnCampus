@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Search, Filter, Plus, Download, Upload, UserCheck, AlertCircle, TrendingUp, Eye, Edit, Phone, CheckCircle, X, FileText, ArrowLeftRight, Building2, Trash2, GraduationCap, Mail, Save } from 'lucide-react'
+import { Users, Search, Filter, Plus, Download, Upload, UserCheck, AlertCircle, TrendingUp, Eye, EyeOff, Edit, Phone, CheckCircle, X, FileText, ArrowLeftRight, Building2, Trash2, GraduationCap, Mail, Save, Copy } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/SkeletonLoader'
 import Pagination from '@/components/ui/Pagination'
 import Link from 'next/link'
@@ -42,6 +42,7 @@ function StudentViewModal({ student, onEdit, onClose }) {
   const fee   = feeColors[student.fees] || feeColors.pending
   const color = avatarColors[(student.id || 0) % avatarColors.length]
   const balance = Math.max(0, (student.totalFee || 0) - (student.paidAmount || 0))
+  const [showPwd, setShowPwd] = useState(false)
 
   const rows = [
     { label: 'Roll No.',   value: student.roll       || '—' },
@@ -92,6 +93,22 @@ function StudentViewModal({ student, onEdit, onClose }) {
                 <span style={{ fontSize: 13, color: '#0F172A', fontWeight: 500 }}>{r.value}</span>
               </div>
             ))}
+            {student.tempPassword && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: '#FFF7ED', border: '1px solid #FED7AA' }}>
+                <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>Temp Password</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, color: '#C2410C', fontWeight: 700, fontFamily: 'monospace', letterSpacing: showPwd ? '0.05em' : '0.15em' }}>
+                    {showPwd ? student.tempPassword : '•'.repeat(student.tempPassword.length)}
+                  </span>
+                  <button onClick={() => setShowPwd(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400E', display: 'flex', padding: 2 }}>
+                    {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                  <button onClick={() => { navigator.clipboard.writeText(student.tempPassword); toast.success('Password copied') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400E', display: 'flex', padding: 2 }}>
+                    <Copy size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>

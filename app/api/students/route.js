@@ -115,6 +115,7 @@ export async function GET(req) {
         status:       s.status || 'active',
         branchId:     s.branch_id || null,
         branch:       s.branches?.name || '',
+        tempPassword: meta.temp_password || null,
       }
     })
 
@@ -186,6 +187,7 @@ export async function GET(req) {
             status:       'active',
             branchId:     p.branch_id   || null,
             branch:       p.branches?.name || '',
+            tempPassword: meta.temp_password || null,
           }
         })
     }
