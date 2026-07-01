@@ -342,12 +342,13 @@ export async function POST(req, { params }) {
     }
 
     return Response.json({
-      success:   true,
+      success:    true,
       userId,
-      email:     request.email,
-      name:      request.name,
-      phone:     request.phone || null,
-      emailSent: emailResult.ok,
+      email:      request.email,
+      password,
+      name:       request.name,
+      phone:      request.phone || null,
+      emailSent:  emailResult.ok,
       emailError: emailResult.ok ? null : emailResult.error,
     })
   } catch (err) {
