@@ -4,18 +4,40 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { User, Mail, Phone, BookOpen, GraduationCap, Building } from 'lucide-react'
 import { useCurrentUser } from '@/lib/useCurrentUser'
+import { createClient }   from '@/lib/supabase/client'
 
 export default function StudentContact() {
   const cu = useCurrentUser()
-  const [faculty, setFaculty] = useState([])
+  const [faculty,    setFaculty   ] = useState([])
+  const [branchName, setBranchName] = useState('')
 
   useEffect(() => {
-    if (!cu.mounted) return
-    fetch('/api/faculty')
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setFaculty(Array.isArray(data) ? data : []))
-      .catch(() => setFaculty([]))
-  }, [cu.mounted])
+    if (!cu.mounted || !cu.userId) return
+
+    const supabase = createClient()
+
+    async function load() {
+      try {
+        const { data: student } = await supabase
+          .from('students')
+          .select('branch_id, branches(name)')
+          .eq('user_id', cu.userId)
+          .single()
+
+        const bName = student?.branches?.name || ''
+        setBranchName(bName)
+
+        const url  = bName ? `/api/faculty?branch=${encodeURIComponent(bName)}` : '/api/faculty'
+        const r    = await fetch(url)
+        const data = r.ok ? await r.json() : []
+        setFaculty(Array.isArray(data) ? data : [])
+      } catch {
+        setFaculty([])
+      }
+    }
+
+    load()
+  }, [cu.mounted, cu.userId])
 
   if (!cu.mounted) return null
 
@@ -29,7 +51,7 @@ export default function StudentContact() {
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', margin: 0 }}>Contact Faculty</h1>
         <p style={{ fontSize: 13, color: '#64748B', marginTop: 3 }}>
-          Faculty members assigned to{cu.classSection ? ` Class ${cu.classSection}` : ' your class'}
+          Faculty members assigned to{branchName ? ` ${branchName} Branch` : cu.classSection ? ` Class ${cu.classSection}` : ' your class'}
         </p>
       </div>
 
@@ -38,11 +60,13 @@ export default function StudentContact() {
           <div style={{ width: 56, height: 56, borderRadius: 16, background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <GraduationCap size={24} color="#CBD5E1" />
           </div>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#64748B', margin: '0 0 6px' }}>No faculty assigned to your class</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#64748B', margin: '0 0 6px' }}>No faculty found for your class</p>
           <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>
-            {cu.classSection
-              ? `Class "${cu.classSection}" has no faculty assigned yet. Contact admin.`
-              : 'Your class is not configured. Contact admin.'}
+            {branchName
+              ? `No faculty assigned to ${branchName} Branch yet. Contact admin.`
+              : cu.classSection
+                ? `Class "${cu.classSection}" has no faculty assigned yet. Contact admin.`
+                : 'Your class is not configured. Contact admin.'}
           </p>
         </div>
       ) : (

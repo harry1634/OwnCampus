@@ -439,7 +439,7 @@ export default function HRMSPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#F8FAFC' }}>
-                    {['EMPLOYEE', 'DEPARTMENT', 'GROSS', 'DEDUCTIONS', 'NET PAY', 'STATUS'].map(col => (
+                    {['EMPLOYEE', 'DEPARTMENT', 'GROSS', 'DEDUCTIONS', 'NET PAY', 'STATUS', ''].map(col => (
                       <th key={col} style={{ padding: '10px 18px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.06em', borderBottom: '1px solid #E8ECF0' }}>{col}</th>
                     ))}
                   </tr>
@@ -472,6 +472,16 @@ export default function HRMSPage() {
                         <td style={{ padding: '12px 18px' }}><span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{emp.net}</span></td>
                         <td style={{ padding: '12px 18px' }}>
                           <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color }}>{emp.status}</span>
+                        </td>
+                        <td style={{ padding: '12px 18px' }}>
+                          <button
+                            onClick={() => {
+                              const html = `<div class="payslip"><div class="ps-header"><div><div class="ps-school">OwnCampus</div><div class="ps-title">Payslip — ${cycle}</div></div><div class="ps-emp">${emp.name}<br/><span>${emp.dept}</span></div></div><div class="ps-body"><div class="ps-row"><span>Employee</span><span>${emp.name}</span></div><div class="ps-row"><span>Department</span><span>${emp.dept}</span></div><div class="ps-row"><span>Designation</span><span>${emp.designation || '—'}</span></div><div class="ps-row"><span>Gross Salary</span><span>${emp.gross}</span></div><div class="ps-row"><span>Deductions (PF + Tax)</span><span style="color:#dc2626">- ${emp.deductions}</span></div><div class="ps-row net"><span>Net Pay</span><span>${emp.net}</span></div></div><div class="ps-footer">Cycle: ${cycle} &nbsp;|&nbsp; Status: <strong>${emp.status}</strong></div></div>`
+                              openPrintWindow(`Payslip — ${emp.name} — ${cycle}`, html, `body{padding:24px;background:#f8fafc}.payslip{background:#fff;border:1px solid #e2e8f0;border-radius:10px;max-width:520px;margin:0 auto;overflow:hidden}.ps-header{background:#1e40af;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:flex-start}.ps-school{font-size:12px;opacity:.7;margin-bottom:4px}.ps-title{font-size:16px;font-weight:800}.ps-emp{font-size:14px;font-weight:700;text-align:right}.ps-emp span{font-size:11px;opacity:.75;font-weight:400}.ps-body{padding:16px 20px;display:flex;flex-direction:column;gap:8px}.ps-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #f1f5f9}.ps-row.net{font-weight:800;font-size:15px;border-bottom:none;color:#16a34a}.ps-footer{background:#f8fafc;padding:10px 20px;font-size:12px;color:#64748b}`)
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#F8FAFC', fontSize: 12, color: '#475569', cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                            <Download size={12} /> Payslip
+                          </button>
                         </td>
                       </tr>
                     )

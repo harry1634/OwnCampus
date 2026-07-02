@@ -99,22 +99,30 @@ export default function StudentProfile() {
 
       {/* Hero */}
       <div style={{ background: 'linear-gradient(135deg,#4C1D95,#7C3AED)', borderRadius: 20, padding: '26px 30px', display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
-        <div style={{ width: 76, height: 76, borderRadius: 18, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 800, color: '#FFFFFF', border: '3px solid rgba(255,255,255,0.30)', flexShrink: 0 }}>
-          {profile.name ? profile.name.split(' ').map(w => w[0]).join('').slice(0, 2) : cu.initials || 'S'}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <div style={{ width: 84, height: 84, borderRadius: 20, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#FFFFFF', border: '3px solid rgba(255,255,255,0.32)', boxShadow: '0 0 0 5px rgba(255,255,255,0.07)' }}>
+            {profile.name ? profile.name.split(' ').map(w => w[0]).join('').slice(0, 2) : cu.initials || 'S'}
+          </div>
+          <div style={{ position: 'absolute', bottom: -4, right: -4, width: 22, height: 22, borderRadius: 7, background: '#10B981', border: '2px solid #5B21B6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <GraduationCap size={11} color="white" />
+          </div>
         </div>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#FFFFFF', margin: '0 0 4px' }}>{profile.name}</h2>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 99, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', marginBottom: 8 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ADE80' }} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.78)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Student</span>
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#FFFFFF', margin: '0 0 4px' }}>{profile.name || cu.name}</h2>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.70)', margin: '0 0 10px' }}>
             {profile.class ? `Class ${profile.class}${profile.section ? '-' + profile.section : ''}` : cu.classSection ? `Class ${cu.classSection}` : ''}
             {profile.rollNo ? ` · Roll ${profile.rollNo}` : ''}
             {profile.branch ? ` · ${profile.branch}` : ''}
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {[profile.blood, profile.gender, profile.house, profile.rollNo ? 'ID: ' + profile.rollNo : '']
-              .filter(Boolean)
-              .map((tag, i) => (
-                <span key={i} style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(255,255,255,0.15)', color: '#FFFFFF' }}>{tag}</span>
-              ))}
+            {profile.blood ? <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(239,68,68,0.22)', color: '#FCA5A5', border: '1px solid rgba(239,68,68,0.28)' }}>{profile.blood}</span> : null}
+            {profile.gender ? <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)' }}>{profile.gender}</span> : null}
+            {profile.house ? <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(251,191,36,0.18)', color: '#FDE68A', border: '1px solid rgba(251,191,36,0.22)' }}>{profile.house}</span> : null}
+            {(profile.email || cu.email) ? <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={10} />{profile.email || cu.email}</span> : null}
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, GraduationCap, UserCheck, ClipboardList,
   BookOpen, CreditCard, Library, Home, Bus, Briefcase, Monitor,
   Calendar, MessageSquare, Award, Users2, BarChart3, Settings,
-  Building2, ShoppingCart, Package, ChevronRight, Activity
+  Building2, ShoppingCart, Package, ChevronRight
 } from 'lucide-react'
 
 export const navigation = [
@@ -59,7 +59,6 @@ export const navigation = [
     items: [
       { name: 'Institution', href: '/institution', icon: Building2, roles: ['super_admin', 'principal', 'director', 'owner'] },
       { name: 'Branches',    href: '/branches',    icon: Building2, roles: ['super_admin', 'principal', 'director', 'owner', 'admin', 'administrator'] },
-      { name: 'System Health', href: '/system',   icon: Activity,  roles: ['owner', 'super_admin'] },
       { name: 'Settings',    href: '/settings',    icon: Settings,  roles: 'all' },
     ],
   },

@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPI Cards — 4 wide cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+      <div className="rg-4">
         {kpiData.map((kpi, i) => {
           const KpiIcon = kpi.icon
           return (
@@ -182,7 +182,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Charts Row 1: Revenue + Attendance */}
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 20 }}>
+      <div className="rg-32">
 
         {/* Fee Collection Trend */}
         <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
@@ -221,7 +221,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Charts Row 2: Sources + Radar + Reports */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+      <div className="rg-3">
 
         {/* Admission Sources */}
         <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>

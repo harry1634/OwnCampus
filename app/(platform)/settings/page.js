@@ -195,7 +195,7 @@ export default function SettingsPage() {
                   {/* Basic Info */}
                   <div>
                     <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94A3B8', marginBottom: 16 }}>Basic Information</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div className="rg-2">
                       <FieldGroup label="Institution Name" icon={Building2}>
                         <input type="text" defaultValue="OwnCampus Demo School" style={FIELD_STYLE} />
                       </FieldGroup>
@@ -222,7 +222,7 @@ export default function SettingsPage() {
                   {/* Contact Info */}
                   <div>
                     <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94A3B8', marginBottom: 16 }}>Contact Details</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div className="rg-2">
                       <FieldGroup label="Email Address" icon={Mail}>
                         <input type="email" defaultValue="admin@owncampus.com" style={FIELD_STYLE} />
                       </FieldGroup>
@@ -286,7 +286,7 @@ export default function SettingsPage() {
                       <FieldGroup label="Current Password" icon={Lock}>
                         <input type="password" value={curPwd} onChange={e => setCurPwd(e.target.value)} placeholder="••••••••" required style={FIELD_STYLE} />
                       </FieldGroup>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div className="rg-2">
                         <FieldGroup label="New Password" icon={Lock}>
                           <input type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)} placeholder="••••••••" required style={FIELD_STYLE} />
                         </FieldGroup>

@@ -398,21 +398,21 @@ export default function Sidebar({ profile }) {
 
       {/* ── Institution Code chip ── */}
       {instCode && !showCollapsed && (
-        <div style={{ padding: '0 10px 8px', flexShrink: 0 }}>
-          <div style={{ borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', padding: '8px 10px' }}>
-            <p style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 5 }}>
+        <div style={{ padding: '0 10px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))', flexShrink: 0 }}>
+          <div style={{ borderRadius: 9, background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.15)', padding: '10px 12px' }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 6 }}>
               Institution Code
             </p>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', letterSpacing: '0.12em', fontFamily: 'monospace' }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: '#FFFFFF', letterSpacing: '0.14em', fontFamily: 'monospace' }}>
                 {instCode}
               </span>
               <button onClick={copyCode} title="Copy code"
-                style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: codeCopied ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
-                {codeCopied ? <Check size={11} color="#34D399" /> : <Copy size={11} color="rgba(255,255,255,0.60)" />}
+                style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid rgba(255,255,255,0.20)', background: codeCopied ? 'rgba(16,185,129,0.28)' : 'rgba(255,255,255,0.10)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}>
+                {codeCopied ? <Check size={12} color="#34D399" /> : <Copy size={12} color="rgba(255,255,255,0.65)" />}
               </button>
             </div>
-            <p style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.28)', marginTop: 4 }}>Share with students &amp; faculty</p>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 5 }}>Share with students &amp; faculty</p>
           </div>
         </div>
       )}

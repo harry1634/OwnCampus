@@ -480,7 +480,7 @@ export default function FacultyPage() {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+      <div className="rg-4">
         {[
           { label: 'Total Faculty',   value: faculty.length,                         sub: `${allDepts.length} department${allDepts.length !== 1 ? 's' : ''}`, icon: GraduationCap, iconColor: '#2563EB', iconBg: '#EFF6FF' },
           { label: 'Full Time',       value: fullTime,                                sub: `${partTime} part-time`,   icon: Users,    iconColor: '#10B981', iconBg: '#F0FDF4' },
@@ -543,7 +543,7 @@ export default function FacultyPage() {
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#94A3B8', fontSize: 14 }}>No faculty registered yet. Approve access requests from the dashboard to add faculty.</div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+      <div className="rg-3">
         {paginated.map((f, i) => {
           const color    = avatarColors[i % avatarColors.length]
           const dept     = deptConfig[f.dept] || { color: '#64748B', bg: '#F8FAFC' }

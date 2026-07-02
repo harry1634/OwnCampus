@@ -17,7 +17,6 @@ export async function GET() {
     let q = adminSupabase
       .from('announcements')
       .select('*')
-      .is('deleted_at', null)
       .order('is_pinned', { ascending: false })
       .order('created_at',  { ascending: false })
       .limit(50)

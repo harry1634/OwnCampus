@@ -4,7 +4,19 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { CreditCard, CheckCircle, Clock, AlertTriangle, Download, Printer } from 'lucide-react'
 import { useCurrentUser } from '@/lib/useCurrentUser'
-import { createClient }   from '@/lib/supabase/client'
+
+function fmtDate(str) {
+  if (!str) return '—'
+  const m = typeof str === 'string' && str.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (m) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    return `${m[3]} ${months[parseInt(m[2],10)-1]} ${m[1]}`
+  }
+  const d = new Date(str)
+  if (isNaN(d.getTime())) return '—'
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`
+}
 
 const STATUS_CONF = {
   paid:    { color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', label: 'Paid',    icon: CheckCircle  },
@@ -26,16 +38,12 @@ export default function StudentFees() {
   useEffect(() => {
     if (!cu.mounted || !cu.userId) return
 
-    // Load totalFee and paid_amount from students table (authoritative columns)
-    const supabase = createClient()
-    supabase.from('students').select('total_fee, paid_amount, fee_status').eq('user_id', cu.userId).single()
-      .then(({ data }) => {
-        if (!data) return
-        const totalFee   = Number(data.total_fee   || 0)
-        const paidAmount = Number(data.paid_amount  || 0)
-        const feeStatus  = data.fee_status ||
-          (totalFee === 0 ? 'pending' : paidAmount >= totalFee ? 'paid' : paidAmount > 0 ? 'partial' : 'pending')
-        setFeeData({ totalFee, paidAmount, feeStatus })
+    // Load totalFee and paid_amount via API (uses admin client, bypasses RLS)
+    fetch('/api/student/fee-summary')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || data.error) return
+        setFeeData({ totalFee: data.totalFee, paidAmount: data.paidAmount, feeStatus: data.feeStatus })
       }).catch(() => {})
 
     // Fetch transport assignment
@@ -69,7 +77,7 @@ export default function StudentFees() {
         const normalized = rows.map(p => ({
           id:      p.id,
           amount:  Number(p.amount || 0),
-          date:    p.payment_date  || p.created_at,
+          date:    fmtDate(p.payment_date || p.created_at),
           mode:    p.payment_mode  || p.payment_method || 'cash',
           receipt: p.receipt_number || null,
           status:  p.status === 'paid' ? 'paid' : p.status || 'pending',

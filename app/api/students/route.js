@@ -38,7 +38,6 @@ export async function GET(req) {
         branches ( id, name )
       `)
       .eq('status', 'active')
-      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1)
 

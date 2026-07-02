@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, UserCheck, BookOpen, Calendar, CreditCard } from 'lucide-react'
+import { LayoutDashboard, UserCheck, BookOpen, Calendar, CreditCard, User } from 'lucide-react'
 
 const ITEMS = [
   { label: 'Home',       href: '/student/dashboard',  icon: LayoutDashboard },
   { label: 'Attendance', href: '/student/attendance', icon: UserCheck       },
   { label: 'Marks',      href: '/student/marks',      icon: BookOpen        },
-  { label: 'Timetable',  href: '/student/timetable',  icon: Calendar        },
   { label: 'Fees',       href: '/student/fees',       icon: CreditCard      },
+  { label: 'Profile',    href: '/student/profile',    icon: User            },
 ]
 
 export default function StudentMobileNav() {

@@ -516,20 +516,62 @@ export default function LoginPage() {
       </div>
 
       {/* ════════════════ RIGHT PANEL ════════════════ */}
-      <div style={{
-        flex: 1, display: 'flex', alignItems: 'stretch', justifyContent: 'center',
+      <div className="lp-right" style={{
+        flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center',
         background: 'linear-gradient(160deg, #FFFFFF 0%, #F8FAFF 55%, #F3F7FF 100%)',
         padding: '40px 24px', boxSizing: 'border-box',
       }}>
-        <div style={{ width: '100%', maxWidth: 448, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 'min-content' }}>
 
-          {/* Mobile logo */}
-          <div className="flex lg:hidden items-center gap-3 mb-10">
-            <div style={{ width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg,#1E40AF,#2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px #2563EB40' }}>
-              <LayoutGrid size={17} color="white" />
+        {/* ── Mobile / tablet hero (hidden on desktop) ── */}
+        <div className="lg:hidden" style={{
+          padding: '48px 24px 44px', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0,
+        }}>
+          {/* Dot-grid texture */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
+            backgroundImage: 'radial-gradient(rgba(255,255,255,0.055) 1px, transparent 1px)',
+            backgroundSize: '22px 22px' }} />
+          {/* Glow orbs */}
+          <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', pointerEvents: 'none',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.38) 0%, transparent 65%)' }} />
+          <div style={{ position: 'absolute', bottom: -20, left: -30, width: 160, height: 160, borderRadius: '50%', pointerEvents: 'none',
+            background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 65%)' }} />
+
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 20, position: 'relative', zIndex: 1 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 15,
+              background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backdropFilter: 'blur(12px)', boxShadow: '0 4px 20px rgba(0,0,0,0.22)' }}>
+              <LayoutGrid size={21} color="white" strokeWidth={1.8} />
             </div>
-            <span style={{ fontSize: 17, fontWeight: 800, color: T.text, letterSpacing: '-0.02em' }}>OwnCampus</span>
+            <div>
+              <p style={{ fontSize: 21, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.028em', lineHeight: 1, margin: 0 }}>OwnCampus</p>
+              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginTop: 3, letterSpacing: '0.18em', textTransform: 'uppercase', margin: '3px 0 0' }}>School ERP Platform</p>
+            </div>
           </div>
+
+          {/* Stats strip */}
+          <div style={{ display: 'flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+            {[['5,000+', 'Institutions'], ['2M+', 'Students'], ['99.9%', 'Uptime']].map(([val, lbl], i) => (
+              <div key={lbl} style={{ display: 'flex', alignItems: 'center' }}>
+                {i > 0 && <div style={{ width: 1, height: 26, background: 'rgba(255,255,255,0.15)', margin: '0 16px', flexShrink: 0 }} />}
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', margin: 0, letterSpacing: '-0.02em' }}>{val}</p>
+                  <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.38)', margin: '2px 0 0', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>{lbl}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom shimmer line */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, pointerEvents: 'none',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)' }} />
+        </div>
+
+        {/* ── Content sheet ── */}
+        <div className="lp-sheet" style={{ width: '100%', maxWidth: 448, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: 'min-content' }}>
 
           {/* Signup stepper */}
           <AnimatePresence>
@@ -592,7 +634,7 @@ export default function LoginPage() {
                 </motion.div>
 
                 {/* Sign-up pill buttons */}
-                <motion.div {...fade(0.32)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 14 }}>
+                <motion.div {...fade(0.32)} className="lp-pill-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 14 }}>
                   <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
                     onClick={() => { setRole('faculty'); setMode('signup'); setStep('form') }}
                     style={{ background: '#ECFDF5', border: '1.5px solid #A7F3D0', borderRadius: 99, padding: '8px 18px',
@@ -680,7 +722,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Form card */}
-                <div style={{ background: T.surface, borderRadius: T.radius.xl, padding: 32, border: `1px solid ${T.border}`,
+                <div className="lp-card" style={{ background: T.surface, borderRadius: T.radius.xl, padding: 32, border: `1px solid ${T.border}`,
                   boxShadow: '0 4px 24px rgba(15,23,42,0.07), 0 1px 4px rgba(15,23,42,0.04)' }}>
                   <form onSubmit={mode === 'signup' ? handleSignUpNext : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
@@ -848,7 +890,7 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                <div style={{ background: T.surface, borderRadius: T.radius.xl, padding: 32, border: `1px solid ${T.border}`,
+                <div className="lp-card" style={{ background: T.surface, borderRadius: T.radius.xl, padding: 32, border: `1px solid ${T.border}`,
                   boxShadow: '0 4px 24px rgba(15,23,42,0.07), 0 1px 4px rgba(15,23,42,0.04)' }}>
                   <form onSubmit={handleDetailsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
@@ -865,7 +907,7 @@ export default function LoginPage() {
                     </div>
 
                     {role === 'faculty' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div className="lp-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         <div>
                           <Label>Department *</Label>
                           <div style={{ position: 'relative' }}>
@@ -890,7 +932,7 @@ export default function LoginPage() {
                     )}
 
                     {role === 'student' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div className="lp-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         <div>
                           <Label>Class & Section *</Label>
                           <div style={{ position: 'relative' }}>

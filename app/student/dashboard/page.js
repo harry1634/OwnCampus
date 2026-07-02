@@ -10,6 +10,19 @@ import {
 } from 'lucide-react'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 
+function fmtDate(str) {
+  if (!str) return '—'
+  const m = typeof str === 'string' && str.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (m) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    return `${m[3]} ${months[parseInt(m[2],10)-1]} ${m[1]}`
+  }
+  const d = new Date(str)
+  if (isNaN(d.getTime())) return '—'
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`
+}
+
 const PERIOD_COLORS = ['#7C3AED','#2563EB','#059669','#D97706','#DC2626','#0891B2','#EA580C','#9333EA']
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 
@@ -32,6 +45,14 @@ export default function StudentDashboard() {
   const cu = useCurrentUser()
   const [dashData,     setDashData    ] = useState(null)
   const [loading,      setLoading     ] = useState(true)
+  const [isMobile,     setIsMobile    ] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Single aggregated API call — replaces 4 separate fetches
   useEffect(() => {
@@ -94,13 +115,13 @@ export default function StudentDashboard() {
       </div>
 
       {/* Quick access */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
         {QUICK.map(q => {
           const Icon = q.icon
           return (
             <Link key={q.label} href={q.href}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 10px', borderRadius: 14, background: q.bg, textDecoration: 'none', border: '1px solid transparent' }}>
-              <Icon size={20} style={{ color: q.color }} />
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: isMobile ? '18px 12px' : '16px 10px', borderRadius: 14, background: q.bg, textDecoration: 'none', border: '1px solid transparent', WebkitTapHighlightColor: 'transparent' }}>
+              <Icon size={22} style={{ color: q.color }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: q.color, textAlign: 'center' }}>{q.label}</span>
             </Link>
           )
@@ -154,7 +175,7 @@ export default function StudentDashboard() {
                     </div>
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: '0 0 2px' }}>Payment Received</p>
-                      <p style={{ fontSize: 11, color: '#64748B', margin: 0 }}>{p.mode} · {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      <p style={{ fontSize: 11, color: '#64748B', margin: 0 }}>{p.payment_mode || p.mode || 'Cash'} · {fmtDate(p.payment_date || p.date)}</p>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -201,7 +222,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Schedule & Marks placeholders */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
         <div style={{ background: '#FFFFFF', borderRadius: 18, border: '1px solid #E2E8F0', overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

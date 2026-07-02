@@ -150,7 +150,7 @@ function PaymentModal({ onClose, onAdd, students = [] }) {
           </button>
         </div>
         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="rg-2">
             <div style={{ gridColumn: '1 / -1', position: 'relative' }}>
               <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>Student Name / Roll No. *</label>
               <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="Type name or roll number…" value={form.name} onChange={handleNameChange} autoComplete="off" />
@@ -323,7 +323,7 @@ export default function FinancePage() {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+      <div className="rg-4">
         {kpis.map((kpi, i) => {
           const KpiIcon = kpi.icon
           return (
@@ -351,7 +351,7 @@ export default function FinancePage() {
       </div>
 
       {/* Chart + Overdue Breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 20 }}>
+      <div className="rg-32">
         <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
           <div style={{ marginBottom: 20 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Collection vs Target</h3>

@@ -60,7 +60,6 @@ export async function GET(req) {
         .from('announcements')
         .select('id, title, type, created_at, content')
         .eq('institution_id', institutionId)
-        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(5),
 
