@@ -27,7 +27,7 @@ export async function GET() {
     // Only select columns guaranteed to exist from migration 001
     const { data: inst, error } = await supabase
       .from('institutions')
-      .select('id, name, type, slug')
+      .select('id, name, type, slug, logo_url')
       .eq('id', profile.institution_id)
       .single()
 
@@ -59,7 +59,7 @@ export async function GET() {
       } catch (_) {}
     }
 
-    return Response.json({ id: inst.id, name: inst.name, type: inst.type, code })
+    return Response.json({ id: inst.id, name: inst.name, type: inst.type, code, logo_url: inst.logo_url || null })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }

@@ -69,6 +69,7 @@ export async function POST(req) {
             role:           'student',
             institution_id: institutionId,
             phone:          row.phone || null,
+            avatar_url:     row.photo_url || null,
             metadata: {
               roll_number:  row.roll  || null,
               class_section: row.class || null,

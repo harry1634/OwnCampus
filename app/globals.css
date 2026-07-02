@@ -550,6 +550,39 @@ main { will-change: auto; }
   .rg-2        { grid-template-columns: 1fr !important; gap: 12px !important; }
   .rg-32       { grid-template-columns: 1fr !important; gap: 14px !important; }
   .rg-31       { grid-template-columns: 1fr !important; gap: 14px !important; }
+
+  /* ── Faculty card grid — single column on mobile ── */
+  .rg-faculty  { grid-template-columns: 1fr !important; }
+
+  /* ── Settings page — stack sidebar + content vertically on mobile ── */
+  .settings-layout  { flex-direction: column !important; gap: 12px !important; }
+  .settings-sidenav {
+    width: 100% !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding: 6px !important;
+    gap: 2px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .settings-sidenav::-webkit-scrollbar { display: none; }
+  .settings-navbtn {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 64px !important;
+    flex-shrink: 0 !important;
+    padding: 6px 10px !important;
+    gap: 4px !important;
+    margin-bottom: 0 !important;
+    text-align: center !important;
+  }
+  .snav-flex  { flex: none !important; min-width: 0 !important; }
+  .snav-label { font-size: 10px !important; }
+  .snav-desc  { display: none !important; }
+  .snav-arrow { display: none !important; }
 }
 
 /* Login page mobile / tablet tweaks (left panel is hidden below 1024px) */

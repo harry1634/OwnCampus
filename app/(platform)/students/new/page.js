@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -114,6 +114,18 @@ export default function NewStudentPage() {
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
   const [errors, setErrors]   = useState({})
+  const [photoFile,    setPhotoFile   ] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
+  const photoRef = useRef(null)
+
+  function handlePhotoChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { alert('Image must be under 2MB.'); return }
+    setPhotoFile(file)
+    setPhotoPreview(URL.createObjectURL(file))
+    e.target.value = ''
+  }
 
   const [form, setForm] = useState({
     firstName: '', lastName: '', dob: '', gender: '', blood: 'Unknown',
@@ -146,17 +158,31 @@ export default function NewStudentPage() {
     if (!validate()) return
     setSaving(true)
     try {
+      // Upload photo first if selected
+      let photoUrl = null
+      if (photoFile) {
+        const ext  = photoFile.name.split('.').pop().toLowerCase()
+        const path = `students/${Date.now()}.${ext}`
+        const fd = new FormData()
+        fd.append('file', photoFile)
+        fd.append('path', path)
+        const upRes = await fetch('/api/upload/photo', { method: 'POST', body: fd })
+        const upJson = await upRes.json()
+        if (upRes.ok && upJson.url) photoUrl = upJson.url
+      }
+
       const res = await fetch('/api/students/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           students: [{
-            name:   `${form.firstName.trim()} ${form.lastName.trim()}`,
-            email:  form.email.trim() || null,
-            roll:   form.rollNo.trim() || null,
-            class:  form.class ? `${form.class}${form.section ? `-${form.section}` : ''}` : null,
-            parent: form.parentName.trim() || null,
-            phone:  form.phone.trim() || null,
+            name:      `${form.firstName.trim()} ${form.lastName.trim()}`,
+            email:     form.email.trim() || null,
+            roll:      form.rollNo.trim() || null,
+            class:     form.class ? `${form.class}${form.section ? `-${form.section}` : ''}` : null,
+            parent:    form.parentName.trim() || null,
+            phone:     form.phone.trim() || null,
+            photo_url: photoUrl,
           }],
         }),
       })
@@ -235,19 +261,25 @@ export default function NewStudentPage() {
               {/* Photo upload */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 26, paddingBottom: 26, borderBottom: '1px solid #F1F5F9' }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <div style={{ width: 80, height: 80, borderRadius: 20, background: hasName ? '#2563EB' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 800, color: hasName ? '#FFFFFF' : '#CBD5E1', fontFamily: 'Inter, sans-serif', border: '3px solid #E2E8F0', boxShadow: '0 4px 12px rgba(37,99,235,0.15)', transition: 'all 0.2s' }}>
-                    {hasName ? initials : <User size={28} style={{ color: '#CBD5E1' }} />}
+                  <div style={{ width: 80, height: 80, borderRadius: 20, overflow: 'hidden', background: hasName ? '#2563EB' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 800, color: hasName ? '#FFFFFF' : '#CBD5E1', fontFamily: 'Inter, sans-serif', border: '3px solid #E2E8F0', boxShadow: '0 4px 12px rgba(37,99,235,0.15)', transition: 'all 0.2s' }}>
+                    {photoPreview
+                      ? <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : hasName ? initials : <User size={28} style={{ color: '#CBD5E1' }} />
+                    }
                   </div>
-                  <button type="button" style={{ position: 'absolute', bottom: -4, right: -4, width: 28, height: 28, borderRadius: '50%', background: '#2563EB', border: '2px solid #FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 6px rgba(37,99,235,0.35)' }}>
+                  <button type="button" onClick={() => photoRef.current?.click()}
+                    style={{ position: 'absolute', bottom: -4, right: -4, width: 28, height: 28, borderRadius: '50%', background: '#2563EB', border: '2px solid #FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 6px rgba(37,99,235,0.35)' }}>
                     <Camera size={12} style={{ color: '#FFFFFF' }} />
                   </button>
                 </div>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>Student Photo</p>
                   <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>JPG, PNG up to 2MB. Initials auto-generated until uploaded.</p>
-                  <button type="button" style={{ marginTop: 8, fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 7, border: '1px solid #BFDBFE', background: '#EFF6FF', color: '#2563EB', cursor: 'pointer' }}>
-                    Upload Photo
+                  <button type="button" onClick={() => photoRef.current?.click()}
+                    style={{ marginTop: 8, fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 7, border: '1px solid #BFDBFE', background: '#EFF6FF', color: '#2563EB', cursor: 'pointer' }}>
+                    {photoPreview ? 'Change Photo' : 'Upload Photo'}
                   </button>
+                  <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhotoChange} />
                 </div>
               </div>
 

@@ -543,7 +543,7 @@ export default function FacultyPage() {
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#94A3B8', fontSize: 14 }}>No faculty registered yet. Approve access requests from the dashboard to add faculty.</div>
       )}
 
-      <div className="rg-3">
+      <div className="rg-3 rg-faculty">
         {paginated.map((f, i) => {
           const color    = avatarColors[i % avatarColors.length]
           const dept     = deptConfig[f.dept] || { color: '#64748B', bg: '#F8FAFC' }

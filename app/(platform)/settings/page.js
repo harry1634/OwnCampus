@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Building2, Users, Shield, Bell, Palette, CreditCard,
-  Save, Check, Upload, ChevronRight, Lock, Eye, EyeOff,
+  Building2, Shield, Bell,
+  Save, Check, Upload, ChevronRight, Lock,
   Globe, Phone, Mail, MapPin, Hash, Calendar, Copy,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -12,12 +12,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 
 const tabs = [
-  { key: 'institution',  label: 'Institution',      icon: Building2,  desc: 'Profile & branding' },
-  { key: 'users',        label: 'Users & Roles',    icon: Users,      desc: 'Access management'  },
-  { key: 'security',     label: 'Security',         icon: Shield,     desc: 'Auth & access'      },
-  { key: 'notifications',label: 'Notifications',    icon: Bell,       desc: 'Alerts & updates'   },
-  { key: 'appearance',   label: 'Appearance',       icon: Palette,    desc: 'Theme & display'    },
-  { key: 'billing',      label: 'Billing',          icon: CreditCard, desc: 'Plan & payments'    },
+  { key: 'institution', label: 'Institution', icon: Building2, desc: 'Profile & branding' },
+  { key: 'security',    label: 'Security',    icon: Shield,    desc: 'Auth & access'      },
 ]
 
 const FIELD_STYLE = {
@@ -53,13 +49,21 @@ export default function SettingsPage() {
   const [newPwd,     setNewPwd    ] = useState('')
   const [confPwd,    setConfPwd   ] = useState('')
   const [pwdBusy,    setPwdBusy   ] = useState(false)
-  const [instCode,   setInstCode  ] = useState(null)
-  const [codeCopied, setCodeCopied] = useState(false)
+  const [instCode,      setInstCode     ] = useState(null)
+  const [instId,        setInstId       ] = useState(null)
+  const [logoUrl,       setLogoUrl      ] = useState(null)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [codeCopied,    setCodeCopied   ] = useState(false)
+  const logoRef = useRef(null)
 
   useEffect(() => {
     fetch('/api/institutions/my-code')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.code) setInstCode(d.code) })
+      .then(d => {
+        if (d?.code)     setInstCode(d.code)
+        if (d?.id)       setInstId(d.id)
+        if (d?.logo_url) setLogoUrl(d.logo_url)
+      })
       .catch(() => {})
   }, [])
 
@@ -92,6 +96,41 @@ export default function SettingsPage() {
     }
   }
 
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2MB.'); return }
+    if (!instId) { toast.error('Institution not loaded yet.'); return }
+    setLogoUploading(true)
+    try {
+      const ext  = file.name.split('.').pop().toLowerCase()
+      const path = `logos/${instId}/${Date.now()}.${ext}`
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('path', path)
+      const res = await fetch('/api/upload/photo', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Upload failed')
+      const supabase = createClient()
+      await supabase.from('institutions').update({ logo_url: json.url }).eq('id', instId)
+      setLogoUrl(json.url)
+      toast.success('Logo updated!')
+    } catch (err) {
+      toast.error(err.message || 'Upload failed.')
+    } finally {
+      setLogoUploading(false)
+      e.target.value = ''
+    }
+  }
+
   const handleSave = () => {
     setSaved(true)
     setTimeout(() => setSaved(false), 2200)
@@ -106,33 +145,58 @@ export default function SettingsPage() {
         <p style={{ fontSize: 14, color: '#64748B', marginTop: 6 }}>Manage institution configuration and preferences</p>
       </div>
 
-      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 24, alignItems: isMobile ? 'stretch' : 'flex-start' }}>
 
         {/* Left Nav */}
-        <div style={{ width: 220, flexShrink: 0, background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: 8, boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
+        <div style={{
+          width: isMobile ? '100%' : 220,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: isMobile ? 'row' : 'column',
+          overflowX: isMobile ? 'auto' : 'visible',
+          scrollbarWidth: 'none',
+          background: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: 16,
+          padding: isMobile ? 6 : 8,
+          gap: isMobile ? 2 : 0,
+          boxShadow: '0 2px 6px rgba(15,23,42,0.05)',
+        }}>
           {tabs.map(tab => {
             const Icon = tab.icon
             const active = activeTab === tab.key
             return (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 12px', borderRadius: 10, border: 'none',
+                  width: isMobile ? 'auto' : '100%',
+                  minWidth: isMobile ? 68 : undefined,
+                  flexShrink: isMobile ? 0 : undefined,
+                  display: 'flex',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  alignItems: 'center',
+                  justifyContent: isMobile ? 'center' : 'flex-start',
+                  gap: isMobile ? 4 : 12,
+                  padding: isMobile ? '6px 8px' : '10px 12px',
+                  borderRadius: 10,
+                  border: 'none',
                   background: active ? '#EFF6FF' : 'transparent',
-                  cursor: 'pointer', textAlign: 'left', marginBottom: 2,
+                  cursor: 'pointer',
+                  textAlign: isMobile ? 'center' : 'left',
+                  marginBottom: isMobile ? 0 : 2,
                   transition: 'background 0.15s',
+                  fontFamily: 'inherit',
                 }}
                 onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#F8FAFC' }}
                 onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
               >
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: active ? '#2563EB' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
-                  <Icon size={15} style={{ color: active ? '#FFFFFF' : '#94A3B8' }} />
+                <div style={{ width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: 8, background: active ? '#2563EB' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
+                  <Icon size={isMobile ? 13 : 15} style={{ color: active ? '#FFFFFF' : '#94A3B8' }} />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: active ? '#2563EB' : '#374151', lineHeight: 1.2 }}>{tab.label}</p>
-                  <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>{tab.desc}</p>
+                <div style={{ flex: isMobile ? 'none' : 1, minWidth: 0 }}>
+                  <p style={{ fontSize: isMobile ? 10 : 13, fontWeight: 600, color: active ? '#2563EB' : '#374151', lineHeight: 1.2, margin: 0 }}>{tab.label}</p>
+                  {!isMobile && <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 1, marginBottom: 0 }}>{tab.desc}</p>}
                 </div>
-                {active && <ChevronRight size={13} style={{ color: '#2563EB', flexShrink: 0 }} />}
+                {active && !isMobile && <ChevronRight size={13} style={{ color: '#2563EB', flexShrink: 0 }} />}
               </button>
             )
           })}
@@ -163,15 +227,23 @@ export default function SettingsPage() {
 
                   {/* Logo section */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '20px 24px', background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 14 }}>
-                    <div style={{ width: 72, height: 72, borderRadius: 18, background: 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#FFFFFF', flexShrink: 0, boxShadow: '0 4px 16px rgba(37,99,235,0.30)' }}>
-                      OC
+                    <div style={{ width: 72, height: 72, borderRadius: 18, overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 16px rgba(37,99,235,0.20)', border: '2px solid #E2E8F0' }}>
+                      {logoUrl
+                        ? <img src={logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#FFFFFF' }}>OC</div>
+                      }
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>Institution Logo</p>
-                      <p style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12 }}>PNG, JPG or SVG. Recommended size 256×256px. Max 2MB.</p>
-                      <button style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}>
-                        <Upload size={13} /> Upload Logo
+                      <p style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12 }}>PNG or JPG. Recommended 256×256px. Max 2MB.</p>
+                      <button onClick={() => logoRef.current?.click()} disabled={logoUploading}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#374151', cursor: logoUploading ? 'default' : 'pointer', opacity: logoUploading ? 0.7 : 1 }}>
+                        {logoUploading
+                          ? <><div style={{ width: 12, height: 12, border: '2px solid #E2E8F0', borderTop: '2px solid #2563EB', borderRadius: '50%' }} className="animate-spin" /> Uploading…</>
+                          : <><Upload size={13} /> {logoUrl ? 'Change Logo' : 'Upload Logo'}</>
+                        }
                       </button>
+                      <input ref={logoRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleLogoUpload} />
                     </div>
                   </div>
 
@@ -307,25 +379,6 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            {/* ── Placeholder tabs ── */}
-            {['users', 'notifications', 'appearance', 'billing'].includes(activeTab) && (
-              <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
-                style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
-
-                <div style={{ padding: '20px 28px', borderBottom: '1px solid #F1F5F9' }}>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', margin: 0, textTransform: 'capitalize' }}>{activeTab.replace('notifications', 'Notifications').replace('appearance', 'Appearance').replace('billing', 'Billing').replace('users', 'Users & Roles')} Settings</h2>
-                  <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Configure {activeTab} preferences for your institution</p>
-                </div>
-
-                <div style={{ padding: '64px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  {(() => { const t = tabs.find(t => t.key === activeTab); const Icon = t?.icon; return Icon ? <div style={{ width: 56, height: 56, borderRadius: 16, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}><Icon size={24} style={{ color: '#CBD5E1' }} /></div> : null })()}
-                  <p style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>Coming Soon</p>
-                  <p style={{ fontSize: 13, color: '#94A3B8', textAlign: 'center', maxWidth: 280 }}>
-                    This section is being set up. Check back soon for full configuration options.
-                  </p>
-                </div>
-              </motion.div>
-            )}
           </AnimatePresence>
         </div>
       </div>

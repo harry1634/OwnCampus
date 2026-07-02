@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { User, Mail, Phone, BookOpen, Award, Save, Camera, KeyRound, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
@@ -15,8 +15,11 @@ export default function FacultyProfile() {
     doj: '', exp: '', qualification: '',
     subjects: '', classes: '',
   })
-  const [editing, setEditing] = useState(false)
-  const [saving,  setSaving ] = useState(false)
+  const [editing,       setEditing      ] = useState(false)
+  const [saving,        setSaving       ] = useState(false)
+  const [avatarUrl,     setAvatarUrl    ] = useState(null)
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const photoRef = useRef(null)
   const [pwdOpen, setPwdOpen] = useState(false)
   const [curPwd,  setCurPwd ] = useState('')
   const [newPwd,  setNewPwd ] = useState('')
@@ -31,12 +34,13 @@ export default function FacultyProfile() {
 
     supabase
       .from('user_profiles')
-      .select('first_name, last_name, email, phone, metadata')
+      .select('first_name, last_name, email, phone, avatar_url, metadata')
       .eq('id', cu.userId)
       .single()
       .then(({ data: up }) => {
         if (!up) return
         const meta = up.metadata || {}
+        setAvatarUrl(up.avatar_url || null)
         setProfile(p => ({
           ...p,
           name:  [up.first_name, up.last_name].filter(Boolean).join(' '),
@@ -64,6 +68,32 @@ export default function FacultyProfile() {
         }))
       })
   }, [cu.mounted, cu.userId])
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2MB.'); return }
+    setPhotoUploading(true)
+    try {
+      const ext  = file.name.split('.').pop().toLowerCase()
+      const path = `avatars/${cu.userId}/${Date.now()}.${ext}`
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('path', path)
+      const res = await fetch('/api/upload/photo', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Upload failed')
+      const supabase = createClient()
+      await supabase.from('user_profiles').update({ avatar_url: json.url }).eq('id', cu.userId)
+      setAvatarUrl(json.url)
+      toast.success('Photo updated!')
+    } catch (err) {
+      toast.error(err.message || 'Upload failed.')
+    } finally {
+      setPhotoUploading(false)
+      e.target.value = ''
+    }
+  }
 
   const handleSave = async () => {
     if (!cu.userId) return
@@ -158,14 +188,19 @@ export default function FacultyProfile() {
       {/* Avatar + basic info */}
       <div style={{ background: 'linear-gradient(135deg,#065F46,#059669)', borderRadius: 20, padding: '28px 32px', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }}>
-          <div style={{ width: 80, height: 80, borderRadius: 20, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#FFFFFF', border: '3px solid rgba(255,255,255,0.3)' }}>
-            {profile.name ? profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'FA'}
+          <div style={{ width: 80, height: 80, borderRadius: 20, overflow: 'hidden', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#FFFFFF', border: '3px solid rgba(255,255,255,0.3)' }}>
+            {avatarUrl
+              ? <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : (profile.name ? profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'FA')
+            }
           </div>
           {editing && (
-            <button style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: 8, background: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+            <button onClick={() => photoRef.current?.click()} disabled={photoUploading}
+              style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: 8, background: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: photoUploading ? 'default' : 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)', opacity: photoUploading ? 0.6 : 1 }}>
               <Camera size={12} color="#059669" />
             </button>
           )}
+          <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhotoChange} />
         </div>
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: '#FFFFFF', margin: '0 0 4px' }}>{profile.name || 'Faculty'}</h2>
