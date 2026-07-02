@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, BookOpen, Award, Save, Camera, KeyRound, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { User, Mail, Phone, BookOpen, Award, Save, Camera, Trash2, KeyRound, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 import { createClient } from '@/lib/supabase/client'
@@ -19,7 +19,8 @@ export default function FacultyProfile() {
   const [saving,        setSaving       ] = useState(false)
   const [avatarUrl,     setAvatarUrl    ] = useState(null)
   const [photoUploading, setPhotoUploading] = useState(false)
-  const photoRef = useRef(null)
+  const photoRef  = useRef(null)
+  const authUser  = useRef(null)
   const [pwdOpen, setPwdOpen] = useState(false)
   const [curPwd,  setCurPwd ] = useState('')
   const [newPwd,  setNewPwd ] = useState('')
@@ -29,54 +30,75 @@ export default function FacultyProfile() {
   const [pwdBusy, setPwdBusy] = useState(false)
 
   useEffect(() => {
-    if (!cu.mounted || !cu.userId) return
     const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      authUser.current = user
+      const uid = user.id
 
-    supabase
-      .from('user_profiles')
-      .select('first_name, last_name, email, phone, avatar_url, metadata')
-      .eq('id', cu.userId)
-      .single()
-      .then(({ data: up }) => {
-        if (!up) return
+      const [{ data: up }, { data: f }] = await Promise.all([
+        supabase
+          .from('user_profiles')
+          .select('first_name, last_name, email, phone, avatar_url, metadata')
+          .eq('id', uid)
+          .single(),
+        supabase
+          .from('faculty')
+          .select('designation, joining_date, qualification, experience_years, subjects_teaching, classes_assigned')
+          .eq('user_id', uid)
+          .single(),
+      ])
+
+      if (up) {
         const meta = up.metadata || {}
         setAvatarUrl(up.avatar_url || null)
         setProfile(p => ({
           ...p,
           name:  [up.first_name, up.last_name].filter(Boolean).join(' '),
-          email: up.email || cu.email || '',
+          email: up.email || user.email || '',
           phone: up.phone || '',
           empId: meta.employee_id || '',
-          dept:  meta.department || cu.dept || '',
+          dept:  meta.department  || '',
         }))
-      })
+      }
 
-    supabase
-      .from('faculty')
-      .select('designation, joining_date, qualification, experience_years, subjects_teaching')
-      .eq('user_id', cu.userId)
-      .single()
-      .then(({ data: f }) => {
-        if (!f) return
+      if (f) {
         setProfile(p => ({
           ...p,
-          designation:   f.designation    || cu.designation || '',
-          doj:           f.joining_date   || '',
-          qualification: f.qualification  || '',
+          designation:   f.designation        || '',
+          doj:           f.joining_date        || '',
+          qualification: f.qualification       || '',
           exp:           f.experience_years != null ? String(f.experience_years) : '',
           subjects:      Array.isArray(f.subjects_teaching) ? f.subjects_teaching.join(', ') : (f.subjects_teaching || ''),
+          classes:       Array.isArray(f.classes_assigned)  ? f.classes_assigned.join(', ')  : (f.classes_assigned  || ''),
         }))
-      })
-  }, [cu.mounted, cu.userId])
+      }
+    })
+  }, [])
+
+  async function handleDeletePhoto() {
+    const uid = authUser.current?.id
+    if (!uid || !avatarUrl) return
+    try {
+      const supabase = createClient()
+      await supabase.from('user_profiles').update({ avatar_url: null }).eq('id', uid)
+      setAvatarUrl(null)
+      toast.success('Photo removed.')
+    } catch (err) {
+      toast.error(err.message || 'Failed to remove photo.')
+    }
+  }
 
   async function handlePhotoChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2MB.'); return }
+    const uid = authUser.current?.id
+    if (!uid) { toast.error('Not authenticated.'); return }
     setPhotoUploading(true)
     try {
       const ext  = file.name.split('.').pop().toLowerCase()
-      const path = `avatars/${cu.userId}/${Date.now()}.${ext}`
+      const path = `avatars/${uid}/${Date.now()}.${ext}`
       const fd = new FormData()
       fd.append('file', file)
       fd.append('path', path)
@@ -84,7 +106,7 @@ export default function FacultyProfile() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Upload failed')
       const supabase = createClient()
-      await supabase.from('user_profiles').update({ avatar_url: json.url }).eq('id', cu.userId)
+      await supabase.from('user_profiles').update({ avatar_url: json.url }).eq('id', uid)
       setAvatarUrl(json.url)
       toast.success('Photo updated!')
     } catch (err) {
@@ -96,7 +118,8 @@ export default function FacultyProfile() {
   }
 
   const handleSave = async () => {
-    if (!cu.userId) return
+    const uid = authUser.current?.id
+    if (!uid) return
     setSaving(true)
     try {
       const supabase = createClient()
@@ -112,7 +135,7 @@ export default function FacultyProfile() {
           phone:       profile.phone  || null,
           metadata:    { employee_id: profile.empId || null, department: profile.dept, designation: profile.designation, classes_assigned: profile.classes },
         })
-        .eq('id', cu.userId)
+        .eq('id', uid)
       if (upErr) throw upErr
 
       const subjects = profile.subjects
@@ -128,10 +151,9 @@ export default function FacultyProfile() {
           experience_years: parseInt(profile.exp) || 0,
           subjects_teaching: subjects,
         })
-        .eq('user_id', cu.userId)
+        .eq('user_id', uid)
       if (fErr) throw fErr
 
-      // Keep localStorage in sync so sidebar & useCurrentUser see updated values immediately
       if (profile.name)        localStorage.setItem('oc_user_name',  profile.name)
       if (profile.dept)        localStorage.setItem('oc_user_dept',  profile.dept)
       if (profile.designation) localStorage.setItem('oc_user_desig', profile.designation)
@@ -152,7 +174,8 @@ export default function FacultyProfile() {
     setPwdBusy(true)
     try {
       const supabase = createClient()
-      const { error: signInErr } = await supabase.auth.signInWithPassword({ email: cu.email, password: curPwd })
+      const email = authUser.current?.email || profile.email
+      const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: curPwd })
       if (signInErr) { toast.error('Current password is incorrect.'); return }
       const { error } = await supabase.auth.updateUser({ password: newPwd })
       if (error) throw error
@@ -194,10 +217,18 @@ export default function FacultyProfile() {
               : (profile.name ? profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'FA')
             }
           </div>
-          {editing && (
-            <button onClick={() => photoRef.current?.click()} disabled={photoUploading}
-              style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: 8, background: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: photoUploading ? 'default' : 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)', opacity: photoUploading ? 0.6 : 1 }}>
-              <Camera size={12} color="#059669" />
+          {/* Camera upload — always visible */}
+          <button onClick={() => photoRef.current?.click()} disabled={photoUploading}
+            style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: 8, background: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: photoUploading ? 'default' : 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)', opacity: photoUploading ? 0.6 : 1 }}>
+            {photoUploading
+              ? <div style={{ width: 12, height: 12, border: '2px solid rgba(5,150,105,0.3)', borderTop: '2px solid #059669', borderRadius: '50%' }} className="animate-spin" />
+              : <Camera size={12} color="#059669" />}
+          </button>
+          {/* Delete — only when a photo exists */}
+          {avatarUrl && (
+            <button onClick={handleDeletePhoto}
+              style={{ position: 'absolute', bottom: -4, left: -4, width: 26, height: 26, borderRadius: 8, background: '#FEF2F2', border: '1.5px solid #FCA5A5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }}>
+              <Trash2 size={11} color="#EF4444" />
             </button>
           )}
           <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhotoChange} />

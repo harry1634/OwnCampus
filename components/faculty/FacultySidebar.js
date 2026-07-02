@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Calendar, UserCheck, BookOpen, ClipboardList,
   Bell, User, ChevronLeft, ChevronRight, Building2, GraduationCap,
-  Package, Megaphone,
+  Package, Megaphone, Settings,
 } from 'lucide-react'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 
@@ -25,6 +25,7 @@ const NAV = [
     { name: 'Procurement',      href: '/faculty/procurement',  icon: Package         },
     { name: 'Announcements',    href: '/faculty/announcements',icon: Megaphone       },
     { name: 'My Profile',       href: '/faculty/profile',      icon: User            },
+    { name: 'Settings',         href: '/faculty/settings',     icon: Settings        },
   ]},
 ]
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -220,6 +220,14 @@ export default function LoginPage() {
   const [details,  setDetails ] = useState({ name: '', dept: '', designation: '', phone: '', classSection: '', roll: '', branch: '' })
   const [branches,      setBranches     ] = useState([])
   const [loadingBranch, setLoadingBranch] = useState(false)
+
+  const [isDesktop,   setIsDesktop  ] = useState(false)
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 1024)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const [instCode,    setInstCode   ] = useState('')
   const [instInfo,    setInstInfo   ] = useState(null)
@@ -518,13 +526,13 @@ export default function LoginPage() {
       {/* ════════════════ RIGHT PANEL ════════════════ */}
       <div className="lp-right" style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: isDesktop ? 'flex-start' : 'center',
         background: 'linear-gradient(160deg, #FFFFFF 0%, #F8FAFF 55%, #F3F7FF 100%)',
-        padding: '40px 24px', boxSizing: 'border-box',
+        padding: isDesktop ? '48px 24px 40px' : '40px 24px', boxSizing: 'border-box',
       }}>
 
         {/* ── Mobile / tablet hero (hidden on desktop) ── */}
-        <div className="lg:hidden" style={{
+        {!isDesktop && <div style={{
           padding: '48px 24px 44px', display: 'flex', flexDirection: 'column',
           alignItems: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0,
         }}>
@@ -568,7 +576,7 @@ export default function LoginPage() {
           {/* Bottom shimmer line */}
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, pointerEvents: 'none',
             background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)' }} />
-        </div>
+        </div>}
 
         {/* ── Content sheet ── */}
         <div className="lp-sheet" style={{ width: '100%', maxWidth: 448, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: 'min-content' }}>
