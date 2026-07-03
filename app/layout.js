@@ -1,6 +1,7 @@
 import './globals.css'
 import { Toaster } from 'sonner'
 import { Providers } from '@/components/providers'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata = {
   title: {
@@ -57,6 +58,7 @@ export default function RootLayout({ children }) {
             },
           }}
         />
+        <Analytics />
       </body>
     </html>
   )
