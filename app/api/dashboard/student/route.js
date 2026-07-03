@@ -154,7 +154,7 @@ export async function GET(req) {
         rollNumber:      studentRow.roll_number,
         admissionNumber: studentRow.admission_number,
         className:       studentRow.classes
-          ? `${studentRow.classes.name}${studentRow.classes.section ? ' ' + studentRow.classes.section : ''}`
+          ? `${studentRow.classes.name}${studentRow.classes.section ? '-' + studentRow.classes.section : ''}`
           : null,
         institutionId,
       },

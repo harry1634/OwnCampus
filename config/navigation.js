@@ -44,7 +44,7 @@ export const navigation = [
   {
     label: 'Engagement',
     items: [
-      { name: 'Communication', href: '/communication', icon: MessageSquare, roles: 'all' },
+      { name: 'Announcements', href: '/communication', icon: MessageSquare, roles: 'all' },
       { name: 'Alumni', href: '/alumni', icon: Users2, roles: 'all' },
     ],
   },

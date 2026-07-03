@@ -150,7 +150,7 @@ export async function POST(req) {
     const admin = createAdminClient()
     const institutionId = await getInstitutionId(admin, user.id)
 
-    // Find room by building + room_number
+    // Find or create room by building + room_number
     let roomId = body.roomId || null
     if (!roomId && buildingId && roomNumber) {
       const { data: room } = await admin
@@ -160,6 +160,23 @@ export async function POST(req) {
         .eq('room_number', roomNumber)
         .single()
       roomId = room?.id || null
+
+      // Auto-create the room if it doesn't exist yet
+      if (!roomId) {
+        const { data: newRoom } = await admin
+          .from('hostel_rooms')
+          .insert({
+            building_id:  buildingId,
+            room_number:  roomNumber,
+            floor:        1,
+            capacity:     4,
+            occupied:     0,
+            is_available: true,
+          })
+          .select('id')
+          .single()
+        roomId = newRoom?.id || null
+      }
     }
 
     // Find student by name (best-effort)
@@ -182,10 +199,11 @@ export async function POST(req) {
       }
     }
 
-    if (!roomId || !studentId) {
-      return Response.json({
-        error: !roomId ? 'Room not found' : 'Student not found in the system',
-      }, { status: 400 })
+    if (!roomId) {
+      return Response.json({ error: 'Building not found — add a building first' }, { status: 400 })
+    }
+    if (!studentId) {
+      return Response.json({ error: 'Student not found in the system' }, { status: 400 })
     }
 
     const { data, error } = await admin

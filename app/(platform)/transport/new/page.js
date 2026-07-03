@@ -45,10 +45,50 @@ export default function NewRoutePage() {
     ev.preventDefault()
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
-    setSaving(false); setSaved(true)
-    await new Promise(r => setTimeout(r, 700))
-    router.push('/transport')
+    try {
+      // Step 1: create a vehicle record
+      let vehicleId = null
+      if (form.vehicle.trim()) {
+        const vRes  = await fetch('/api/transport', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action:              'add_vehicle',
+            registration_number: form.vehicle.trim(),
+            type:                'bus',
+            capacity:            parseInt(form.capacity) || 40,
+          }),
+        })
+        const vJson = await vRes.json()
+        if (vJson.vehicle?.id) vehicleId = vJson.vehicle.id
+      }
+
+      // Step 2: create route (vehicle_id may be null if vehicle creation failed gracefully)
+      const rRes = await fetch('/api/transport', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action:         'add_route',
+          name:           form.name.trim(),
+          vehicle_id:     vehicleId || null,
+          stops:          form.stops ? form.stops.split(',').map(s => s.trim()).filter(Boolean) : [],
+          departure_time: form.departure || null,
+          arrival_time:   form.arrival   || null,
+        }),
+      })
+      const rJson = await rRes.json()
+      if (!rRes.ok || rJson.error) {
+        setErrors({ name: rJson.error || 'Failed to save route. Please try again.' })
+        setSaving(false)
+        return
+      }
+      setSaved(true)
+      await new Promise(r => setTimeout(r, 600))
+      router.push('/transport')
+    } catch {
+      setErrors({ name: 'Network error. Please try again.' })
+      setSaving(false)
+    }
   }
 
   const stopsList = form.stops ? form.stops.split(',').map(s=>s.trim()).filter(Boolean) : []

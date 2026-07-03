@@ -81,7 +81,7 @@ export default function StudentTimetable() {
   // Today's slots
   const todayDay      = DAYS_FULL[todayIdx > 6 ? 6 : todayIdx] || 'monday'
   const todaySlots    = (byDay[todayDay] || []).sort((a, b) => a.period_number - b.period_number)
-  const classLabel    = classInfo ? `${classInfo.name} ${classInfo.section || ''}`.trim() : (cu.classSection || 'Your class')
+  const classLabel    = classInfo ? `${classInfo.name}${classInfo.section ? '-' + classInfo.section : ''}` : (cu.classSection || 'Your class')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

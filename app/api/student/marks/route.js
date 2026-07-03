@@ -95,7 +95,7 @@ export async function GET() {
       student: {
         id:        student.id,
         rollNumber:student.roll_number,
-        className: student.classes ? `${student.classes.name}${student.classes.section ? ' - ' + student.classes.section : ''}` : null,
+        className: student.classes ? `${student.classes.name}${student.classes.section ? '-' + student.classes.section : ''}` : null,
       },
       marks,
       subjects,

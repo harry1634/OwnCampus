@@ -355,7 +355,7 @@ export default function Header({ user, profile, institution }) {
                     )}
                   </div>
                   <div style={{ padding: '10px 12px', borderTop: '1px solid #F1F5F9' }}>
-                    <Link href="/announcements" onClick={() => setShowNotifications(false)} style={{ display: 'block', textAlign: 'center', fontSize: 12, fontWeight: 600, padding: '8px', borderRadius: 10, color: '#2563EB', background: '#EFF6FF', border: '1px solid #BFDBFE', textDecoration: 'none' }}>
+                    <Link href="/communication" onClick={() => setShowNotifications(false)} style={{ display: 'block', textAlign: 'center', fontSize: 12, fontWeight: 600, padding: '8px', borderRadius: 10, color: '#2563EB', background: '#EFF6FF', border: '1px solid #BFDBFE', textDecoration: 'none' }}>
                       View all announcements
                     </Link>
                   </div>

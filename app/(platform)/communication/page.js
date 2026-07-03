@@ -163,7 +163,7 @@ export default function CommunicationPage() {
       {/* Page Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-header-title">Communication Center</h1>
+          <h1 className="page-header-title">Announcements</h1>
           <p className="page-header-sub">Post and manage announcements for faculty, students &amp; parents</p>
         </div>
         <div className="page-actions">
@@ -174,7 +174,7 @@ export default function CommunicationPage() {
       </div>
 
       {/* Channel indicators (decorative) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
         {channels.map((ch, i) => {
           const Icon = ch.icon
           return (
@@ -194,15 +194,15 @@ export default function CommunicationPage() {
 
       {/* Announcements list */}
       <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 1px 4px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap', gap: 10 }}>
           <div>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Posted Announcements</h3>
             <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{filtered.length} announcement{filtered.length !== 1 ? 's' : ''}</p>
           </div>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', minWidth: 0, flex: '0 1 220px' }}>
             <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#CBD5E1' }} />
             <input type="text" placeholder="Search announcements…" value={search} onChange={e => setSearch(e.target.value)}
-              className="input-premium" style={{ paddingLeft: 34, paddingTop: 7, paddingBottom: 7, fontSize: 12, width: 220 }} />
+              className="input-premium" style={{ paddingLeft: 34, paddingTop: 7, paddingBottom: 7, fontSize: 12, width: '100%' }} />
           </div>
         </div>
 

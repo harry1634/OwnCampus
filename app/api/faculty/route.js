@@ -134,11 +134,19 @@ export async function GET(req) {
 
       if (branchFilter) faculty = faculty.filter(f => f.branch === branchFilter || f.branchId === branchFilter)
       if (deptFilter)   faculty = faculty.filter(f => f.dept.toLowerCase().includes(deptFilter.toLowerCase()))
-      if (search)       faculty = faculty.filter(f =>
-        f.name.toLowerCase().includes(search.toLowerCase()) ||
-        f.email.toLowerCase().includes(search.toLowerCase()) ||
-        f.dept.toLowerCase().includes(search.toLowerCase())
-      )
+      if (search) {
+        const q = search.toLowerCase()
+        faculty = faculty.filter(f => {
+          const subjectsStr = Array.isArray(f.subjects) ? f.subjects.join(' ') : String(f.subjects || '')
+          return (
+            f.name.toLowerCase().includes(q)  ||
+            f.email.toLowerCase().includes(q) ||
+            f.dept.toLowerCase().includes(q)  ||
+            f.designation?.toLowerCase().includes(q) ||
+            subjectsStr.toLowerCase().includes(q)
+          )
+        })
+      }
 
       return Response.json(faculty)
     }

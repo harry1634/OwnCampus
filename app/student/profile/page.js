@@ -29,10 +29,49 @@ export default function StudentProfile() {
   const [showCur,        setShowCur       ] = useState(false)
   const [showNew,        setShowNew       ] = useState(false)
   const [pwdBusy,        setPwdBusy       ] = useState(false)
+  const [saving,         setSaving        ] = useState(false)
   const [avatarUrl,      setAvatarUrl     ] = useState(null)
   const [photoUploading, setPhotoUploading] = useState(false)
   const photoRef = useRef(null)
-  const authUser = useRef(null)
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name:    profile.name.split(' ')[0] || '',
+          last_name:     profile.name.split(' ').slice(1).join(' ') || '',
+          phone:         profile.phone    || null,
+          // Personal fields — written to user_profiles proper columns
+          date_of_birth: profile.dob     || null,
+          blood_group:   profile.blood   || null,
+          gender:        profile.gender  || null,
+          address:       profile.address || null,
+          // Parent fields — written to students table
+          parent_name:   profile.parentName  || null,
+          parent_phone:  profile.parentPhone || null,
+          // Only truly orphaned fields (no DB column) go to metadata
+          metadata: {
+            house: profile.house || null,
+          },
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Save failed')
+
+      // API returns full confirmed profile — apply it directly
+      if (json.profile) applyProfileData(json.profile)
+
+      setEditing(false)
+      toast.success('Profile saved!')
+    } catch (err) {
+      toast.error(err.message || 'Failed to save profile.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function handleChangePassword(e) {
     e.preventDefault()
@@ -41,7 +80,7 @@ export default function StudentProfile() {
     setPwdBusy(true)
     try {
       const supabase = createClient()
-      const userEmail = authUser.current?.email || cu.email
+      const userEmail = cu.email
       const { error: signInErr } = await supabase.auth.signInWithPassword({ email: userEmail, password: curPwd })
       if (signInErr) { toast.error('Current password is incorrect.'); return }
       const { error } = await supabase.auth.updateUser({ password: newPwd })
@@ -56,11 +95,14 @@ export default function StudentProfile() {
   }
 
   async function handleDeletePhoto() {
-    const uid = authUser.current?.id
-    if (!uid || !avatarUrl) return
+    if (!cu.userId || !avatarUrl) return
     try {
-      const supabase = createClient()
-      await supabase.from('user_profiles').update({ avatar_url: null }).eq('id', uid)
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar_url: null }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed')
       setAvatarUrl(null)
       toast.success('Photo removed.')
     } catch (err) {
@@ -72,19 +114,16 @@ export default function StudentProfile() {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 5 * 1024 * 1024) { toast.error('Photo must be under 5 MB.'); return }
+    if (!cu.userId) { toast.error('Not authenticated.'); return }
     setPhotoUploading(true)
     try {
-      const uid = authUser.current?.id
-      if (!uid) throw new Error('Not authenticated.')
-      const ext = file.name.split('.').pop()
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('path', `students/${uid}/avatar.${ext}`)
+      // API enforces safe path server-side
       const res  = await fetch('/api/upload/photo', { method: 'POST', body: fd })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Upload failed.')
-      const supabase = createClient()
-      await supabase.from('user_profiles').update({ avatar_url: json.url }).eq('id', uid)
+      // API already saved avatar_url to DB — just update local state
       setAvatarUrl(json.url)
       toast.success('Photo updated!')
     } catch (err) {
@@ -95,43 +134,47 @@ export default function StudentProfile() {
     }
   }
 
-  // Fetch profile from Supabase DB on mount
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return
-      authUser.current = user
-      const uid = user.id
-      const { data: up } = await supabase
-        .from('user_profiles')
-        .select('first_name,last_name,email,phone,avatar_url,metadata')
-        .eq('id', uid)
-        .single()
-      if (up) {
-        const fullName = [up.first_name, up.last_name].filter(Boolean).join(' ')
-        const meta = up.metadata || {}
-        setProfile(p => ({
-          ...p,
-          name:        fullName || p.name,
-          email:       up.email || p.email,
-          phone:       up.phone || p.phone,
-          dob:         meta.dob || p.dob,
-          blood:       meta.blood_group || p.blood,
-          gender:      meta.gender || p.gender,
-          address:     meta.address || p.address,
-          parentName:  meta.parent_name || p.parentName,
-          parentPhone: meta.parent_phone || p.parentPhone,
-          class:       meta.class || p.class,
-          section:     meta.section || p.section,
-          rollNo:      meta.roll_no || p.rollNo,
-          branch:      meta.branch || p.branch,
-          house:       meta.house || p.house,
-          admission:   meta.admission_date || p.admission,
-        }))
-        if (up.avatar_url) setAvatarUrl(up.avatar_url)
-      }
-    })
-  }, [])
+  function applyProfileData(data) {
+    const meta = data.metadata || {}
+    const stu  = data.student  || {}
+    if (data.avatar_url !== undefined) setAvatarUrl(data.avatar_url || null)
+    setProfile(p => ({
+      ...p,
+      name:        data.name  || '',
+      email:       data.email || '',
+      phone:       data.phone || '',
+      // Personal fields — now in user_profiles proper columns; fall back to metadata for existing data
+      dob:         data.date_of_birth || meta.dob         || '',
+      blood:       data.blood_group   || meta.blood_group  || '',
+      gender:      data.gender        || meta.gender       || '',
+      address:     data.address       || meta.address      || '',
+      // Student fields — from students table; fall back to metadata for existing data
+      parentName:  stu.parent_name    || meta.parent_name  || '',
+      parentPhone: stu.parent_phone   || meta.parent_phone || '',
+      class:       stu.class_name     || meta.class        || '',
+      section:     stu.class_name     ? ''  : (meta.section || ''),
+      rollNo:      stu.roll_number    || meta.roll_no      || '',
+      branch:      stu.branch         || data.branch       || meta.branch || '',
+      house:       meta.house         || '',
+      admission:   stu.admission_date || meta.admission_date || '',
+    }))
+  }
+
+  // Load profile via API — uses server auth + admin client, no RLS issues
+  function loadProfile() {
+    fetch('/api/profile', { cache: 'no-store' })
+      .then(r => {
+        if (!r.ok) {
+          r.json().then(j => toast.error(`Load failed (${r.status}): ${j?.error || 'Unknown error'}`)).catch(() => toast.error(`Failed to load profile (${r.status})`))
+          return null
+        }
+        return r.json()
+      })
+      .then(data => { if (data) applyProfileData(data) })
+      .catch(err => toast.error(`Network error: ${err.message}`))
+  }
+
+  useEffect(() => { loadProfile() }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800 }}>
@@ -140,27 +183,12 @@ export default function StudentProfile() {
         {editing ? (
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setEditing(false)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#F8FAFC', fontSize: 13, fontWeight: 600, color: '#64748B', cursor: 'pointer' }}>Cancel</button>
-            <motion.button whileHover={{ scale: 1.02 }} onClick={async () => {
-              const uid = authUser.current?.id
-              if (uid) {
-                const supabase = createClient()
-                await supabase.from('user_profiles').update({
-                  first_name: profile.name.split(' ')[0] || '',
-                  last_name:  profile.name.split(' ').slice(1).join(' ') || '',
-                  phone: profile.phone,
-                  metadata: {
-                    dob: profile.dob, blood_group: profile.blood, gender: profile.gender,
-                    address: profile.address, parent_name: profile.parentName,
-                    parent_phone: profile.parentPhone, class: profile.class,
-                    section: profile.section, roll_no: profile.rollNo,
-                    branch: profile.branch, house: profile.house, admission_date: profile.admission,
-                  },
-                }).eq('id', uid)
-              }
-              setEditing(false); toast.success('Profile saved!')
-            }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: 'linear-gradient(135deg,#4C1D95,#7C3AED)', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              <Save size={14} /> Save
+            <motion.button whileHover={{ scale: saving ? 1 : 1.02 }} onClick={handleSave} disabled={saving}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: 'linear-gradient(135deg,#4C1D95,#7C3AED)', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.75 : 1 }}>
+              {saving
+                ? <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid white', borderRadius: '50%' }} className="animate-spin" />
+                : <Save size={14} />}
+              {saving ? 'Saving…' : 'Save'}
             </motion.button>
           </div>
         ) : (

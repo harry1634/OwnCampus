@@ -29,8 +29,13 @@ export async function GET(req) {
     }
 
     // Resolve faculty.id for faculty callers so we filter to their slots only
+    const FACULTY_ROLES = [
+      'teacher','faculty','trainer','hod','staff','librarian','counsellor','hr',
+      'admission_officer','transport_manager','hostel_manager','coordinator','tutor',
+      'instructor','professor','dean','vice_principal','principal','receptionist',
+    ]
     let facultyId = null
-    if (profile?.role === 'faculty' && !classId) {
+    if (FACULTY_ROLES.includes(profile?.role) && !classId) {
       const { data: fac } = await admin
         .from('faculty').select('id').eq('user_id', user.id).single()
       facultyId = fac?.id || null

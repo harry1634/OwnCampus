@@ -15,12 +15,11 @@ export default function FacultyProfile() {
     doj: '', exp: '', qualification: '',
     subjects: '', classes: '',
   })
-  const [editing,       setEditing      ] = useState(false)
-  const [saving,        setSaving       ] = useState(false)
-  const [avatarUrl,     setAvatarUrl    ] = useState(null)
+  const [editing,        setEditing       ] = useState(false)
+  const [saving,         setSaving        ] = useState(false)
+  const [avatarUrl,      setAvatarUrl     ] = useState(null)
   const [photoUploading, setPhotoUploading] = useState(false)
-  const photoRef  = useRef(null)
-  const authUser  = useRef(null)
+  const photoRef = useRef(null)
   const [pwdOpen, setPwdOpen] = useState(false)
   const [curPwd,  setCurPwd ] = useState('')
   const [newPwd,  setNewPwd ] = useState('')
@@ -29,59 +28,51 @@ export default function FacultyProfile() {
   const [showNew, setShowNew] = useState(false)
   const [pwdBusy, setPwdBusy] = useState(false)
 
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return
-      authUser.current = user
-      const uid = user.id
+  // Load profile via API — uses server auth + admin client, no RLS issues
+  function applyProfileData(data) {
+    const meta = data.metadata || {}
+    const fac  = data.faculty  || {}
+    setAvatarUrl(data.avatar_url || null)
+    setProfile(p => ({
+      ...p,
+      name:          data.name  || '',
+      email:         data.email || '',
+      phone:         data.phone || '',
+      empId:         fac.employee_code  || meta.employee_id  || '',
+      dept:          fac.department     || meta.department    || '',
+      designation:   fac.designation    || meta.designation   || '',
+      doj:           fac.joining_date   || '',
+      qualification: fac.qualification  || '',
+      exp:           fac.experience_years != null ? String(fac.experience_years) : '',
+      subjects:      Array.isArray(fac.subjects_teaching) ? fac.subjects_teaching.join(', ') : (fac.subjects_teaching || ''),
+      classes:       meta.classes_assigned || '',
+    }))
+  }
 
-      const [{ data: up }, { data: f }] = await Promise.all([
-        supabase
-          .from('user_profiles')
-          .select('first_name, last_name, email, phone, avatar_url, metadata')
-          .eq('id', uid)
-          .single(),
-        supabase
-          .from('faculty')
-          .select('designation, joining_date, qualification, experience_years, subjects_teaching, classes_assigned')
-          .eq('user_id', uid)
-          .single(),
-      ])
+  function loadProfile() {
+    fetch('/api/profile', { cache: 'no-store' })
+      .then(r => {
+        if (!r.ok) {
+          r.json().then(j => toast.error(`Load failed (${r.status}): ${j?.error || 'Unknown error'}`)).catch(() => toast.error(`Failed to load profile (${r.status})`))
+          return null
+        }
+        return r.json()
+      })
+      .then(data => { if (data) applyProfileData(data) })
+      .catch(err => toast.error(`Network error: ${err.message}`))
+  }
 
-      if (up) {
-        const meta = up.metadata || {}
-        setAvatarUrl(up.avatar_url || null)
-        setProfile(p => ({
-          ...p,
-          name:  [up.first_name, up.last_name].filter(Boolean).join(' '),
-          email: up.email || user.email || '',
-          phone: up.phone || '',
-          empId: meta.employee_id || '',
-          dept:  meta.department  || '',
-        }))
-      }
-
-      if (f) {
-        setProfile(p => ({
-          ...p,
-          designation:   f.designation        || '',
-          doj:           f.joining_date        || '',
-          qualification: f.qualification       || '',
-          exp:           f.experience_years != null ? String(f.experience_years) : '',
-          subjects:      Array.isArray(f.subjects_teaching) ? f.subjects_teaching.join(', ') : (f.subjects_teaching || ''),
-          classes:       Array.isArray(f.classes_assigned)  ? f.classes_assigned.join(', ')  : (f.classes_assigned  || ''),
-        }))
-      }
-    })
-  }, [])
+  useEffect(() => { loadProfile() }, [])
 
   async function handleDeletePhoto() {
-    const uid = authUser.current?.id
-    if (!uid || !avatarUrl) return
+    if (!cu.userId || !avatarUrl) return
     try {
-      const supabase = createClient()
-      await supabase.from('user_profiles').update({ avatar_url: null }).eq('id', uid)
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar_url: null }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed')
       setAvatarUrl(null)
       toast.success('Photo removed.')
     } catch (err) {
@@ -93,20 +84,16 @@ export default function FacultyProfile() {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2MB.'); return }
-    const uid = authUser.current?.id
-    if (!uid) { toast.error('Not authenticated.'); return }
+    if (!cu.userId) { toast.error('Not authenticated.'); return }
     setPhotoUploading(true)
     try {
-      const ext  = file.name.split('.').pop().toLowerCase()
-      const path = `avatars/${uid}/${Date.now()}.${ext}`
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('path', path)
+      // API enforces safe path server-side — no need to send path
       const res = await fetch('/api/upload/photo', { method: 'POST', body: fd })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Upload failed')
-      const supabase = createClient()
-      await supabase.from('user_profiles').update({ avatar_url: json.url }).eq('id', uid)
+      // API already saved avatar_url to DB via admin client — just update local state
       setAvatarUrl(json.url)
       toast.success('Photo updated!')
     } catch (err) {
@@ -118,41 +105,49 @@ export default function FacultyProfile() {
   }
 
   const handleSave = async () => {
-    const uid = authUser.current?.id
-    if (!uid) return
+    if (!cu.userId) {
+      toast.error('Session not ready — please refresh the page.')
+      return
+    }
     setSaving(true)
     try {
-      const supabase = createClient()
       const parts     = profile.name.trim().split(' ')
       const firstName = parts[0] || ''
       const lastName  = parts.slice(1).join(' ') || ''
-
-      const { error: upErr } = await supabase
-        .from('user_profiles')
-        .update({
-          first_name:  firstName,
-          last_name:   lastName,
-          phone:       profile.phone  || null,
-          metadata:    { employee_id: profile.empId || null, department: profile.dept, designation: profile.designation, classes_assigned: profile.classes },
-        })
-        .eq('id', uid)
-      if (upErr) throw upErr
-
-      const subjects = profile.subjects
+      const subjects  = profile.subjects
         ? profile.subjects.split(',').map(s => s.trim()).filter(Boolean)
         : []
 
-      const { error: fErr } = await supabase
-        .from('faculty')
-        .update({
-          designation:      profile.designation  || null,
-          joining_date:     profile.doj          || null,
-          qualification:    profile.qualification || null,
-          experience_years: parseInt(profile.exp) || 0,
+      const body = {
+        first_name: firstName,
+        last_name:  lastName,
+        faculty_data: {
+          employee_code:     profile.empId        || null,
+          department:        profile.dept         || null,
+          designation:       profile.designation  || null,
+          joining_date:      profile.doj          || null,
+          qualification:     profile.qualification || null,
+          experience_years:  parseInt(profile.exp) || 0,
           subjects_teaching: subjects,
-        })
-        .eq('user_id', uid)
-      if (fErr) throw fErr
+        },
+        // classes_assigned has no DB column — persist in metadata
+        metadata: {
+          classes_assigned: profile.classes || null,
+        },
+      }
+      // Only include phone if user actually filled it in — avoid nulling it out
+      if (profile.phone !== undefined) body.phone = profile.phone || null
+
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Save failed')
+
+      // API returns full confirmed profile — apply it directly
+      if (json.profile) applyProfileData(json.profile)
 
       setEditing(false)
       toast.success('Profile updated successfully!')
@@ -170,7 +165,7 @@ export default function FacultyProfile() {
     setPwdBusy(true)
     try {
       const supabase = createClient()
-      const email = authUser.current?.email || profile.email
+      const email = cu.email || profile.email
       const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: curPwd })
       if (signInErr) { toast.error('Current password is incorrect.'); return }
       const { error } = await supabase.auth.updateUser({ password: newPwd })

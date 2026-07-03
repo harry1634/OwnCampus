@@ -10,9 +10,10 @@ export async function GET(req) {
 
     const admin = createAdminClient()
     const { searchParams } = new URL(req.url)
-    const branchFilter = searchParams.get('branch')    || ''
-    const classFilter  = searchParams.get('class')     || ''
-    const search       = searchParams.get('q')         || ''
+    const branchFilter  = searchParams.get('branch')   || ''
+    const classFilter   = searchParams.get('class')    || ''
+    const classIdFilter = searchParams.get('class_id') || null
+    const search        = searchParams.get('q')        || ''
 
     // Resolve caller's institution
     const { data: callerProfile } = await admin
@@ -42,6 +43,7 @@ export async function GET(req) {
       .range((page - 1) * pageSize, page * pageSize - 1)
 
     if (institutionId) stuQuery = stuQuery.eq('institution_id', institutionId)
+    if (classIdFilter) stuQuery = stuQuery.eq('class_id', classIdFilter)
 
     const { data: stuRows, error: stuError } = await stuQuery
 
@@ -100,7 +102,7 @@ export async function GET(req) {
         roll:         s.roll_number || meta.roll_number || s.admission_number || '',
         admNo:        s.admission_number || '',
         class:        s.classes
-          ? `${s.classes.name}${s.classes.section ? ' ' + s.classes.section : ''}`
+          ? `${s.classes.name}${s.classes.section ? '-' + s.classes.section : ''}`
           : meta.class_section || '',
         classId:      s.class_id || null,
         parent:       s.parent_name || meta.parent_name || '',
@@ -118,12 +120,14 @@ export async function GET(req) {
       }
     })
 
-    // Supplement: user_profiles with student role not yet in the students table
+    // Supplement: user_profiles with student role not yet in the students table.
+    // Skip when class_id filter is active — profile-only students have no class_id so they
+    // cannot belong to the requested class.
     const tableUserIds = new Set(tableRows.map(s => s.user_id).filter(Boolean))
     // Also track supabaseId to avoid duplication when user_profiles.id = user_id
     const tableSupabaseIds = new Set(fromTable.map(s => s.supabaseId).filter(Boolean))
     let fromProfiles = []
-    {
+    if (!classIdFilter) {
       const STUDENT_ROLES = ['student']
       let pq = admin
         .from('user_profiles')

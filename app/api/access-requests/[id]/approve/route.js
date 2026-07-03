@@ -187,11 +187,29 @@ export async function POST(req, { params }) {
 
     // ── Create student record in students table (if student) ──
     if (request.role === 'student' && institutionId) {
+      // Resolve class_section text → class UUID so attendance & timetable work properly
+      let studentClassId = null
+      if (request.class_section) {
+        const { data: allClasses } = await supabase
+          .from('classes')
+          .select('id, name, section')
+          .eq('institution_id', institutionId)
+        const normalizeLabel = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+        const wanted = normalizeLabel(request.class_section)
+        const match  = (allClasses || []).find(c => {
+          const n = c.name || '', s = c.section || ''
+          return [n, s ? `${n} ${s}` : '', s ? `${n}-${s}` : '']
+            .some(candidate => normalizeLabel(candidate) === wanted)
+        })
+        studentClassId = match?.id || null
+      }
+
       await supabase.from('students').upsert(
         {
           user_id:        userId,
           institution_id: institutionId,
           branch_id:      branchId,
+          class_id:       studentClassId,
           roll_number:    request.roll_number || null,
           parent_name:    null,
           status:         'active',

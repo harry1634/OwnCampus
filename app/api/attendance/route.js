@@ -151,11 +151,10 @@ export async function POST(req) {
 
     let classRows = []
     const hasClassLabels = records.some(r => r.class_label || r.class || r.class_name) || body.class_label || body.class
-    if (hasClassLabels && institutionId) {
-      const { data: classes, error: classError } = await admin
-        .from('classes')
-        .select('id, name, section')
-        .eq('institution_id', institutionId)
+    if (hasClassLabels) {
+      let classQuery = admin.from('classes').select('id, name, section')
+      if (institutionId) classQuery = classQuery.eq('institution_id', institutionId)
+      const { data: classes, error: classError } = await classQuery
       if (classError) return Response.json({ error: classError.message }, { status: 400 })
       classRows = classes || []
     }
@@ -176,12 +175,6 @@ export async function POST(req) {
       if (type === 'student' && r.student_id && !studentRow) {
         return Response.json({
           error: 'Student attendance requires a student record. Re-save or import this student from the Students page first.',
-        }, { status: 400 })
-      }
-
-      if (type === 'student' && !resolvedClassId) {
-        return Response.json({
-          error: 'Student attendance requires a class. Assign this student to an existing class before saving attendance.',
         }, { status: 400 })
       }
 

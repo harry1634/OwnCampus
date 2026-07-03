@@ -45,7 +45,7 @@ export default function StudentLibrary() {
   useEffect(() => {
     if (!cu.mounted) return
     setLoading(true)
-    fetch('/api/library?my=true')
+    fetch('/api/library?type=issued&my=true')
       .then(r => r.json())
       .then(data => setIssues(Array.isArray(data.issues) ? data.issues : []))
       .catch(() => setIssues([]))

@@ -477,16 +477,19 @@ export default function TransportPage() {
   const [viewRoute,  setViewRoute] = useState(null)
   const [showAssign, setShowAssign] = useState(false)
 
-  useEffect(() => {
+  function loadTransportData() {
+    setLoading(true)
     Promise.all([
-      fetch('/api/transport?type=routes').then(r => r.ok ? r.json() : {}),
-      fetch('/api/transport?type=vehicles').then(r => r.ok ? r.json() : {}),
+      fetch('/api/transport?type=routes',   { cache: 'no-store' }).then(r => r.ok ? r.json() : {}),
+      fetch('/api/transport?type=vehicles', { cache: 'no-store' }).then(r => r.ok ? r.json() : {}),
     ]).then(([routeData, vehicleData]) => {
-      setRoutes(routeData.routes || [])
-      setVehicles(vehicleData.vehicles || [])
-    }).catch(() => setRoutes([]))
+      setRoutes(Array.isArray(routeData.routes) ? routeData.routes : [])
+      setVehicles(Array.isArray(vehicleData.vehicles) ? vehicleData.vehicles : [])
+    }).catch(err => { console.error('Transport load error:', err) })
      .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { loadTransportData() }, [])
 
   const totalEnrolled = routes.reduce((s, r) => s + (r.studentsCount ?? r.assignedStudents?.length ?? r.enrolled ?? 0), 0)
   const activeCount   = routes.filter(r => r.isActive !== false && r.status !== 'inactive' && r.status !== 'maintenance').length

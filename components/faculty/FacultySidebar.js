@@ -1,14 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Calendar, UserCheck, BookOpen, ClipboardList,
   Bell, User, ChevronLeft, ChevronRight, GraduationCap,
-  Package, Megaphone, Settings,
+  Package, Megaphone, Settings, LogOut,
 } from 'lucide-react'
 import { useCurrentUser } from '@/lib/useCurrentUser'
+import { createClient } from '@/lib/supabase/client'
 
 const NAV = [
   { label: 'Main', items: [
@@ -18,6 +19,7 @@ const NAV = [
     { name: 'My Timetable',     href: '/faculty/timetable',    icon: Calendar        },
     { name: 'Mark Attendance',  href: '/faculty/attendance',   icon: UserCheck       },
     { name: 'Student Marks',    href: '/faculty/marks',        icon: BookOpen        },
+    { name: 'Homework',         href: '/faculty/homework',     icon: BookOpen        },
     { name: 'Invigilation',     href: '/faculty/invigilation', icon: ClipboardList   },
   ]},
   { label: 'Campus', items: [
@@ -34,8 +36,18 @@ const HOVER = '#047857'
 
 export default function FacultySidebar({ profile, collapsed, setCollapsed, isMobile, mobileOpen, setMobileOpen }) {
   const pathname = usePathname()
+  const router   = useRouter()
   const showCollapsed = isMobile ? false : collapsed
   const isActive = (href) => pathname === href || pathname.startsWith(href + '/')
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('oc_role')
+      window.location.href = '/auth/login'
+    }
+  }
 
   const cu = useCurrentUser()
   const institutionName = profile?.institutions?.name || 'OwnCampus'
@@ -150,24 +162,25 @@ export default function FacultySidebar({ profile, collapsed, setCollapsed, isMob
           ))}
         </nav>
 
-        {/* Footer */}
-        <div style={{ padding: '10px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: cu.avatarUrl ? 'transparent' : 'linear-gradient(135deg,#34D399,#10B981)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: 'white', flexShrink: 0, overflow: 'hidden' }}>
-              {cu.avatarUrl
-                ? <img src={cu.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : displayInitial
-              }
-            </div>
-            {!showCollapsed && (
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {displayName}
-                </p>
-                <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.38)', marginTop: 1 }}>{displayDept} · Active</p>
-              </div>
-            )}
-          </div>
+        {/* Footer: Settings + Sign Out */}
+        <div style={{ padding: '8px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Link href="/faculty/settings"
+            onClick={() => isMobile && setMobileOpen(false)}
+            title={showCollapsed ? 'Settings' : undefined}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: showCollapsed ? '10px' : '9px 10px', borderRadius: 9, textDecoration: 'none', justifyContent: showCollapsed ? 'center' : undefined, transition: 'background 0.12s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.10)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            <Settings size={16} style={{ color: 'rgba(255,255,255,0.72)', flexShrink: 0 }} />
+            {!showCollapsed && <span style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.72)', letterSpacing: '-0.01em' }}>Settings</span>}
+          </Link>
+          <button onClick={handleSignOut}
+            title={showCollapsed ? 'Sign Out' : undefined}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: showCollapsed ? '10px' : '9px 10px', borderRadius: 9, border: 'none', background: 'transparent', cursor: 'pointer', width: '100%', justifyContent: showCollapsed ? 'center' : undefined, transition: 'background 0.12s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            <LogOut size={16} style={{ color: 'rgba(255,255,255,0.55)', flexShrink: 0 }} />
+            {!showCollapsed && <span style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.65)', letterSpacing: '-0.01em' }}>Sign Out</span>}
+          </button>
         </div>
       </aside>
     </>
