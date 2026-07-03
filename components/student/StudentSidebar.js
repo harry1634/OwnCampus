@@ -90,8 +90,11 @@ export default function StudentSidebar({ profile, collapsed, setCollapsed, isMob
         {!showCollapsed && (
           <div style={{ padding: '10px 14px 6px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#A78BFA,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#FFFFFF', flexShrink: 0 }}>
-                {displayInitial}
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: cu.avatarUrl ? 'transparent' : 'linear-gradient(135deg,#A78BFA,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#FFFFFF', flexShrink: 0, overflow: 'hidden' }}>
+                {cu.avatarUrl
+                  ? <img src={cu.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : displayInitial
+                }
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.90)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -138,8 +141,11 @@ export default function StudentSidebar({ profile, collapsed, setCollapsed, isMob
         {/* Footer */}
         <div style={{ padding: '10px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#A78BFA,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: 'white', flexShrink: 0 }}>
-              {displayInitial}
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: cu.avatarUrl ? 'transparent' : 'linear-gradient(135deg,#A78BFA,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: 'white', flexShrink: 0, overflow: 'hidden' }}>
+              {cu.avatarUrl
+                ? <img src={cu.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : displayInitial
+              }
             </div>
             {!showCollapsed && (
               <div style={{ flex: 1, minWidth: 0 }}>

@@ -44,10 +44,9 @@ export default function StudentTimetable() {
   const [classInfo, setClassInfo] = useState(null)
 
   useEffect(() => {
-    if (!cu.mounted) return
     setLoading(true)
     fetch('/api/timetable')
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
       .then(data => {
         setByDay(data.byDay || {})
         setAllSlots(data.slots || [])
@@ -56,9 +55,7 @@ export default function StudentTimetable() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [cu.mounted])
-
-  if (!cu.mounted) return null
+  }, [])
 
   // Build all unique periods
   const periodsMap = {}

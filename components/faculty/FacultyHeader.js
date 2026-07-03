@@ -8,13 +8,16 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { getInitials } from '@/lib/utils'
+import { useCurrentUser } from '@/lib/useCurrentUser'
 
 export default function FacultyHeader({ user, profile, collapsed, isMobile, onHamburger }) {
   const router = useRouter()
   const [showMenu, setShowMenu] = useState(false)
+  const cu = useCurrentUser()
 
-  const name  = profile?.full_name || user?.email?.split('@')[0] || 'Faculty'
-  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
+  const name      = cu.name || [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || user?.email?.split('@')[0] || 'Faculty'
+  const avatarUrl = cu.avatarUrl || profile?.avatar_url || null
+  const today     = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
   async function handleLogout() {
     const supabase = createClient()
@@ -55,8 +58,11 @@ export default function FacultyHeader({ user, profile, collapsed, isMobile, onHa
         <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
           onClick={() => setShowMenu(m => !m)}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 12, background: '#F0FDF4', border: '1px solid #A7F3D0', cursor: 'pointer' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#059669,#065F46)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFFFFF' }}>
-            {getInitials(name)}
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: avatarUrl ? 'transparent' : 'linear-gradient(135deg,#059669,#065F46)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFFFFF', overflow: 'hidden', flexShrink: 0 }}>
+            {avatarUrl
+              ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : getInitials(name)
+            }
           </div>
           {!isMobile && <span style={{ fontSize: 13, fontWeight: 600, color: '#065F46' }}>{name.split(' ')[0]}</span>}
           <ChevronDown size={12} color="#059669" style={{ transform: showMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />

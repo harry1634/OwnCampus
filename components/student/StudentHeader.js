@@ -61,8 +61,11 @@ export default function StudentHeader({ user, profile, isMobile, collapsed, onHa
       <div style={{ flexShrink: 0 }}>
         <button onClick={() => setUserMenuOpen(o => !o)}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '8px 12px 8px 8px' : '5px 10px 5px 5px', borderRadius: 10, background: '#F5F3FF', border: '1px solid #E9D5FF', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#A78BFA,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#FFFFFF', flexShrink: 0 }}>
-            {initials}
+          <div style={{ width: 32, height: 32, borderRadius: 9, background: cu.avatarUrl ? 'transparent' : 'linear-gradient(135deg,#A78BFA,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#FFFFFF', flexShrink: 0, overflow: 'hidden' }}>
+            {cu.avatarUrl
+              ? <img src={cu.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : initials
+            }
           </div>
           {!isMobile && <span style={{ fontSize: 13, fontWeight: 600, color: '#1E293B' }}>{displayName.split(' ')[0]}</span>}
           <ChevronDown size={13} color="#94A3B8" />
@@ -95,8 +98,8 @@ export default function StudentHeader({ user, profile, isMobile, collapsed, onHa
               <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{cu.email || user?.email}</p>
             </div>
             {[
-              { label: 'My Profile', icon: User,    href: '/student/profile' },
-              { label: 'Settings',   icon: Settings, href: '/student/profile' },
+              { label: 'My Profile', icon: User,    href: '/student/profile'  },
+              { label: 'Settings',   icon: Settings, href: '/student/settings' },
             ].map(item => (
               <button key={item.label}
                 onClick={() => { setUserMenuOpen(false); router.push(item.href) }}

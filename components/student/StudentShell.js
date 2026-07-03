@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import StudentSidebar from './StudentSidebar'
 import StudentHeader from './StudentHeader'
 import StudentMobileNav from './StudentMobileNav'
+import { UserProvider } from '@/lib/UserContext'
 
 export default function StudentShell({ user, profile, children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -22,6 +23,7 @@ export default function StudentShell({ user, profile, children }) {
   const marginLeft = isMobile ? 0 : (sidebarCollapsed ? 68 : 260)
 
   return (
+    <UserProvider profile={profile}>
     <div style={{ height: '100vh', display: 'flex', overflow: 'hidden', background: '#F5F3FF' }}>
       <StudentSidebar
         profile={profile}
@@ -48,5 +50,6 @@ export default function StudentShell({ user, profile, children }) {
 
       <StudentMobileNav />
     </div>
+    </UserProvider>
   )
 }

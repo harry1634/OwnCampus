@@ -16,7 +16,7 @@ export default async function StudentLayout({ children }) {
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from('user_profiles')
-    .select('role, institution_id')
+    .select('*')
     .eq('id', user.id)
     .single()
 
@@ -28,5 +28,5 @@ export default async function StudentLayout({ children }) {
 
   if (role !== 'student') redirect('/auth/login')
 
-  return <StudentShell>{children}</StudentShell>
+  return <StudentShell user={user} profile={profile}>{children}</StudentShell>
 }

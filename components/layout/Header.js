@@ -378,8 +378,11 @@ export default function Header({ user, profile, institution }) {
               onMouseEnter={e => e.currentTarget.style.borderColor = '#CBD5E1'}
               onMouseLeave={e => e.currentTarget.style.borderColor = '#E2E8F0'}
             >
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0 }}>
-                {getInitials(userName)}
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: profile?.avatar_url ? 'transparent' : 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                {profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : getInitials(userName)
+                }
               </div>
               <span className="hidden lg:block" style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {userName.split(' ')[0]}
@@ -398,8 +401,11 @@ export default function Header({ user, profile, institution }) {
                 >
                   {/* User info */}
                   <div style={{ padding: '16px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0 }}>
-                      {getInitials(userName)}
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: profile?.avatar_url ? 'transparent' : 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                      {profile?.avatar_url
+                        ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : getInitials(userName)
+                      }
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0, lineHeight: 1.3 }}>{userName}</p>

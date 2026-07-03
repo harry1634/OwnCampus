@@ -19,7 +19,7 @@ export default async function FacultyLayout({ children }) {
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from('user_profiles')
-    .select('role, institution_id')
+    .select('*')
     .eq('id', user.id)
     .single()
 
@@ -33,5 +33,5 @@ export default async function FacultyLayout({ children }) {
     redirect('/auth/login')
   }
 
-  return <FacultyShell>{children}</FacultyShell>
+  return <FacultyShell user={user} profile={profile}>{children}</FacultyShell>
 }

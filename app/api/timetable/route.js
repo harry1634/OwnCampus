@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient }      from '@/lib/supabase/server'
 
 // GET  /api/timetable?class_id=...&day=monday
-// POST /api/timetable  { class_id, day_of_week, slots: [{period, subject_id, faculty_id, start_time, end_time}] }
+// POST /api/timetable  { class_id, day_of_week, slots: [...] }
 // DELETE /api/timetable?slot_id=...
 
 export async function GET(req) {
@@ -15,42 +15,49 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url)
     const classId = searchParams.get('class_id') || null
     const day     = searchParams.get('day')      || null
-    const userId  = searchParams.get('user_id')  || null  // for student/faculty view
 
     const { data: profile } = await admin
       .from('user_profiles').select('institution_id, role').eq('id', user.id).single()
     const institutionId = profile?.institution_id || null
 
-    // If student: resolve their class automatically
+    // Resolve the class for student callers
     let resolvedClassId = classId
-    if (!resolvedClassId && (profile?.role === 'student' || userId)) {
-      const targetUserId = userId || user.id
+    if (!resolvedClassId && profile?.role === 'student') {
       const { data: stu } = await admin
-        .from('students').select('class_id').eq('user_id', targetUserId).single()
+        .from('students').select('class_id').eq('user_id', user.id).single()
       resolvedClassId = stu?.class_id || null
+    }
+
+    // Resolve faculty.id for faculty callers so we filter to their slots only
+    let facultyId = null
+    if (profile?.role === 'faculty' && !classId) {
+      const { data: fac } = await admin
+        .from('faculty').select('id').eq('user_id', user.id).single()
+      facultyId = fac?.id || null
     }
 
     let query = admin
       .from('timetable_slots')
       .select(`
         id, day_of_week, period_number, start_time, end_time, room,
-        class_id, subject_id, faculty_id,
-        classes      ( id, name, section ),
-        subjects     ( id, name, code ),
-        user_profiles ( id, first_name, last_name )
+        class_id, subject_id, faculty_id, faculty_user_id,
+        classes   ( id, name, section ),
+        subjects  ( id, name, code ),
+        user_profiles!faculty_user_id ( id, first_name, last_name )
       `)
-      .order('day_of_week').order('period_number')
+      .order('day_of_week')
+      .order('period_number')
 
-    if (institutionId)    query = query.eq('institution_id', institutionId)
-    if (resolvedClassId)  query = query.eq('class_id', resolvedClassId)
-    if (day)              query = query.eq('day_of_week', day)
+    if (institutionId)   query = query.eq('institution_id', institutionId)
+    if (resolvedClassId) query = query.eq('class_id',       resolvedClassId)
+    if (facultyId)       query = query.eq('faculty_id',     facultyId)
+    if (day)             query = query.eq('day_of_week',    day)
 
     const { data, error } = await query
     if (error) return Response.json({ error: error.message }, { status: 400 })
 
-    // Group by day for easy frontend consumption
-    const byDay = {}
     const DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
+    const byDay = {}
     DAYS.forEach(d => { byDay[d] = [] })
     ;(data || []).forEach(slot => {
       const d = slot.day_of_week
@@ -81,7 +88,6 @@ export async function POST(req) {
       .from('user_profiles').select('institution_id').eq('id', user.id).single()
     const institutionId = profile?.institution_id || null
 
-    // Optionally clear existing slots for this class+day first
     if (replace_day) {
       await admin.from('timetable_slots')
         .delete()
@@ -92,13 +98,14 @@ export async function POST(req) {
     const rows = slots.map((s, i) => ({
       class_id,
       day_of_week,
-      institution_id: institutionId,
-      period_number:  s.period_number ?? (i + 1),
-      start_time:     s.start_time || null,
-      end_time:       s.end_time   || null,
-      subject_id:     s.subject_id || null,
-      faculty_id:     s.faculty_id || null,
-      room:           s.room       || null,
+      institution_id:  institutionId,
+      period_number:   s.period_number ?? (i + 1),
+      start_time:      s.start_time || null,
+      end_time:        s.end_time   || null,
+      subject_id:      s.subject_id || null,
+      faculty_id:      s.faculty_id || null,
+      faculty_user_id: s.faculty_user_id || null,
+      room:            s.room       || null,
     }))
 
     const { data, error } = await admin

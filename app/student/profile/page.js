@@ -17,15 +17,6 @@ const DEFAULTS = {
   house: '',
 }
 
-// Persist profile edits per-user in localStorage
-function saveProfile(email, data) {
-  if (typeof window === 'undefined' || !email) return
-  localStorage.setItem(`oc_profile_${email}`, JSON.stringify(data))
-}
-function loadProfile(email) {
-  if (typeof window === 'undefined' || !email) return null
-  try { return JSON.parse(localStorage.getItem(`oc_profile_${email}`)) } catch { return null }
-}
 
 export default function StudentProfile() {
   const cu = useCurrentUser()
@@ -139,13 +130,6 @@ export default function StudentProfile() {
         }))
         if (up.avatar_url) setAvatarUrl(up.avatar_url)
       }
-      // Fall back to localStorage if Supabase has no extra data
-      if (!up) {
-        const saved = loadProfile(user.email)
-        if (saved) { setProfile(saved); return }
-        const classParts = cu.classSection ? cu.classSection.split('-') : []
-        setProfile(p => ({ ...p, name: cu.name || '', email: cu.email || '', class: classParts[0] || '', section: classParts[1] || '', rollNo: cu.roll || '' }))
-      }
     })
   }, [])
 
@@ -157,7 +141,6 @@ export default function StudentProfile() {
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setEditing(false)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#F8FAFC', fontSize: 13, fontWeight: 600, color: '#64748B', cursor: 'pointer' }}>Cancel</button>
             <motion.button whileHover={{ scale: 1.02 }} onClick={async () => {
-              saveProfile(cu.email || authUser.current?.email, profile)
               const uid = authUser.current?.id
               if (uid) {
                 const supabase = createClient()

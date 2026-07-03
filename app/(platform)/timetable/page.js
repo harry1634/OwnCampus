@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Printer, Plus, X, Check, ChevronLeft, ChevronRight, Pencil, RotateCcw, Settings } from 'lucide-react'
+import { ChevronDown, Printer, Plus, X, Check, ChevronLeft, ChevronRight, Pencil, RotateCcw, AlertCircle } from 'lucide-react'
 import { openPrintWindow } from '@/lib/exportUtils'
+import { toast } from 'sonner'
 // ── Subject colors (config only — no mock schedule data) ─────────────────────
 const SUBJECT_COLORS = {
   'Mathematics':    { bg: '#EFF6FF', color: '#2563EB' },
@@ -288,13 +289,16 @@ export default function TimetablePage() {
   }, [])
 
   // Load timetable from timetable_slots via the grid API
-  useEffect(() => {
-    fetch('/api/timetable/grid')
+  function loadGrid(markMounted) {
+    return fetch('/api/timetable/grid')
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d?.grid) {
           const g = d.grid
-          if (g.grades?.length)  setGrades(g.grades)
+          if (g.grades?.length) {
+            setGrades(g.grades)
+            setGrade(g.grades[0])  // always sync active grade to DB — prevents mismatch with DEFAULT_GRADES
+          }
           if (g.periods?.length) setPeriods(g.periods)
           if (g.schedules)       setSchedules(g.schedules)
           if (g.rooms)           setRooms(g.rooms)
@@ -307,7 +311,11 @@ export default function TimetablePage() {
         }
       })
       .catch(() => {})
-      .finally(() => setMounted(true))
+      .finally(() => { if (markMounted) setMounted(true) })
+  }
+
+  useEffect(() => {
+    loadGrid(true)
   }, [])
 
   // Ensure new grades / periods always have initialized slots
@@ -433,7 +441,7 @@ export default function TimetablePage() {
   const publishToDb = async () => {
     setPublishing(true)
     try {
-      const res = await fetch('/api/timetable/grid', {
+      const res  = await fetch('/api/timetable/grid', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ grades, periods, schedules, rooms, cellTeachers }),
@@ -441,10 +449,19 @@ export default function TimetablePage() {
       const json = await res.json()
       if (res.ok && json.success) {
         setPublished(true)
+        toast.success(`Timetable published — ${json.slots_written} slot${json.slots_written !== 1 ? 's' : ''} saved.`)
+        if (json.warning) toast.warning(json.warning)
+        // Re-load from DB so the displayed grid matches what was actually saved
+        loadGrid(false)
         setTimeout(() => setPublished(false), 3000)
+      } else {
+        toast.error(json.error || 'Publish failed. Check that classes exist in the system.')
       }
-    } catch {}
-    setPublishing(false)
+    } catch (err) {
+      toast.error(err.message || 'Network error while publishing.')
+    } finally {
+      setPublishing(false)
+    }
   }
 
   const dotColors = ['#2563EB','#7C3AED','#0891B2','#16A34A','#D97706','#DB2777','#0F766E']

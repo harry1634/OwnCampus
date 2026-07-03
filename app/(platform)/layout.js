@@ -54,7 +54,7 @@ export default async function PlatformLayout({ children }) {
     <div className="h-screen flex overflow-hidden" style={{ background: '#F8FAFC' }}>
       <Sidebar profile={profile} />
 
-      <LayoutShell>
+      <LayoutShell profile={profile}>
         <Header user={user} profile={profile} institution={profile?.institutions} />
 
         <main

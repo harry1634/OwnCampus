@@ -34,18 +34,16 @@ export default function FacultyAttendance() {
   useEffect(() => {
     if (!cu.mounted) return
     setLoadingTt(true)
+    // API now filters to this faculty's slots server-side (via faculty_id resolution)
     fetch('/api/timetable')
       .then(r => r.json())
       .then(data => {
         const slots = data.slots || []
-        // Filter to slots assigned to this faculty (match by faculty_id = cu.userId)
-        const mySlots = slots.filter(s => s.faculty_id === cu.userId || s.user_profiles?.id === cu.userId)
-
-        setTtSlots(mySlots)
+        setTtSlots(slots)
 
         // Build distinct class entries: group by class_id
         const classMap = {}
-        mySlots.forEach(slot => {
+        slots.forEach(slot => {
           const cid = slot.class_id
           if (!cid) return
           if (!classMap[cid]) {

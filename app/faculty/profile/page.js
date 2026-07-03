@@ -154,10 +154,6 @@ export default function FacultyProfile() {
         .eq('user_id', uid)
       if (fErr) throw fErr
 
-      if (profile.name)        localStorage.setItem('oc_user_name',  profile.name)
-      if (profile.dept)        localStorage.setItem('oc_user_dept',  profile.dept)
-      if (profile.designation) localStorage.setItem('oc_user_desig', profile.designation)
-
       setEditing(false)
       toast.success('Profile updated successfully!')
     } catch (err) {

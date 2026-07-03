@@ -69,7 +69,7 @@ export async function GET(req) {
         .select(`
           id, start_time, end_time, room, period_number,
           subjects(name, code),
-          user_profiles(first_name, last_name)
+          user_profiles!faculty_user_id(first_name, last_name)
         `)
         .eq('class_id', classId)
         .eq('day_of_week', todayDay.toLowerCase())

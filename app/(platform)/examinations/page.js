@@ -454,12 +454,15 @@ export default function ExaminationsPage() {
   const [showModal,  setShowModal ] = useState(false)
   const [schedule,   setSchedule  ] = useState([])
 
-  // Load grades from timetable snapshot for class dropdown
+  // Load grades from live timetable DB (authoritative source)
   const [ttGrades, setTtGrades] = useState([])
   useEffect(() => {
-    fetch('/api/timetable/snapshot')
+    fetch('/api/timetable/grid')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.snapshot?.grades?.length) setTtGrades(d.snapshot.grades) })
+      .then(d => {
+        if (d?.grid?.grades?.length)  setTtGrades(d.grid.grades)
+        else if (d?.classes?.length)  setTtGrades(d.classes.map(c => c.displayName || c.name))
+      })
       .catch(() => {})
   }, [])
 

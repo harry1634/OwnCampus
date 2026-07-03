@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Calendar, UserCheck, BookOpen, ClipboardList,
-  Bell, User, ChevronLeft, ChevronRight, Building2, GraduationCap,
+  Bell, User, ChevronLeft, ChevronRight, GraduationCap,
   Package, Megaphone, Settings,
 } from 'lucide-react'
 import { useCurrentUser } from '@/lib/useCurrentUser'
@@ -92,8 +92,11 @@ export default function FacultySidebar({ profile, collapsed, setCollapsed, isMob
         {!showCollapsed && (
           <div style={{ padding: '10px 14px 6px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Building2 size={13} style={{ color: 'rgba(255,255,255,0.75)' }} />
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: cu.avatarUrl ? 'transparent' : 'linear-gradient(135deg,#34D399,#10B981)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFFFFF', flexShrink: 0, overflow: 'hidden' }}>
+                {cu.avatarUrl
+                  ? <img src={cu.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : displayInitial
+                }
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.90)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -150,8 +153,11 @@ export default function FacultySidebar({ profile, collapsed, setCollapsed, isMob
         {/* Footer */}
         <div style={{ padding: '10px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#34D399,#10B981)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: 'white', flexShrink: 0 }}>
-              {displayInitial}
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: cu.avatarUrl ? 'transparent' : 'linear-gradient(135deg,#34D399,#10B981)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: 'white', flexShrink: 0, overflow: 'hidden' }}>
+              {cu.avatarUrl
+                ? <img src={cu.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : displayInitial
+              }
             </div>
             {!showCollapsed && (
               <div style={{ flex: 1, minWidth: 0 }}>

@@ -48,20 +48,19 @@ export async function GET(req) {
         .from('announcements')
         .select('id, title, type, created_at, content')
         .eq('institution_id', institutionId)
-        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(5),
 
-      // 2. Today's timetable
+      // 2. Today's timetable for this faculty member
       admin
         .from('timetable_slots')
         .select(`
-          id, start_time, end_time, subject_id, class_id, period_number,
+          id, start_time, end_time, subject_id, class_id, period_number, room,
           subjects(name, code), classes(name, section)
         `)
         .eq('institution_id', institutionId)
         .eq('faculty_id', facultyRow?.id || '00000000-0000-0000-0000-000000000000')
-        .eq('day_of_week', todayDay.toLowerCase())
+        .eq('day_of_week', DAYS[new Date().getDay()].toLowerCase())
         .order('period_number', { ascending: true }),
 
       // 3. My pending leave requests
