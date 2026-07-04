@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Printer, Plus, X, Check, ChevronLeft, ChevronRight, Pencil, RotateCcw, AlertCircle } from 'lucide-react'
 import { openPrintWindow } from '@/lib/exportUtils'
@@ -113,35 +114,52 @@ function getWeekLabel(offset) {
 // ── Dropdown ──────────────────────────────────────────────────────────────────
 function Dropdown({ label, options, value, onChange, alignLeft }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+  const [pos,  setPos ] = useState({ top: 0, right: 0, left: 0 })
+  const btnRef  = useRef(null)
+  const menuRef = useRef(null)
   useEffect(() => {
-    if (!open) return
-    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    const close = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target) && btnRef.current && !btnRef.current.contains(e.target)) setOpen(false)
+    }
     document.addEventListener('mousedown', close)
     return () => document.removeEventListener('mousedown', close)
-  }, [open])
+  }, [])
+  function handleToggle() {
+    if (!open && btnRef.current) {
+      const r   = btnRef.current.getBoundingClientRect()
+      const w   = 190 // minWidth of menu
+      const pad = 8
+      const raw  = alignLeft ? r.left : r.right - w
+      const left = Math.min(Math.max(raw, pad), window.innerWidth - w - pad)
+      setPos({ top: r.bottom + 6, left })
+    }
+    setOpen(o => !o)
+  }
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <button onClick={() => setOpen(o => !o)} className="btn-filter"
+    <div style={{ position: 'relative' }}>
+      <button ref={btnRef} onClick={handleToggle} className="btn-filter"
         style={{ background: open ? '#EFF6FF' : undefined, borderColor: open ? '#BFDBFE' : undefined, color: open ? '#2563EB' : undefined }}>
         {value || label}
         <ChevronDown size={13} style={{ transition: 'transform 0.18s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }} />
       </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.14 }}
-            style={{ position: 'absolute', top: 'calc(100% + 6px)', [alignLeft ? 'left' : 'right']: 0, minWidth: 190, background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 60, overflow: 'hidden' }}>
-            {options.map((opt, i) => (
-              <button key={opt} onClick={() => { onChange(opt); setOpen(false) }}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13, color: value === opt ? '#2563EB' : '#0F172A', fontWeight: value === opt ? 600 : 400, borderTop: i === 0 ? 'none' : '1px solid #F8FAFC' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                {opt}{value === opt && <Check size={13} style={{ color: '#2563EB', flexShrink: 0 }} />}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {typeof window !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.div ref={menuRef} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.14 }}
+              style={{ position: 'fixed', top: pos.top, left: pos.left, minWidth: 190, background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 9999, overflow: 'hidden' }}>
+              {options.map((opt, i) => (
+                <button key={opt} onClick={() => { onChange(opt); setOpen(false) }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13, color: value === opt ? '#2563EB' : '#0F172A', fontWeight: value === opt ? 600 : 400, borderTop: i === 0 ? 'none' : '1px solid #F8FAFC' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  {opt}{value === opt && <Check size={13} style={{ color: '#2563EB', flexShrink: 0 }} />}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }
