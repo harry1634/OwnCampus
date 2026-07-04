@@ -34,7 +34,13 @@ export async function proxy(request) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data?.user ?? null
+  } catch {
+    // stale or invalid refresh token — treat as unauthenticated, cookies will be cleared on redirect
+  }
   const { pathname } = request.nextUrl
 
   const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route))

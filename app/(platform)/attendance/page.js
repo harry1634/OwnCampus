@@ -434,7 +434,7 @@ export default function AttendancePage() {
       </div>
 
       {/* ── KPI Cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+      <div className="rg-4">
         {kpis.map((kpi, i) => {
           const KpiIcon = kpi.icon
           return (
@@ -453,7 +453,7 @@ export default function AttendancePage() {
       </div>
 
       {/* ── Main Grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16, alignItems: 'start' }}>
+      <div className="att-layout">
 
         {/* Left — List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Library, BookOpen, Search, Plus, RotateCcw, AlertCircle, Download,
-  Eye, BookMarked, Clock, Upload, X, Trash2, CheckCircle, FileText, AlertTriangle, User,
+  Eye, BookMarked, Clock, Upload, X, Trash2, CheckCircle, FileText, AlertTriangle, User, Pencil,
 } from 'lucide-react'
 import Link from 'next/link'
 import Pagination from '@/components/ui/Pagination'
@@ -364,6 +364,102 @@ function DeleteConfirm({ book, onConfirm, onClose }) {
   )
 }
 
+/* ── Edit Book Modal ─────────────────────────────────────────────── */
+function EditBookModal({ book, onClose, onSaved }) {
+  const CATS = ['Fiction','Science','Mathematics','History','Computer','Commerce','Language','Art','Sports','Reference','Other']
+  const [form,    setForm   ] = useState({
+    title:     book.title     || '',
+    author:    book.author    || '',
+    isbn:      book.isbn      || '',
+    publisher: book.publisher || '',
+    category:  book.category  || 'Other',
+    total:     String(book.total || 1),
+    rack:      book.rack      || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error,  setError ] = useState('')
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  async function handleSave() {
+    if (!form.title.trim()) { setError('Title is required'); return }
+    setSaving(true); setError('')
+    try {
+      const res  = await fetch('/api/library', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          id:            book.id,
+          title:         form.title.trim(),
+          author:        form.author.trim()    || null,
+          isbn:          form.isbn.trim()      || null,
+          publisher:     form.publisher.trim() || null,
+          category:      form.category         || 'Other',
+          total_copies:  parseInt(form.total)  || 1,
+          rack_number:   form.rack.trim()      || null,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok || json.error) { setError(json.error || 'Failed to save'); setSaving(false); return }
+      onSaved(json.book)
+      onClose()
+    } catch (e) { setError(e.message); setSaving(false) }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+        style={{ background: '#FFFFFF', borderRadius: 20, boxShadow: '0 24px 64px rgba(15,23,42,0.22)', width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Pencil size={15} style={{ color: '#2563EB' }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Edit Book</p>
+              <p style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>Update book details</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: '#F1F5F9', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B' }}><X size={14} /></button>
+        </div>
+        <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {error && <p style={{ fontSize: 12, color: '#DC2626', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 12px', margin: 0 }}>{error}</p>}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {[
+              { label: 'Title *', key: 'title', placeholder: 'e.g. Organic Chemistry', span: 2 },
+              { label: 'Author', key: 'author', placeholder: 'e.g. Morrison & Boyd' },
+              { label: 'Publisher', key: 'publisher', placeholder: 'e.g. Pearson' },
+              { label: 'ISBN', key: 'isbn', placeholder: '978-0-00-000000-0' },
+              { label: 'Total Copies', key: 'total', placeholder: '1', type: 'number' },
+              { label: 'Rack / Shelf', key: 'rack', placeholder: 'e.g. B-04' },
+            ].map(f => (
+              <div key={f.key} style={f.span ? { gridColumn: `1 / span ${f.span}` } : {}}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 5 }}>{f.label}</label>
+                <input type={f.type || 'text'} value={form[f.key]} onChange={set(f.key)} placeholder={f.placeholder}
+                  className="input-premium" style={{ width: '100%', boxSizing: 'border-box', fontSize: 13 }} />
+              </div>
+            ))}
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 5 }}>Category</label>
+              <select value={form.category} onChange={set('category')} className="input-premium" style={{ width: '100%', fontSize: 13 }}>
+                {CATS.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#64748B', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleSave} disabled={saving}
+              style={{ flex: 2, padding: '10px 0', borderRadius: 10, border: 'none', background: saving ? '#93C5FD' : '#2563EB', color: '#FFF', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 /* ── Main Page ───────────────────────────────────────────────────── */
 export default function LibraryPage() {
 
@@ -378,24 +474,23 @@ export default function LibraryPage() {
   const [importToast,   setImportToast  ] = useState(null)
   const [deleteTarget,  setDeleteTarget ] = useState(null)
   const [issueTarget,   setIssueTarget  ] = useState(null)
+  const [editTarget,    setEditTarget   ] = useState(null)
 
   const loadBooks = () => {
-    Promise.all([
-      fetch('/api/library?type=catalog&limit=200').then(r => r.ok ? r.json() : {}),
-      fetch('/api/library?type=issued&limit=100').then(r => r.ok ? r.json() : {}),
+    return Promise.all([
+      fetch('/api/library?type=catalog&limit=200', { cache: 'no-store' }).then(r => r.ok ? r.json() : {}),
+      fetch('/api/library?type=issued&limit=100',  { cache: 'no-store' }).then(r => r.ok ? r.json() : {}),
     ]).then(([catData, issData]) => {
-      const apiBooks = catData.books || []
-      setBooks(apiBooks)
+      setBooks(catData.books || [])
       setIssuedBooks((issData.issues || []).map(i => ({
         ...i,
-        due: i.dueDate,
+        due:      i.dueDate,
         returned: i.status === 'returned',
-        student: i.borrower,
-        book: i.bookTitle,
-        issued: i.issuedDate,
+        student:  i.borrower,
+        book:     i.bookTitle,
+        issued:   i.issuedDate,
       })))
-    }).catch(() => setBooks([]))
-     .finally(() => setLoadingBooks(false))
+    }).catch(() => {}).finally(() => setLoadingBooks(false))
   }
 
   useEffect(() => { loadBooks() }, [])
@@ -463,23 +558,33 @@ export default function LibraryPage() {
 
   const handleIssue = async (studentName, dueDate, studentId) => {
     if (!issueTarget) return
-    try {
-      const userId = studentId || null
-      if (userId && issueTarget.id && typeof issueTarget.id === 'string' && issueTarget.id.includes('-')) {
-        const res = await fetch('/api/library', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'issue', book_id: issueTarget.id, user_id: userId }),
-        })
-        const json = await res.json()
-        if (json.error) { setImportToast(`Error: ${json.error}`); setTimeout(() => setImportToast(null), 4000); return }
-      }
-      // Optimistic update
-      setBooks(prev => prev.map(b => b.id === issueTarget.id ? { ...b, available: Math.max(0, (b.available || 0) - 1) } : b))
-    } catch {}
+    const bookTitle = issueTarget.title
+    const bookId    = issueTarget.id
     setIssueTarget(null)
-    setImportToast(`"${issueTarget.title}" issued to ${studentName}`)
+    try {
+      const res  = await fetch('/api/library', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ action: 'issue', book_id: bookId, user_id: studentId }),
+      })
+      const json = await res.json()
+      if (!res.ok || json.error) {
+        setImportToast(`Error: ${json.error || 'Issue failed'}`)
+        setTimeout(() => setImportToast(null), 4000)
+        return
+      }
+    } catch {
+      setImportToast('Network error — book not issued')
+      setTimeout(() => setImportToast(null), 4000)
+      return
+    }
+    setImportToast(`"${bookTitle}" issued to ${studentName}`)
     setTimeout(() => setImportToast(null), 3500)
+    await loadBooks()
+    setActiveTab('issued')
+  }
+
+  const handleEditSaved = () => {
     loadBooks()
   }
 
@@ -561,9 +666,10 @@ export default function LibraryPage() {
       {activeTab === 'catalog' && (
         <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8ECF0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
           <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid #F1F5F9' }}>
-            <div className="relative flex-1 max-w-xs">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#CBD5E1' }} />
-              <input type="text" placeholder="Search title, author, ISBN…" value={search} onChange={e => { setSearch(e.target.value); setCatalogPage(1) }} className="input-premium pl-9 py-2 text-xs" />
+            <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
+              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#CBD5E1', pointerEvents: 'none' }} />
+              <input type="text" placeholder="Search title, author, ISBN…" value={search} onChange={e => { setSearch(e.target.value); setCatalogPage(1) }}
+                className="input-premium" style={{ paddingLeft: 36, paddingTop: 8, paddingBottom: 8, fontSize: 12 }} />
             </div>
           </div>
 
@@ -607,12 +713,15 @@ export default function LibraryPage() {
                           </td>
                           <td>
                             <div className="flex gap-1">
-                              <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" style={{ color: '#64748B' }} title="View"><Eye size={13} /></button>
+                              <button onClick={() => setEditTarget(book)}
+                                className="p-1.5 rounded-lg hover:bg-blue-50 transition-colors" style={{ color: '#2563EB' }} title="Edit">
+                                <Pencil size={13} />
+                              </button>
                               <button onClick={() => setIssueTarget(book)} disabled={book.available === 0}
-                              className="text-xs px-2 py-1 rounded-lg font-medium disabled:opacity-40"
-                              style={{ background: book.available === 0 ? '#F1F5F9' : '#EFF6FF', color: book.available === 0 ? '#94A3B8' : '#2563EB', cursor: book.available === 0 ? 'default' : 'pointer' }}>
-                              Issue
-                            </button>
+                                className="text-xs px-2 py-1 rounded-lg font-medium disabled:opacity-40"
+                                style={{ background: book.available === 0 ? '#F1F5F9' : '#EFF6FF', color: book.available === 0 ? '#94A3B8' : '#2563EB', cursor: book.available === 0 ? 'default' : 'pointer' }}>
+                                Issue
+                              </button>
                               <button onClick={() => setDeleteTarget(book)}
                                 className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" style={{ color: '#EF4444' }} title="Delete">
                                 <Trash2 size={13} />
@@ -685,6 +794,7 @@ export default function LibraryPage() {
         {showImport   && <ImportModal key="import" onClose={() => setShowImport(false)} onImport={handleImport} />}
         {deleteTarget && <DeleteConfirm key="delete" book={deleteTarget} onConfirm={handleDelete} onClose={() => setDeleteTarget(null)} />}
         {issueTarget  && <IssueModal key="issue" book={issueTarget} onClose={() => setIssueTarget(null)} onConfirm={handleIssue} />}
+        {editTarget   && <EditBookModal key="edit" book={editTarget} onClose={() => setEditTarget(null)} onSaved={handleEditSaved} />}
       </AnimatePresence>
 
       {/* Import toast */}

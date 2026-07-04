@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Home, Users, BedDouble, AlertCircle, Plus, MapPin, X, Check, Pencil, Building2, Bell, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { Home, Users, BedDouble, AlertCircle, Plus, MapPin, X, Check, Pencil, Trash2, Building2, Bell, CheckCircle, XCircle, Loader2, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { computeFeeStatus } from '@/lib/feeUtils'
 const HOSTEL_TYPES = ['Boys', 'Girls', 'Mixed']
@@ -49,9 +49,13 @@ function AddBuildingModal({ onClose, onSave }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name:    form.name.trim(),
-          type:    form.type.toLowerCase(),
-          address: form.warden.trim() || null,
+          name:       form.name.trim(),
+          type:       form.type.toLowerCase(),
+          address:    form.warden.trim() || null,
+          floors:     form.floors,
+          totalRooms: form.totalRooms,
+          totalBeds:  form.totalBeds,
+          monthlyFee: form.monthlyFee,
         }),
       })
       const json = await res.json()
@@ -160,9 +164,9 @@ function AddBuildingModal({ onClose, onSave }) {
 /* ── Edit Hostel Modal ────────────────────────────────────────────── */
 function EditHostelModal({ building, onClose, onSave }) {
   const [form, setForm] = useState({
-    name:       building.name,
-    type:       building.type,
-    warden:     building.warden,
+    name:       building.name       || '',
+    type:       building.type       || 'Boys',
+    warden:     building.warden     || '',
     floors:     String(building.floors),
     totalRooms: String(building.totalRooms),
     totalBeds:  String(building.totalBeds),
@@ -187,7 +191,28 @@ function EditHostelModal({ building, onClose, onSave }) {
   const handleSave = async () => {
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 500))
+    try {
+      const res = await fetch('/api/hostel/buildings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id:      building.id,
+          name:    form.name.trim(),
+          type:    form.type.toLowerCase(),
+          address: form.warden.trim() || null,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok || json.error) {
+        setErrors({ name: json.error || 'Failed to save. Please try again.' })
+        setSaving(false)
+        return
+      }
+    } catch {
+      setErrors({ name: 'Network error. Please try again.' })
+      setSaving(false)
+      return
+    }
     onSave({
       ...building,
       name:       form.name.trim(),
@@ -197,12 +222,11 @@ function EditHostelModal({ building, onClose, onSave }) {
       totalRooms: parseInt(form.totalRooms) || building.totalRooms,
       totalBeds:  parseInt(form.totalBeds)  || building.totalBeds,
       monthlyFee: parseInt(form.monthlyFee) || building.monthlyFee,
-      // Clamp occupied values if total was reduced
       occupiedRooms: Math.min(building.occupiedRooms, parseInt(form.totalRooms) || building.totalRooms),
       occupiedBeds:  Math.min(building.occupiedBeds,  parseInt(form.totalBeds)  || building.totalBeds),
     })
     setSaved(true)
-    await new Promise(r => setTimeout(r, 500))
+    await new Promise(r => setTimeout(r, 600))
     onClose()
   }
 
@@ -475,15 +499,70 @@ function EditAllocationModal({ allocation, buildings, onClose, onSave }) {
 
 /* ── Allocate Room Modal ─────────────────────────────────────────── */
 function AllocateModal({ buildings, onClose, onSave }) {
-  const [form, setForm] = useState({ student: '', class: '', building: buildings[0]?.name || '', room: '', bed: 'Bed 1' })
-  const [saved, setSaved] = useState(false)
+  const [form, setForm]   = useState({ student: '', studentId: null, class: '', building: buildings[0]?.name || '', room: '', bed: 'Bed 1' })
+  const [saving, setSaving] = useState(false)
+  const [saved,  setSaved ] = useState(false)
+  const [error,  setError ] = useState('')
+  const [results,    setResults   ] = useState([])
+  const [searching,  setSearching ] = useState(false)
+  const [showDrop,   setShowDrop  ] = useState(false)
+  const dropRef = useRef(null)
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  // Debounced student search
+  useEffect(() => {
+    if (!form.student.trim() || form.student.trim().length < 2) { setResults([]); setShowDrop(false); return }
+    const t = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await fetch(`/api/hostel/allocations?search=${encodeURIComponent(form.student.trim())}`, { cache: 'no-store' })
+        const json = await res.json()
+        setResults(json.students || [])
+        setShowDrop((json.students || []).length > 0)
+      } catch {}
+      setSearching(false)
+    }, 320)
+    return () => clearTimeout(t)
+  }, [form.student])
+
+  const selectStudent = s => {
+    setForm(f => ({ ...f, student: s.name, studentId: s.id, class: s.class || f.class }))
+    setResults([])
+    setShowDrop(false)
+  }
 
   const handleSave = async () => {
     if (!form.student.trim() || !form.room.trim()) return
+    setSaving(true)
+    setError('')
+    try {
+      const building = buildings.find(b => b.name === form.building)
+      const res = await fetch('/api/hostel/allocations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName: form.student.trim(),
+          studentId:   form.studentId || null,
+          className:   form.class.trim(),
+          buildingId:  building?.id || null,
+          roomNumber:  form.room.trim(),
+          bedNumber:   parseInt((form.bed || '').replace(/\D/g, '')) || 1,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok || json.error) {
+        setError(json.error || 'Failed to allocate room.')
+        setSaving(false)
+        return
+      }
+    } catch {
+      setError('Network error. Please try again.')
+      setSaving(false)
+      return
+    }
+    onSave()
     setSaved(true)
     await new Promise(r => setTimeout(r, 700))
-    onSave({ ...form, date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) })
     onClose()
   }
 
@@ -501,13 +580,42 @@ function AllocateModal({ buildings, onClose, onSave }) {
           </button>
         </div>
         <div style={{ padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <div style={{ gridColumn: '1 / -1' }}>
+          {/* Student search with dropdown */}
+          <div style={{ gridColumn: '1 / -1', position: 'relative' }} ref={dropRef}>
             <LabeledField label="Student Name *">
-              <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="e.g. Riya Sharma" value={form.student} onChange={set('student')} />
+              <div style={{ position: 'relative' }}>
+                <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }}
+                  placeholder="Type to search registered students…"
+                  value={form.student}
+                  onChange={e => { set('student')(e); setForm(f => ({ ...f, studentId: null })) }}
+                  onFocus={() => results.length > 0 && setShowDrop(true)}
+                  onBlur={() => setTimeout(() => setShowDrop(false), 180)}
+                  autoComplete="off" />
+                {searching && (
+                  <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#94A3B8' }}>Searching…</span>
+                )}
+              </div>
             </LabeledField>
+            {showDrop && results.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 10, boxShadow: '0 8px 24px rgba(15,23,42,0.12)', zIndex: 300, maxHeight: 200, overflowY: 'auto' }}>
+                {results.map(s => (
+                  <button key={s.id} onMouseDown={() => selectStudent(s)}
+                    style={{ width: '100%', padding: '10px 14px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>{s.name}</span>
+                    <span style={{ fontSize: 11, color: '#64748B', flexShrink: 0 }}>{s.class}{s.rollNumber ? ` · ${s.rollNumber}` : ''}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {form.studentId && (
+              <p style={{ fontSize: 11, color: '#16A34A', marginTop: 4 }}>✓ Student verified — {form.class}</p>
+            )}
           </div>
+
           <LabeledField label="Class">
-            <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="e.g. 11-A" value={form.class} onChange={set('class')} />
+            <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="Auto-filled on student select" value={form.class} onChange={set('class')} />
           </LabeledField>
           <LabeledField label="Building">
             <select className="input-premium" style={{ width: '100%' }} value={form.building} onChange={set('building')}>
@@ -515,7 +623,7 @@ function AllocateModal({ buildings, onClose, onSave }) {
             </select>
           </LabeledField>
           <LabeledField label="Room Number *">
-            <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="e.g. B-301" value={form.room} onChange={set('room')} />
+            <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="e.g. 101" value={form.room} onChange={set('room')} />
           </LabeledField>
           <LabeledField label="Bed">
             <select className="input-premium" style={{ width: '100%' }} value={form.bed} onChange={set('bed')}>
@@ -523,12 +631,15 @@ function AllocateModal({ buildings, onClose, onSave }) {
             </select>
           </LabeledField>
         </div>
-        <div style={{ padding: '14px 20px', borderTop: '1px solid #F1F5F9', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#FFFFFF', fontSize: 13, color: '#475569', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSave}
-            style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: saved ? '#16A34A' : '#2563EB', color: '#FFFFFF', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, transition: 'background 0.2s' }}>
-            {saved ? <><Check size={14} /> Allocated!</> : <><Plus size={14} /> Allocate Room</>}
-          </motion.button>
+        <div style={{ padding: '14px 20px', borderTop: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {error && <p style={{ fontSize: 12, color: '#DC2626', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '7px 12px', margin: 0 }}>{error}</p>}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#FFFFFF', fontSize: 13, color: '#475569', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
+            <motion.button whileHover={{ scale: saving ? 1 : 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSave} disabled={saving}
+              style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: saved ? '#16A34A' : '#2563EB', color: '#FFFFFF', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: 7, transition: 'background 0.2s' }}>
+              {saved ? <><Check size={14} /> Allocated!</> : saving ? 'Allocating…' : <><Plus size={14} /> Allocate Room</>}
+            </motion.button>
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -549,6 +660,9 @@ export default function HostelPage() {
   const [editAllocation, setEditAllocation] = useState(null)
   const [showAll,        setShowAll       ] = useState(false)
   const [showAddBuilding, setShowAddBuilding] = useState(false)
+  const [confirmDeleteBuilding, setConfirmDeleteBuilding] = useState(null)
+  const [confirmDeleteAlloc,    setConfirmDeleteAlloc   ] = useState(null)
+  const [allocSearch,           setAllocSearch          ] = useState('')
 
   // Requests tab state
   const [hostelRequests,    setHostelRequests   ] = useState([])
@@ -569,20 +683,32 @@ export default function HostelPage() {
   // Load real data
   useEffect(() => {
     Promise.all([
-      fetch('/api/hostel/buildings').then(r => r.ok ? r.json() : []),
-      fetch('/api/hostel/allocations').then(r => r.ok ? r.json() : {}),
+      fetch('/api/hostel/buildings', { cache: 'no-store' }).then(r => r.json()).catch(e => ({ _fetchError: e.message })),
+      fetch('/api/hostel/allocations', { cache: 'no-store' }).then(r => r.json()).catch(() => ({})),
     ]).then(([bldgs, allocData]) => {
+      if (bldgs?.error || bldgs?._fetchError) {
+        toast.error('Buildings API error: ' + (bldgs.error || bldgs._fetchError))
+      }
       setBuildings(Array.isArray(bldgs) ? bldgs : [])
       setAllocations(allocData.allocations || [])
       setPendingTotal(allocData.pendingTotal || 0)
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch(e => toast.error('Failed to load hostel data: ' + e.message)).finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
     if (activeTab === 'Requests') fetchRequests()
   }, [activeTab])
 
-  const displayedAllocations = showAll ? allocations : allocations.slice(0, 5)
+  const filteredAllocations = allocSearch.trim()
+    ? allocations.filter(a => {
+        const q = allocSearch.toLowerCase()
+        return (a.student || '').toLowerCase().includes(q)
+          || (a.room     || '').toLowerCase().includes(q)
+          || (a.building || '').toLowerCase().includes(q)
+          || (a.class    || '').toLowerCase().includes(q)
+      })
+    : allocations
+  const displayedAllocations = showAll ? filteredAllocations : filteredAllocations.slice(0, 5)
 
   const totalResidents = buildings.reduce((s, b) => s + (b.occupiedBeds || 0), 0)
   const totalRooms     = buildings.reduce((s, b) => s + (b.totalRooms   || 0), 0)
@@ -602,23 +728,31 @@ export default function HostelPage() {
     { label: 'Pending Fees',    value: loading ? '—' : (pendingTotal > 0 ? fmtAmount(pendingTotal) : '₹0'), icon: AlertCircle, iconColor: '#EF4444', iconBg: '#FEF2F2' },
   ]
 
-  const handleSaveBuilding = async updated => {
-    try {
-      const res = await fetch('/api/hostel/buildings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id:      updated.id,
-          name:    updated.name,
-          type:    updated.type,
-          address: updated.warden,
-        }),
-      })
-      const json = await res.json()
-      if (!res.ok || json.error) { toast.error(json.error || 'Failed to save building.'); return }
-    } catch { toast.error('Network error. Please try again.'); return }
+  const handleSaveBuilding = updated => {
     setBuildings(prev => prev.map(b => b.id === updated.id ? updated : b))
     setEditBuilding(null)
+  }
+
+  const handleDeleteBuilding = async id => {
+    try {
+      const res = await fetch(`/api/hostel/buildings?id=${id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok || json.error) { toast.error(json.error || 'Failed to delete building'); return }
+      setBuildings(prev => prev.filter(b => b.id !== id))
+      toast.success('Building deleted.')
+    } catch { toast.error('Network error.') }
+    setConfirmDeleteBuilding(null)
+  }
+
+  const handleDeleteAllocation = async alloc => {
+    try {
+      const res = await fetch(`/api/hostel/allocations?id=${alloc.id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok || json.error) { toast.error(json.error || 'Failed to remove allocation'); return }
+      setAllocations(prev => prev.filter(a => a.id !== alloc.id))
+      toast.success('Allocation removed.')
+    } catch { toast.error('Network error.') }
+    setConfirmDeleteAlloc(null)
   }
 
   const handleSaveAllocation = newData => {
@@ -627,34 +761,13 @@ export default function HostelPage() {
     )
   }
 
-  const handleAllocate = async alloc => {
+  const handleAllocate = async () => {
     try {
-      const building = buildings.find(b => b.name === alloc.building)
-      const res = await fetch('/api/hostel/allocations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentName: alloc.student,
-          className:   alloc.class,
-          buildingId:  building?.id || null,
-          roomNumber:  alloc.room,
-          bedNumber:   parseInt((alloc.bed || '').replace(/\D/g, '')) || 1,
-        }),
-      })
-      const json = await res.json()
-      if (!json.error) {
-        // Refresh allocations after save
-        const fresh = await fetch('/api/hostel/allocations').then(r => r.ok ? r.json() : {})
-        setAllocations(fresh.allocations || [])
-        setPendingTotal(fresh.pendingTotal || 0)
-        return
-      }
-    } catch {}
-    // Optimistic fallback if API save failed
-    setAllocations(prev => [{
-      id: Date.now(), ...alloc,
-      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-    }, ...prev])
+      const fresh = await fetch('/api/hostel/allocations', { cache: 'no-store' }).then(r => r.json())
+      if (fresh.error) { toast.error('Allocations error: ' + fresh.error); return }
+      setAllocations(fresh.allocations || [])
+      setPendingTotal(fresh.pendingTotal || 0)
+    } catch (e) { toast.error('Failed to load allocations: ' + e.message) }
   }
 
   const handleRequestAction = async (id, status) => {
@@ -789,13 +902,34 @@ export default function HostelPage() {
                     <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 36, fontWeight: 700, color: typeColor, lineHeight: 1, letterSpacing: '-0.03em' }}>{occupancyPct}%</p>
                     <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Occupancy</p>
                   </div>
-                  {/* Edit button */}
-                  <button onClick={() => setEditBuilding(building)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.color = '#2563EB'; e.currentTarget.style.borderColor = '#BFDBFE' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#E2E8F0' }}>
-                    <Pencil size={12} /> Edit
-                  </button>
+                  {/* Edit / Delete buttons */}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => setEditBuilding(building)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.color = '#2563EB'; e.currentTarget.style.borderColor = '#BFDBFE' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#E2E8F0' }}>
+                      <Pencil size={12} /> Edit
+                    </button>
+                    {confirmDeleteBuilding === building.id ? (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button onClick={() => handleDeleteBuilding(building.id)}
+                          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                          Confirm
+                        </button>
+                        <button onClick={() => setConfirmDeleteBuilding(null)}
+                          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#64748B', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setConfirmDeleteBuilding(building.id)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#EF4444', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.borderColor = '#FECACA' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0' }}>
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -842,15 +976,29 @@ export default function HostelPage() {
 
       {/* Recent Allocations */}
       <motion.div {...fade(0.3)} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 20, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.06)' }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
           <div>
             <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0, letterSpacing: '-0.01em' }}>Recent Allocations</h3>
-            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>{allocations.length} total assignments</p>
+            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>
+              {allocSearch.trim() ? `${filteredAllocations.length} of ${allocations.length}` : allocations.length} total assignments
+            </p>
           </div>
-          <button onClick={() => setShowAll(v => !v)}
-            style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
-            {showAll ? 'Show Less' : 'View All'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 200, maxWidth: 340 }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder="Search student, room, building…"
+                value={allocSearch}
+                onChange={e => setAllocSearch(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', paddingLeft: 32, paddingRight: 10, paddingTop: 7, paddingBottom: 7, borderRadius: 8, border: '1px solid #E2E8F0', background: '#F8FAFC', fontSize: 13, color: '#0F172A', outline: 'none', fontFamily: 'inherit' }}
+              />
+            </div>
+            <button onClick={() => setShowAll(v => !v)}
+              style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+              {showAll ? 'Show Less' : 'View All'}
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -863,11 +1011,15 @@ export default function HostelPage() {
               </tr>
             </thead>
             <tbody>
-              {!loading && allocations.length === 0 && (
+              {!loading && filteredAllocations.length === 0 && (
                 <tr>
                   <td colSpan={9} style={{ padding: '48px 20px', textAlign: 'center' }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#64748B', margin: 0 }}>No allocations yet</p>
-                    <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>Use "Allocate Room" to assign students to hostel rooms.</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#64748B', margin: 0 }}>
+                      {allocSearch.trim() ? `No results for "${allocSearch}"` : 'No allocations yet'}
+                    </p>
+                    <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>
+                      {allocSearch.trim() ? 'Try a different name, room, or building.' : 'Use "Allocate Room" to assign students to hostel rooms.'}
+                    </p>
                   </td>
                 </tr>
               )}
@@ -900,12 +1052,33 @@ export default function HostelPage() {
                   </td>
                   <td style={{ padding: '16px 20px' }}><span style={{ fontSize: 12, color: '#94A3B8' }}>{alloc.date}</span></td>
                   <td style={{ padding: '16px 20px' }}>
-                    <button onClick={() => setEditAllocation(alloc)}
-                      style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #E2E8F0', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', cursor: 'pointer' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.color = '#2563EB'; e.currentTarget.style.borderColor = '#BFDBFE' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748B'; e.currentTarget.style.borderColor = '#E2E8F0' }}>
-                      <Pencil size={13} />
-                    </button>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <button onClick={() => setEditAllocation(alloc)}
+                        style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #E2E8F0', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', cursor: 'pointer' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.color = '#2563EB'; e.currentTarget.style.borderColor = '#BFDBFE' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748B'; e.currentTarget.style.borderColor = '#E2E8F0' }}>
+                        <Pencil size={13} />
+                      </button>
+                      {confirmDeleteAlloc === alloc.id ? (
+                        <>
+                          <button onClick={() => handleDeleteAllocation(alloc)}
+                            style={{ padding: '4px 8px', borderRadius: 7, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            Confirm
+                          </button>
+                          <button onClick={() => setConfirmDeleteAlloc(null)}
+                            style={{ padding: '4px 8px', borderRadius: 7, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#64748B', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                            ✕
+                          </button>
+                        </>
+                      ) : (
+                        <button onClick={() => setConfirmDeleteAlloc(alloc.id)}
+                          style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #E2E8F0', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444', cursor: 'pointer' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.borderColor = '#FECACA' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#E2E8F0' }}>
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </motion.tr>
               ))}

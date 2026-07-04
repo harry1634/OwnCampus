@@ -462,6 +462,8 @@ main { will-change: auto; }
 .rg-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .rg-32 { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
 .rg-31 { display: grid; grid-template-columns: 3fr 1fr; gap: 20px; }
+.att-layout  { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
+.form-layout { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
 
 /* ═══════════════════════════════════════════════════════════════
    TABLET  (≤ 1024px)
@@ -550,6 +552,8 @@ main { will-change: auto; }
   .rg-2        { grid-template-columns: 1fr !important; gap: 12px !important; }
   .rg-32       { grid-template-columns: 1fr !important; gap: 14px !important; }
   .rg-31       { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .att-layout  { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .form-layout { grid-template-columns: 1fr !important; gap: 16px !important; }
 
   /* ── Faculty card grid — single column on mobile ── */
   .rg-faculty  { grid-template-columns: 1fr !important; }

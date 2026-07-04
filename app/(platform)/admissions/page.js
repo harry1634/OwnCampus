@@ -629,7 +629,7 @@ export default function AdmissionsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+      <div className="rg-4">
         {[
           { label: 'Total Leads',     value: String(total),        change: `${followUps} follow-ups`, sub: `${leads.filter(l=>l.status==='new').length} new this cycle`, icon: Users,      iconColor: '#2563EB', iconBg: '#EFF6FF', positive: true  },
           { label: 'Conversion Rate', value: `${convRate}%`,       change: `${converted} converted`,  sub: `of ${total} total leads`,                                    icon: Target,     iconColor: '#10B981', iconBg: '#F0FDF4', positive: true  },
@@ -666,7 +666,7 @@ export default function AdmissionsPage() {
       </div>
 
       {/* Pipeline + Source Breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 20 }}>
+      <div className="rg-32">
 
         {/* Pipeline Funnel */}
         <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
@@ -679,28 +679,31 @@ export default function AdmissionsPage() {
           </div>
 
           {/* Stage cards with arrows */}
-          <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 20 }}>
             {pipeline.map((stage, i) => (
-              <div key={stage.label} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+              <div key={stage.label} style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
                 <motion.div
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                   style={{
-                    flex: 1, padding: '14px 10px', borderRadius: 12,
+                    flex: 1, minWidth: 0, minHeight: 90,
+                    padding: '12px 8px', borderRadius: 12,
                     background: stage.bg, border: `1px solid ${stage.color}25`,
                     textAlign: 'center', cursor: 'default',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 4,
                   }}
                   whileHover={{ scale: 1.03, boxShadow: `0 6px 20px ${stage.color}25` }}
                 >
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 26, fontWeight: 800, color: stage.color, lineHeight: 1, letterSpacing: '-0.03em' }}>
                     {stage.count}
                   </p>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: '#64748B', marginTop: 5, lineHeight: 1.3 }}>{stage.label}</p>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: stage.color, marginTop: 4, opacity: 0.8 }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: '#64748B', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{stage.label}</p>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: stage.color, opacity: 0.8 }}>
                     {pipelineTotal > 0 ? Math.round((stage.count / pipelineTotal) * 100) : 0}%
                   </p>
                 </motion.div>
                 {i < pipeline.length - 1 && (
-                  <ArrowRight size={13} style={{ color: '#CBD5E1', flexShrink: 0, margin: '0 4px' }} />
+                  <ArrowRight size={13} style={{ color: '#CBD5E1', flexShrink: 0, margin: '0 3px' }} />
                 )}
               </div>
             ))}
@@ -785,7 +788,7 @@ export default function AdmissionsPage() {
       <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 2px 6px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
             <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#CBD5E1' }} />
             <input

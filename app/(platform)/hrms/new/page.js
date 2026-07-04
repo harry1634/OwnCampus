@@ -73,7 +73,7 @@ export default function NewEmployeePage() {
         <span style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>Add Employee</span>
       </div>
 
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+      <div className="form-layout" style={{ maxWidth: 1040, margin: '0 auto', padding: '28px 32px' }}>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 

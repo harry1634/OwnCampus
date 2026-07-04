@@ -50,7 +50,7 @@ export default function AlumniPage() {
       </div>
 
       {/* KPI Strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+      <div className="rg-4">
         {[
           { label: 'Total Alumni',  value: '3,840', icon: Users,         iconColor: '#2563EB', iconBg: '#EFF6FF' },
           { label: 'Countries',     value: '24',    icon: Globe,         iconColor: '#10B981', iconBg: '#F0FDF4' },
@@ -74,9 +74,9 @@ export default function AlumniPage() {
       </div>
 
       {/* Search + Filter Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 14, padding: '12px 16px', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 14, padding: '12px 16px', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
         {/* Search input */}
-        <div style={{ position: 'relative', flex: 1 }}>
+        <div style={{ position: 'relative', flex: '1 1 200px', minWidth: 0 }}>
           <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#CBD5E1' }} />
           <input
             type="text"
@@ -86,9 +86,6 @@ export default function AlumniPage() {
             style={{ width: '100%', paddingLeft: 32, paddingRight: 12, paddingTop: 8, paddingBottom: 8, fontSize: 13, border: '1px solid #E2E8F0', borderRadius: 9, outline: 'none', color: '#0F172A', background: '#F8FAFC' }}
           />
         </div>
-
-        {/* Divider */}
-        <div style={{ width: 1, height: 28, background: '#E2E8F0' }} />
 
         {/* Filter pills */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -108,11 +105,7 @@ export default function AlumniPage() {
           ))}
         </div>
 
-        {/* Divider */}
-        <div style={{ width: 1, height: 28, background: '#E2E8F0' }} />
-
-        {/* Count */}
-        <span style={{ fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap' }}>{filtered.length} of {alumni.length}</span>
+        <span style={{ fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap', marginLeft: 'auto' }}>{filtered.length} of {alumni.length}</span>
 
         <button style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#64748B', cursor: 'pointer' }}>
           <SlidersHorizontal size={12} /> Sort
@@ -120,7 +113,7 @@ export default function AlumniPage() {
       </div>
 
       {/* Alumni Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+      <div className="rg-3">
         {filtered.map((alum, i) => (
           <motion.div key={alum.id}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}

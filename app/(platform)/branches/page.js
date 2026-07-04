@@ -226,16 +226,6 @@ export default function BranchesPage() {
         )}
       </div>
 
-      {/* Info note */}
-      <div style={{ padding: '14px 18px', borderRadius: 12, background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-        <p style={{ fontSize: 12.5, color: '#92400E', margin: 0, lineHeight: 1.6 }}>
-          <strong>Note:</strong> To enable branch selection during registration, run this SQL in your Supabase SQL Editor:{' '}
-          <code style={{ background: '#FEF3C7', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontSize: 12 }}>
-            ALTER TABLE access_requests ADD COLUMN IF NOT EXISTS branch text;
-          </code>
-          {' '}Then students and faculty will see the branch dropdown when signing up.
-        </p>
-      </div>
 
     </div>
   )

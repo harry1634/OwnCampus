@@ -82,9 +82,7 @@ export async function GET(req) {
         .select(`
           id, issued_date, due_date, returned_date, fine_amount, fine_paid, status, created_at,
           books ( id, title, author, isbn, category, rack_number ),
-          user_profiles!book_issues_user_id_fkey ( first_name, last_name, email, role,
-            students ( roll_number, classes ( name, section ) )
-          )
+          user_profiles!user_id ( first_name, last_name, email, role )
         `)
         .order('created_at', { ascending: false })
         .limit(limit)
@@ -104,24 +102,20 @@ export async function GET(req) {
       if (error) return Response.json({ error: error.message }, { status: 400 })
 
       const issues = (data || []).map(i => {
-        const up   = i.user_profiles      || {}
-        const bk   = i.books              || {}
-        const stu  = up.students?.[0]     || up.students || {}
-        const cls  = stu.classes           || {}
+        const up   = i.user_profiles || {}
+        const bk   = i.books         || {}
         const fine = i.fine_amount > 0 ? Number(i.fine_amount) : calcFine(i.due_date)
 
         return {
           id:           i.id,
           bookId:       bk.id || null,
-          bookTitle:    bk.title   || '',
-          bookAuthor:   bk.author  || '',
-          isbn:         bk.isbn    || '',
-          category:     bk.category || '',
-          rack:         bk.rack_number || '',
+          bookTitle:    bk.title        || '',
+          bookAuthor:   bk.author       || '',
+          isbn:         bk.isbn         || '',
+          category:     bk.category     || '',
+          rack:         bk.rack_number  || '',
           borrower:     [up.first_name, up.last_name].filter(Boolean).join(' ') || up.email || '',
-          role:         up.role || '',
-          roll:         stu.roll_number || '',
-          class:        cls.name ? `${cls.name}${cls.section ? ' ' + cls.section : ''}` : '',
+          role:         up.role         || '',
           issuedDate:   i.issued_date   || '',
           dueDate:      i.due_date      || '',
           returnedDate: i.returned_date || null,
@@ -289,6 +283,16 @@ export async function PATCH(req) {
 
     const allowed = ['title','author','isbn','publisher','category','rack_number','total_copies','available_copies','price','is_active']
     const patch   = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)))
+
+    // When total_copies changes, adjust available_copies by the same delta so
+    // issued count (total - available) stays correct.
+    if ('total_copies' in patch && !('available_copies' in patch)) {
+      const { data: cur } = await admin.from('books').select('total_copies, available_copies').eq('id', id).single()
+      if (cur) {
+        const delta = patch.total_copies - cur.total_copies
+        patch.available_copies = Math.max(0, (cur.available_copies || 0) + delta)
+      }
+    }
 
     let q = admin.from('books').update(patch).eq('id', id)
     if (institutionId) q = q.eq('institution_id', institutionId)

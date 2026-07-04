@@ -183,7 +183,7 @@ export default function SystemHealthPage() {
 
       {/* Data Counts */}
       {health?.data_counts && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        <div className="rg-4" style={{ gap: 16 }}>
           <DataCountCard label="Active Students"     value={health.data_counts.active_students}  icon={Users}     color="#2563EB" />
           <DataCountCard label="Active Faculty"      value={health.data_counts.active_faculty}   icon={Users}     color="#10B981" />
           <DataCountCard label="Notifications (7d)"  value={health.data_counts.notifications_7d} icon={Bell}      color="#7C3AED" />

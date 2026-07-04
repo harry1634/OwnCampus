@@ -51,13 +51,37 @@ export default function NewBookPage() {
   }
 
   const handleSubmit = async (ev) => {
-    ev.preventDefault()
+    ev?.preventDefault()
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
-    setSaving(false); setSaved(true)
-    await new Promise(r => setTimeout(r, 700))
-    router.push('/library')
+    try {
+      const res  = await fetch('/api/library', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          action:    'add_book',
+          title:     form.title.trim(),
+          author:    form.author.trim(),
+          isbn:      form.isbn.trim()      || null,
+          publisher: form.publisher.trim() || null,
+          category:  form.category         || 'Other',
+          total:     parseInt(form.total)  || 1,
+          rack:      form.rack.trim()      || null,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok || json.error) {
+        setErrors({ title: json.error || 'Failed to save. Please try again.' })
+        setSaving(false)
+        return
+      }
+      setSaved(true)
+      await new Promise(r => setTimeout(r, 600))
+      router.push('/library')
+    } catch {
+      setErrors({ title: 'Network error. Please try again.' })
+      setSaving(false)
+    }
   }
 
   return (

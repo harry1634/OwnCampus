@@ -36,7 +36,6 @@ export default function NewRoutePage() {
     const e = {}
     if (!form.name.trim())    e.name    = 'Route name is required'
     if (!form.vehicle.trim()) e.vehicle = 'Vehicle number is required'
-    if (!form.driver.trim())  e.driver  = 'Driver name is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -45,25 +44,28 @@ export default function NewRoutePage() {
     ev.preventDefault()
     if (!validate()) return
     setSaving(true)
+    setErrors({})
     try {
-      // Step 1: create a vehicle record
-      let vehicleId = null
-      if (form.vehicle.trim()) {
-        const vRes  = await fetch('/api/transport', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action:              'add_vehicle',
-            registration_number: form.vehicle.trim(),
-            type:                'bus',
-            capacity:            parseInt(form.capacity) || 40,
-          }),
-        })
-        const vJson = await vRes.json()
-        if (vJson.vehicle?.id) vehicleId = vJson.vehicle.id
+      // Step 1: create (or find existing) vehicle record
+      const vRes  = await fetch('/api/transport', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action:              'add_vehicle',
+          registration_number: form.vehicle.trim(),
+          type:                'bus',
+          capacity:            parseInt(form.capacity) || 40,
+        }),
+      })
+      const vJson = await vRes.json()
+      if (!vRes.ok || vJson.error) {
+        setErrors({ vehicle: vJson.error || 'Failed to save vehicle. Please try again.' })
+        setSaving(false)
+        return
       }
+      const vehicleId = vJson.vehicle?.id || null
 
-      // Step 2: create route (vehicle_id may be null if vehicle creation failed gracefully)
+      // Step 2: create route
       const rRes = await fetch('/api/transport', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +105,7 @@ export default function NewRoutePage() {
         <span style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>Add Transport Route</span>
       </div>
 
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, alignItems: 'start' }}>
+      <div className="form-layout" style={{ maxWidth: 960, margin: '0 auto', padding: '28px 32px' }}>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
@@ -137,7 +139,7 @@ export default function NewRoutePage() {
               <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>Driver & Timing</p>
             </div>
             <div style={{ padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-              <Field label="Driver Name *" error={errors.driver}>
+              <Field label="Driver Name" error={errors.driver}>
                 <Input placeholder="e.g. Ram Kumar" value={form.driver} onChange={set('driver')} error={errors.driver} />
               </Field>
               <Field label="Departure Time">

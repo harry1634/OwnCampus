@@ -398,7 +398,7 @@ export default function Sidebar({ profile }) {
 
       {/* ── Institution Code chip ── */}
       {instCode && !showCollapsed && (
-        <div style={{ padding: '0 10px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))', flexShrink: 0 }}>
+        <div style={{ padding: '0 10px', paddingBottom: isMobile ? 'calc(72px + env(safe-area-inset-bottom, 0px))' : 'calc(12px + env(safe-area-inset-bottom, 0px))', flexShrink: 0 }}>
           <div style={{ borderRadius: 9, background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.15)', padding: '10px 12px' }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 6 }}>
               Institution Code
