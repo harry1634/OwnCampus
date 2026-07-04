@@ -38,7 +38,7 @@ function CredentialsModal({ creds, onClose }) {
   if (!creds) return null
   const copy = (text, label) => navigator.clipboard.writeText(text).then(() => toast.success(`${label} copied!`))
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }} onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.94, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22 }}
         onClick={e => e.stopPropagation()}
         style={{ background: '#FFFFFF', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, boxShadow: '0 24px 60px rgba(15,23,42,0.20)' }}>
@@ -375,7 +375,7 @@ export default function DashboardClient({ user, profile, initialStats, initialRe
       </AnimatePresence>
 
       {/* Real KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {KPIS.map((k, i) => (
           <motion.div key={k.label} {...fade(0.05 + i * 0.06)}
             style={{ ...card, display: 'flex', flexDirection: 'column', gap: 12 }}>

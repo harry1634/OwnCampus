@@ -109,7 +109,7 @@ export default function ProcurementPage() {
   const totalSpend   = orders.filter(o => o.status !== 'rejected').reduce((s, o) => s + (o.amount || 0), 0)
 
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       {/* Header */}
       <div className="page-header">
         <div>
@@ -126,7 +126,7 @@ export default function ProcurementPage() {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           { label: 'Total Orders',        value: orders.length,                           icon: ShoppingCart, iconColor: '#2563EB', iconBg: '#EFF6FF' },
           { label: 'Pending Approval',    value: pendingPOs,                              icon: Clock,        iconColor: '#F59E0B', iconBg: '#FFFBEB' },
@@ -316,12 +316,12 @@ export default function ProcurementPage() {
       <AnimatePresence>
         {showForm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,23,42,0.50)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(15,23,42,0.50)', backdropFilter: 'blur(6px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 20px 40px' }}
             onClick={() => setShowForm(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.94, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
               onClick={e => e.stopPropagation()}
-              style={{ background: '#FFFFFF', borderRadius: 22, width: '100%', maxWidth: 460, boxShadow: '0 32px 80px rgba(0,0,0,0.22)', overflow: 'hidden' }}>
+              style={{ background: '#FFFFFF', borderRadius: 22, width: '100%', maxWidth: 460, boxShadow: '0 32px 80px rgba(0,0,0,0.22)', overflowX: 'hidden', overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 64px)' }}>
               <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)' }}>
                 <p style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', margin: 0 }}>New Purchase Order</p>
                 <button onClick={() => setShowForm(false)} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

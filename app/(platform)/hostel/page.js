@@ -15,11 +15,13 @@ const fade = (d = 0) => ({
 
 const OVERLAY = {
   position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.48)', zIndex: 200,
-  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
+  overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px',
 }
 const MODAL = {
   background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 520,
-  boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflow: 'hidden',
+  boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflowX: 'hidden', overflowY: 'auto',
+  maxHeight: 'calc(100vh - var(--header-height) - 64px)',
 }
 
 function LabeledField({ label, children }) {
@@ -838,7 +840,7 @@ export default function HostelPage() {
       {activeTab === 'Overview' && <>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {kpis.map((kpi, i) => {
           const KpiIcon = kpi.icon
           return (

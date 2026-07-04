@@ -15,7 +15,8 @@ const feeColors = {
 
 const OVERLAY = {
   position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.52)', zIndex: 200,
-  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
+  overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px',
 }
 
 /* ── Student Edit Modal ───────────────────────────────────────────── */
@@ -56,7 +57,7 @@ function StudentEditModal({ student, assignedStop, routeStops, onClose, onSave }
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       style={{ ...OVERLAY, zIndex: 300 }} onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-        style={{ background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(15,23,42,0.22)' }}
+        style={{ background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 480, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto', boxShadow: '0 24px 64px rgba(15,23,42,0.22)' }}
         onClick={e => e.stopPropagation()}>
 
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#FFFFFF', zIndex: 1 }}>
@@ -207,7 +208,7 @@ function BusEditModal({ route, onClose, onSave }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       style={{ ...OVERLAY, zIndex: 350 }} onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-        style={{ background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(15,23,42,0.22)' }}
+        style={{ background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 520, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto', boxShadow: '0 24px 64px rgba(15,23,42,0.22)' }}
         onClick={e => e.stopPropagation()}>
 
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#FFFFFF', zIndex: 1 }}>
@@ -308,7 +309,7 @@ function RouteViewModal({ route, onClose, onRemoveStudent, onSaveStudent, onUpda
     <>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={OVERLAY} onClick={onClose}>
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-          style={{ background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}
+          style={{ background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}
           onClick={e => e.stopPropagation()}>
 
           {/* Blue header */}
@@ -543,7 +544,7 @@ function AssignTransportModal({ routes, onClose, onAssign }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={OVERLAY} onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-        style={{ background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflow: 'hidden' }}
+        style={{ background: '#FFFFFF', borderRadius: 20, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflowX: 'hidden', overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 64px)' }}
         onClick={e => e.stopPropagation()}>
 
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -776,7 +777,7 @@ export default function TransportPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           { label: 'Total Routes',      value: routes.length, icon: Bus,         iconColor: '#2563EB', iconBg: '#EFF6FF' },
           { label: 'Active Routes',     value: activeCount,   icon: MapPin,      iconColor: '#10B981', iconBg: '#F0FDF4' },

@@ -151,8 +151,8 @@ export default function StudentSidebar({ profile, collapsed, setCollapsed, isMob
         </nav>
 
         {/* Footer: Settings + Sign Out */}
-        <div style={{ padding: '8px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Link href="/student/settings"
+        <div style={{ padding: isMobile ? '8px 10px calc(70px + env(safe-area-inset-bottom, 0px))' : '8px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Link href="/student/profile"
             onClick={() => isMobile && setMobileOpen(false)}
             title={showCollapsed ? 'Settings' : undefined}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: showCollapsed ? '10px' : '9px 10px', borderRadius: 9, textDecoration: 'none', justifyContent: showCollapsed ? 'center' : undefined, transition: 'background 0.12s' }}

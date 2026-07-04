@@ -229,11 +229,11 @@ function ScheduleModal({ onClose, onAdd, classes, currentExam, schedule }) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
       onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
         onClick={e => e.stopPropagation()}
-        style={{ background: '#FFFFFF', borderRadius: 18, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+        style={{ background: '#FFFFFF', borderRadius: 18, width: '100%', maxWidth: 560, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
 
         {/* Header */}
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#FFFFFF', zIndex: 1 }}>
@@ -577,7 +577,7 @@ export default function ExaminationsPage() {
   if (!mounted) return null
 
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       <div className="page-header">
         <div>
           <h1 className="page-header-title">Examinations</h1>
@@ -596,7 +596,7 @@ export default function ExaminationsPage() {
       </div>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {kpis.map((kpi, i) => (
           <motion.div key={kpi.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
             style={{ background: '#FFFFFF', border: '1px solid #E8ECF0', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: '18px 20px' }}>

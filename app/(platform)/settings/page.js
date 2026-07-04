@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Building2, Shield, Bell,
+  Building2, Shield, Bell, User, Trash2,
   Save, Check, Upload, ChevronRight, Lock,
   Globe, Phone, Mail, MapPin, Hash, Calendar, Copy,
 } from 'lucide-react'
@@ -12,8 +12,9 @@ import { createClient } from '@/lib/supabase/client'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 
 const tabs = [
-  { key: 'institution', label: 'Institution', icon: Building2, desc: 'Profile & branding' },
-  { key: 'security',    label: 'Security',    icon: Shield,    desc: 'Auth & access'      },
+  { key: 'institution', label: 'Institution', icon: Building2, desc: 'Profile & branding'      },
+  { key: 'profile',     label: 'My Profile',  icon: User,      desc: 'Personal photo & info'   },
+  { key: 'security',    label: 'Security',    icon: Shield,    desc: 'Auth & access'            },
 ]
 
 const FIELD_STYLE = {
@@ -54,7 +55,13 @@ export default function SettingsPage() {
   const [logoUrl,       setLogoUrl      ] = useState(null)
   const [logoUploading, setLogoUploading] = useState(false)
   const [codeCopied,    setCodeCopied   ] = useState(false)
-  const logoRef = useRef(null)
+  const [avatarUrl,     setAvatarUrl    ] = useState(undefined)   // undefined = not yet overridden
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarDeleting,  setAvatarDeleting ] = useState(false)
+  // undefined means "use DB value from hook"; null means "user deleted it"; string means "user uploaded"
+  const displayAvatarUrl = avatarUrl !== undefined ? avatarUrl : (cu?.avatarUrl ?? null)
+  const logoRef   = useRef(null)
+  const avatarRef = useRef(null)
 
   useEffect(() => {
     fetch('/api/institutions/my-code')
@@ -128,6 +135,43 @@ export default function SettingsPage() {
     } finally {
       setLogoUploading(false)
       e.target.value = ''
+    }
+  }
+
+  async function handleAvatarUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2MB.'); return }
+    setAvatarUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/upload/photo', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Upload failed')
+      setAvatarUrl(json.url)
+      cu.updateAvatarUrl?.(json.url)
+      toast.success('Profile photo updated!')
+    } catch (err) {
+      toast.error(err.message || 'Upload failed.')
+    } finally {
+      setAvatarUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  async function handleAvatarDelete() {
+    setAvatarDeleting(true)
+    try {
+      const res = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ avatar_url: null }) })
+      if (!res.ok) throw new Error('Failed to remove photo')
+      setAvatarUrl(null)
+      cu.updateAvatarUrl?.(null)
+      toast.success('Profile photo removed.')
+    } catch (err) {
+      toast.error(err.message || 'Failed to remove photo.')
+    } finally {
+      setAvatarDeleting(false)
     }
   }
 
@@ -309,6 +353,76 @@ export default function SettingsPage() {
                       </FieldGroup>
                     </div>
                   </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── My Profile ── */}
+            {activeTab === 'profile' && (
+              <motion.div key="profile" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+                style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 2px 6px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
+
+                <div style={{ padding: '20px 28px', borderBottom: '1px solid #F1F5F9' }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', margin: 0 }}>My Profile</h2>
+                  <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Manage your personal photo and account details</p>
+                </div>
+
+                <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+                  {/* Avatar section */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '20px 24px', background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 14 }}>
+                    <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 16px rgba(37,99,235,0.20)', border: '2px solid #E2E8F0' }}>
+                      {displayAvatarUrl
+                        ? <img src={displayAvatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #2563EB, #7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#FFFFFF' }}>
+                            {cu?.email ? cu.email[0].toUpperCase() : 'A'}
+                          </div>
+                      }
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>Profile Photo</p>
+                      <p style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12 }}>PNG or JPG. Max 2MB. Shown in the header dropdown and admin views.</p>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button onClick={() => avatarRef.current?.click()} disabled={avatarUploading}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#374151', cursor: avatarUploading ? 'default' : 'pointer', opacity: avatarUploading ? 0.7 : 1 }}>
+                          {avatarUploading
+                            ? <><div style={{ width: 12, height: 12, border: '2px solid #E2E8F0', borderTop: '2px solid #2563EB', borderRadius: '50%' }} className="animate-spin" /> Uploading…</>
+                            : <><Upload size={13} /> {displayAvatarUrl ? 'Change Photo' : 'Upload Photo'}</>
+                          }
+                        </button>
+                        {displayAvatarUrl && (
+                          <button onClick={handleAvatarDelete} disabled={avatarDeleting}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', cursor: avatarDeleting ? 'default' : 'pointer', opacity: avatarDeleting ? 0.7 : 1 }}>
+                            {avatarDeleting
+                              ? <><div style={{ width: 12, height: 12, border: '2px solid #FECACA', borderTop: '2px solid #DC2626', borderRadius: '50%' }} className="animate-spin" /> Removing…</>
+                              : <><Trash2 size={13} /> Remove Photo</>
+                            }
+                          </button>
+                        )}
+                      </div>
+                      <input ref={avatarRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarUpload} />
+                    </div>
+                  </div>
+
+                  {/* Account info */}
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94A3B8', marginBottom: 16 }}>Account Details</p>
+                    <div className="rg-2">
+                      <div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                          <User size={12} style={{ color: '#94A3B8' }} /> Role
+                        </label>
+                        <div style={{ ...FIELD_STYLE, background: '#F8FAFC', color: '#64748B' }}>Administrator</div>
+                      </div>
+                      <div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                          <Mail size={12} style={{ color: '#94A3B8' }} /> Email
+                        </label>
+                        <div style={{ ...FIELD_STYLE, background: '#F8FAFC', color: '#64748B' }}>{cu?.email || '—'}</div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </motion.div>
             )}

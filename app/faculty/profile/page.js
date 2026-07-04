@@ -203,8 +203,8 @@ export default function FacultyProfile() {
       <div style={{ background: 'linear-gradient(135deg,#065F46,#059669)', borderRadius: 20, padding: '28px 32px', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }}>
           <div style={{ width: 80, height: 80, borderRadius: 20, overflow: 'hidden', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#FFFFFF', border: '3px solid rgba(255,255,255,0.3)' }}>
-            {avatarUrl
-              ? <img src={avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {(avatarUrl || cu.avatarUrl)
+              ? <img src={avatarUrl || cu.avatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : (profile.name ? profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'FA')
             }
           </div>

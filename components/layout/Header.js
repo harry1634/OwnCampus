@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, ChevronDown, LogOut, Settings, User, Command, Menu, Search, CheckCheck, AlertCircle, CreditCard, Calendar, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/store/appStore'
+import { useCurrentUser } from '@/lib/useCurrentUser'
 import { toast } from 'sonner'
 import { getInitials } from '@/lib/utils'
 import { navigation } from '@/config/navigation'
@@ -59,6 +60,8 @@ export default function Header({ user, profile, institution }) {
   const router   = useRouter()
   const pathname = usePathname()
   const { toggleSidebar, sidebarCollapsed: _sidebarCollapsed, openMobileSidebar } = useAppStore()
+  const cu = useCurrentUser()
+  const liveAvatarUrl = cu?.avatarUrl || profile?.avatar_url || null
   const [showUserMenu,       setShowUserMenu]       = useState(false)
   const [showNotifications,  setShowNotifications]  = useState(false)
   const [paletteOpen,        setPaletteOpen]        = useState(false)
@@ -378,9 +381,9 @@ export default function Header({ user, profile, institution }) {
               onMouseEnter={e => e.currentTarget.style.borderColor = '#CBD5E1'}
               onMouseLeave={e => e.currentTarget.style.borderColor = '#E2E8F0'}
             >
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: profile?.avatar_url ? 'transparent' : 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
-                {profile?.avatar_url
-                  ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: liveAvatarUrl ? 'transparent' : 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                {liveAvatarUrl
+                  ? <img src={liveAvatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : getInitials(userName)
                 }
               </div>
@@ -401,9 +404,9 @@ export default function Header({ user, profile, institution }) {
                 >
                   {/* User info */}
                   <div style={{ padding: '16px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: profile?.avatar_url ? 'transparent' : 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
-                      {profile?.avatar_url
-                        ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: liveAvatarUrl ? 'transparent' : 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                      {liveAvatarUrl
+                        ? <img src={liveAvatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : getInitials(userName)
                       }
                     </div>
@@ -419,8 +422,8 @@ export default function Header({ user, profile, institution }) {
                   {/* Menu items */}
                   <div style={{ padding: '8px' }}>
                     {[
-                      { label: 'My Profile', icon: User,     href: '/settings/profile', desc: 'View & edit profile' },
-                      { label: 'Settings',   icon: Settings, href: '/settings',          desc: 'App preferences'   },
+                      { label: 'My Profile', icon: User,     href: '/settings', desc: 'View & edit profile' },
+                      { label: 'Settings',   icon: Settings, href: '/settings', desc: 'App preferences'   },
                     ].map(item => (
                       <Link key={item.label} href={item.href} onClick={() => setShowUserMenu(false)}
                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 10, textDecoration: 'none', transition: 'background 0.12s' }}

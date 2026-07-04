@@ -30,7 +30,7 @@ export default function PlacementPage() {
   const [search, setSearch] = useState('')
 
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       <div className="page-header">
         <div>
           <h1 className="page-header-title">Placement Cell</h1>
@@ -45,7 +45,7 @@ export default function PlacementPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           { label: 'Placed Students',  value: '98',       icon: Award,      iconColor: '#10B981', iconBg: '#F0FDF4' },
           { label: 'Companies Visited',value: '34',       icon: Building2,  iconColor: '#2563EB', iconBg: '#EFF6FF' },

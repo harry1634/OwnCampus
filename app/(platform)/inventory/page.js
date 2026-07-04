@@ -34,7 +34,7 @@ export default function InventoryPage() {
       )
     : allItems
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       <div className="page-header">
         <div>
           <h1 className="page-header-title">Inventory Management</h1>
@@ -49,7 +49,7 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           { label: 'Total Items',   value: '284',     icon: Package,    iconColor: '#2563EB', iconBg: '#EFF6FF' },
           { label: 'Low Stock',     value: '12',      icon: TrendingDown,iconColor: '#F59E0B', iconBg: '#FFFBEB' },
@@ -73,7 +73,7 @@ export default function InventoryPage() {
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8ECF0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-        <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid #F1F5F9' }}>
+        <div className="flex items-center gap-3" style={{ padding: '16px 16px 20px', borderBottom: '1px solid #F1F5F9' }}>
           <div className="relative flex-1 max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#CBD5E1' }} />
             <input type="text" placeholder="Search inventory…" className="input-premium pl-9 py-2 text-xs" value={search} onChange={e => setSearch(e.target.value)} />
@@ -103,7 +103,7 @@ export default function InventoryPage() {
                     <td><span className="text-xs" style={{ color: '#94A3B8' }}>{item.minStock}</span></td>
                     <td><span className="text-xs font-semibold" style={{ color: '#0F172A' }}>₹{item.value.toLocaleString('en-IN')}</span></td>
                     <td><span className="text-xs px-2 py-1 rounded-lg font-medium" style={{ background: status.bg, color: status.color }}>{status.label}</span></td>
-                    <td><button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" style={{ color: '#64748B' }}><Edit size={13} /></button></td>
+                    <td><div className="action-group"><button title="Edit" className="action-btn action-btn-edit"><Edit size={13} /></button></div></td>
                   </motion.tr>
                 )
               })}

@@ -114,7 +114,7 @@ function DashboardSkeleton() {
         <div className="shimmer h-3.5 w-48 rounded mb-3" />
         <div className="shimmer h-8 w-64 rounded" />
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[...Array(4)].map((_, i) => (
           <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px' }}>
             <div className="shimmer h-3 w-20 rounded mb-3" />

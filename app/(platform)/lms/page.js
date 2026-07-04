@@ -92,7 +92,7 @@ function VideoModal({ url, title, onClose }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}>
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9 }}
         onClick={e => e.stopPropagation()}
         style={{ width: '100%', maxWidth: 860, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -537,7 +537,7 @@ function CreateCourseModal({ courseCount, onClose, onAdd }) {
       onClick={onClose}>
       <motion.div initial={{ opacity:0, scale:0.95, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.95 }}
         onClick={e => e.stopPropagation()}
-        style={{ background:'#FFFFFF', borderRadius:18, width:'100%', maxWidth:520, boxShadow:'0 20px 60px rgba(0,0,0,0.18)', overflow:'hidden' }}>
+        style={{ background:'#FFFFFF', borderRadius:18, width:'100%', maxWidth:520, boxShadow:'0 20px 60px rgba(0,0,0,0.18)', overflowX:'hidden', overflowY:'auto', maxHeight:'calc(100vh - var(--header-height) - 64px)' }}>
         <div style={{ padding:'18px 20px', borderBottom:'1px solid #F1F5F9', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div>
             <p style={{ fontSize:15, fontWeight:700, color:'#0F172A' }}>Create New Course</p>
@@ -627,7 +627,7 @@ export default function LMSPage() {
   if (!mounted) return null
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
       <div className="page-header">
         <div>
@@ -641,7 +641,7 @@ export default function LMSPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {kpis.map((stat, i) => {
           const Icon = stat.icon
           return (

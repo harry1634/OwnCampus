@@ -117,9 +117,9 @@ function ImportModal({ onClose, onImport }) {
   }
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.55)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.55)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-start', overflowY:'auto', padding:'calc(var(--header-height) + 24px) 20px 40px' }}>
       <motion.div initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0, scale:0.95 }}
-        style={{ background:'#FFFFFF', borderRadius:20, width:'100%', maxWidth:680, maxHeight:'90vh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 32px 80px rgba(15,23,42,0.22)' }}>
+        style={{ background:'#FFFFFF', borderRadius:20, width:'100%', maxWidth:680, maxHeight:'calc(100vh - var(--header-height) - 64px)', display:'flex', flexDirection:'column', overflowX:'hidden', overflowY:'auto', boxShadow:'0 32px 80px rgba(15,23,42,0.22)' }}>
 
         {/* Header */}
         <div style={{ padding:'20px 24px', borderBottom:'1px solid #F1F5F9', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
@@ -310,9 +310,9 @@ function LeadEditModal({ lead, onClose, onSave }) {
   )
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.55)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.55)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-start', overflowY:'auto', padding:'calc(var(--header-height) + 24px) 20px 40px' }}>
       <motion.div initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0, scale:0.95 }}
-        style={{ background:'#FFFFFF', borderRadius:20, width:'100%', maxWidth:540, maxHeight:'90vh', overflow:'auto', boxShadow:'0 32px 80px rgba(15,23,42,0.22)' }}>
+        style={{ background:'#FFFFFF', borderRadius:20, width:'100%', maxWidth:540, maxHeight:'calc(100vh - var(--header-height) - 64px)', overflowY:'auto', boxShadow:'0 32px 80px rgba(15,23,42,0.22)' }}>
         <div style={{ padding:'20px 24px', borderBottom:'1px solid #F1F5F9', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ width:36, height:36, borderRadius:10, background:'#EFF6FF', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -788,7 +788,7 @@ export default function AdmissionsPage() {
       <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 2px 6px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px 20px', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
             <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#CBD5E1' }} />
             <input

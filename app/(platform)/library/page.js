@@ -103,11 +103,11 @@ function ImportModal({ onClose, onImport }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
       onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-        style={{ background: '#FFFFFF', borderRadius: 20, boxShadow: '0 24px 64px rgba(15,23,42,0.22)', width: '100%', maxWidth: 640, maxHeight: '88vh', overflowY: 'auto' }}
+        style={{ background: '#FFFFFF', borderRadius: 20, boxShadow: '0 24px 64px rgba(15,23,42,0.22)', width: '100%', maxWidth: 640, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -236,7 +236,7 @@ function IssueModal({ book, onClose, onConfirm }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
       onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 340, damping: 30 }}
@@ -340,7 +340,7 @@ function IssueModal({ book, onClose, onConfirm }) {
 /* ── Delete Confirm Dialog ───────────────────────────────────────── */
 function DeleteConfirm({ book, onConfirm, onClose }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
       onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
@@ -406,11 +406,11 @@ function EditBookModal({ book, onClose, onSaved }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-        style={{ background: '#FFFFFF', borderRadius: 20, boxShadow: '0 24px 64px rgba(15,23,42,0.22)', width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
+        style={{ background: '#FFFFFF', borderRadius: 20, boxShadow: '0 24px 64px rgba(15,23,42,0.22)', width: '100%', maxWidth: 520, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto' }}>
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -565,7 +565,7 @@ export default function LibraryPage() {
       const res  = await fetch('/api/library', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ action: 'issue', book_id: bookId, user_id: studentId }),
+        body:    JSON.stringify({ action: 'issue', book_id: bookId, user_id: studentId, due_date: dueDate }),
       })
       const json = await res.json()
       if (!res.ok || json.error) {
@@ -589,7 +589,7 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       {/* Header */}
       <div className="page-header">
         <div>
@@ -614,7 +614,7 @@ export default function LibraryPage() {
       </div>
 
       {/* KPI Cards — real data from store */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           { label: 'Total Books',  value: totalBooks.toLocaleString(), icon: BookOpen,    iconColor: '#2563EB', iconBg: '#EFF6FF' },
           { label: 'Available',    value: available.toLocaleString(),   icon: Library,     iconColor: '#10B981', iconBg: '#F0FDF4' },
@@ -665,7 +665,7 @@ export default function LibraryPage() {
       {/* Catalog Tab */}
       {activeTab === 'catalog' && (
         <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8ECF0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-          <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid #F1F5F9' }}>
+          <div className="flex items-center gap-3" style={{ padding: '16px 16px 20px', borderBottom: '1px solid #F1F5F9' }}>
             <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
               <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#CBD5E1', pointerEvents: 'none' }} />
               <input type="text" placeholder="Search title, author, ISBN…" value={search} onChange={e => { setSearch(e.target.value); setCatalogPage(1) }}
@@ -689,7 +689,7 @@ export default function LibraryPage() {
                   <thead>
                     <tr>
                       <th>Title / Author</th><th>Category</th><th>Publisher</th>
-                      <th>Rack</th><th>Available</th><th>Status</th><th>Actions</th>
+                      <th>Rack</th><th>Available</th><th>Status</th><th style={{ textAlign: 'center' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -711,21 +711,22 @@ export default function LibraryPage() {
                               {book.available === 0 ? 'All Issued' : 'Available'}
                             </span>
                           </td>
-                          <td>
-                            <div className="flex gap-1">
-                              <button onClick={() => setEditTarget(book)}
-                                className="p-1.5 rounded-lg hover:bg-blue-50 transition-colors" style={{ color: '#2563EB' }} title="Edit">
-                                <Pencil size={13} />
-                              </button>
+                          <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
+                            <div className="action-group" style={{ justifyContent: 'center' }}>
+                              <button onClick={() => setEditTarget(book)} title="Edit Book" className="action-btn action-btn-edit"><Pencil size={13} /></button>
                               <button onClick={() => setIssueTarget(book)} disabled={book.available === 0}
-                                className="text-xs px-2 py-1 rounded-lg font-medium disabled:opacity-40"
-                                style={{ background: book.available === 0 ? '#F1F5F9' : '#EFF6FF', color: book.available === 0 ? '#94A3B8' : '#2563EB', cursor: book.available === 0 ? 'default' : 'pointer' }}>
+                                style={{
+                                  height: 32, padding: '0 14px', borderRadius: 8, flexShrink: 0,
+                                  display: 'flex', alignItems: 'center',
+                                  background: book.available === 0 ? '#F1F5F9' : '#2563EB',
+                                  border: `1.5px solid ${book.available === 0 ? '#E2E8F0' : '#1D4ED8'}`,
+                                  color: book.available === 0 ? '#94A3B8' : '#FFFFFF',
+                                  fontSize: 12, fontWeight: 700, cursor: book.available === 0 ? 'not-allowed' : 'pointer',
+                                  opacity: book.available === 0 ? 0.55 : 1,
+                                }}>
                                 Issue
                               </button>
-                              <button onClick={() => setDeleteTarget(book)}
-                                className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" style={{ color: '#EF4444' }} title="Delete">
-                                <Trash2 size={13} />
-                              </button>
+                              <button onClick={() => setDeleteTarget(book)} title="Delete Book" className="action-btn action-btn-delete"><Trash2 size={13} /></button>
                             </div>
                           </td>
                         </motion.tr>

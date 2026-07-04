@@ -163,7 +163,7 @@ export default function FacultySidebar({ profile, collapsed, setCollapsed, isMob
         </nav>
 
         {/* Footer: Settings + Sign Out */}
-        <div style={{ padding: '8px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{ padding: isMobile ? '8px 10px calc(70px + env(safe-area-inset-bottom, 0px))' : '8px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Link href="/faculty/settings"
             onClick={() => isMobile && setMobileOpen(false)}
             title={showCollapsed ? 'Settings' : undefined}

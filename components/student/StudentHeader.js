@@ -200,8 +200,8 @@ export default function StudentHeader({ user, profile, isMobile, collapsed, onHa
               <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{cu.email || user?.email}</p>
             </div>
             {[
-              { label: 'My Profile', icon: User,    href: '/student/profile'  },
-              { label: 'Settings',   icon: Settings, href: '/student/settings' },
+              { label: 'My Profile', icon: User,    href: '/student/profile' },
+              { label: 'Settings',   icon: Settings, href: '/student/profile' },
             ].map(item => (
               <button key={item.label}
                 onClick={() => { setUserMenuOpen(false); router.push(item.href) }}

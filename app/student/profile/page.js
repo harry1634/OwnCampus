@@ -200,8 +200,8 @@ export default function StudentProfile() {
       <div style={{ background: 'linear-gradient(135deg,#4C1D95,#7C3AED)', borderRadius: 20, padding: '26px 30px', display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <div style={{ width: 84, height: 84, borderRadius: 20, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#FFFFFF', border: '3px solid rgba(255,255,255,0.32)', boxShadow: '0 0 0 5px rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-            {avatarUrl
-              ? <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {(avatarUrl || cu.avatarUrl)
+              ? <img src={avatarUrl || cu.avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : (profile.name ? profile.name.split(' ').map(w => w[0]).join('').slice(0, 2) : cu.initials || 'S')
             }
           </div>

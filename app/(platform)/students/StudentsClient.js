@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Search, Filter, Plus, Download, Upload, UserCheck, AlertCircle, TrendingUp, Eye, EyeOff, Edit, Phone, CheckCircle, X, FileText, ArrowLeftRight, Building2, Trash2, GraduationCap, Mail, Save, Copy } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/SkeletonLoader'
 import Pagination from '@/components/ui/Pagination'
+import ActionDropdown from '@/components/ui/ActionDropdown'
 import Link from 'next/link'
 import { downloadCSV } from '@/lib/exportUtils'
 import { toast } from 'sonner'
@@ -35,8 +36,8 @@ function getInitials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
 }
 
-const OVERLAY = { position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }
-const MODAL   = { background: '#FFFFFF', borderRadius: 20, boxShadow: '0 24px 64px rgba(15,23,42,0.22)', width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }
+const OVERLAY = { position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }
+const MODAL   = { background: '#FFFFFF', borderRadius: 20, boxShadow: '0 24px 64px rgba(15,23,42,0.22)', width: '100%', maxWidth: 480, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto' }
 
 function StudentViewModal({ student, onEdit, onClose }) {
   const fee   = feeColors[student.fees] || feeColors.pending
@@ -452,7 +453,13 @@ export default function StudentsClient() {
   const [editStudent,      setEditStudent     ] = useState(null)
   const [deleteConfirm,    setDeleteConfirm   ] = useState(null)
   const [deleting,         setDeleting        ] = useState(false)
-  const importRef = useRef(null)
+  const [selectedIds,      setSelectedIds     ] = useState(new Set())
+  const [bulkDeleteConfirm,setBulkDeleteConfirm] = useState(false)
+  const [bulkDeleting,     setBulkDeleting    ] = useState(false)
+  const importRef       = useRef(null)
+  const headerCheckRef  = useRef(null)
+
+  const getRowKey = (s) => s.supabaseId || s.email || `local-${s.id}`
 
   useEffect(() => {
     fetch('/api/students')
@@ -600,13 +607,65 @@ export default function StudentsClient() {
     return matchSearch && matchClass && matchFee && matchBranch
   })
 
-  useEffect(() => { setPage(1) }, [search, selectedClass, selectedFee, selectedBranch])
+  useEffect(() => { setPage(1); setSelectedIds(new Set()) }, [search, selectedClass, selectedFee, selectedBranch])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  // Sync header checkbox indeterminate state
+  useEffect(() => {
+    if (!headerCheckRef.current) return
+    const pageKeys = paginated.map(getRowKey)
+    const allSel  = pageKeys.length > 0 && pageKeys.every(k => selectedIds.has(k))
+    const someSel = pageKeys.some(k => selectedIds.has(k))
+    headerCheckRef.current.checked       = allSel
+    headerCheckRef.current.indeterminate = someSel && !allSel
+  }, [selectedIds, paginated])
+
+  function toggleStudent(key) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
+  function handleSelectAll(e) {
+    setSelectedIds(e.target.checked ? new Set(paginated.map(getRowKey)) : new Set())
+  }
+
+  function handleBulkExport() {
+    const sel = students.filter(s => selectedIds.has(getRowKey(s)))
+    const headers = ['Roll No', 'Name', 'Class', 'Branch', 'Parent', 'Phone', 'Email', 'Attendance %', 'Fee Status']
+    downloadCSV(`students-${sel.length}.csv`, headers, sel.map(s => [s.roll, s.name, s.class, s.branch, s.parent, s.phone, s.email, s.attendance, s.fees]))
+    setSelectedIds(new Set())
+  }
+
+  async function handleBulkDelete() {
+    setBulkDeleting(true)
+    const sel = students.filter(s => selectedIds.has(getRowKey(s)))
+    let count = 0
+    for (const student of sel) {
+      try {
+        if (student.studentRowId) {
+          const r = await fetch(`/api/students?id=${student.studentRowId}`, { method: 'DELETE' })
+          if (r.ok) count++
+        } else if (student.supabaseId) {
+          const r = await fetch(`/api/admin/users/${student.supabaseId}`, { method: 'DELETE' })
+          if (r.ok) count++
+        }
+      } catch {}
+    }
+    const removedKeys = new Set(sel.map(getRowKey))
+    setStudents(prev => prev.filter(s => !removedKeys.has(getRowKey(s))))
+    setSelectedIds(new Set())
+    setBulkDeleteConfirm(false)
+    setBulkDeleting(false)
+    if (count > 0) toast.success(`${count} student${count > 1 ? 's' : ''} removed`)
+  }
+
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
       {/* Import result toast */}
       <AnimatePresence>
@@ -681,11 +740,45 @@ export default function StudentsClient() {
         </div>
         <div className="page-actions">
           <input ref={importRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleImport} />
-          <button className="btn-secondary" title="Download sample CSV template" onClick={() => downloadCSV('students-template.csv', ['Name','Roll No','Class','Parent','Phone','Email'], [['Rahul Sharma','A001','10-A','Suresh Sharma','+91 98765 43210','rahul@email.com']])}>
-            <FileText size={15} /> Template
+
+          {/* Import ▼ — merged dropdown (Part 6 of DS sprint) */}
+          <ActionDropdown
+            label="Import"
+            icon={Upload}
+            align="right"
+            items={[
+              {
+                label: 'Import CSV',
+                desc:  'Upload a .csv file with student data',
+                icon:  Upload,
+                iconColor: '#2563EB', iconBg: '#EFF6FF',
+                onClick: () => importRef.current?.click(),
+              },
+              {
+                label: 'Import Excel',
+                desc:  'Coming soon',
+                icon:  FileText,
+                iconColor: '#10B981', iconBg: '#F0FDF4',
+                disabled: true,
+              },
+              { divider: true },
+              {
+                label: 'Download Template',
+                desc:  'Sample CSV with all columns',
+                icon:  Download,
+                iconColor: '#64748B', iconBg: '#F1F5F9',
+                onClick: () => downloadCSV(
+                  'students-template.csv',
+                  ['Name','Roll No','Class','Parent','Phone','Email'],
+                  [['Rahul Sharma','A001','10-A','Suresh Sharma','+91 98765 43210','rahul@email.com']]
+                ),
+              },
+            ]}
+          />
+
+          <button className="btn-secondary" onClick={handleExport}>
+            <Download size={15} /> Export
           </button>
-          <button className="btn-secondary" onClick={() => importRef.current?.click()}><Upload size={15} /> Import CSV</button>
-          <button className="btn-secondary" onClick={handleExport}><Download size={15} /> Export</button>
           <Link href="/students/new">
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn-primary">
               <Plus size={15} /> Add Student
@@ -695,7 +788,7 @@ export default function StudentsClient() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {stats.map((stat, i) => {
           const StatIcon = stat.icon
           return (
@@ -715,29 +808,29 @@ export default function StudentsClient() {
 
       {/* Table Card */}
       <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8ECF0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-        {/* Toolbar — two rows for clean alignment */}
-        <div className="px-5 py-4 space-y-3" style={{ borderBottom: '1px solid #F1F5F9' }}>
+        {/* Toolbar */}
+        <div style={{ padding: '16px 20px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Row 1: Search + count */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#CBD5E1' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ position: 'relative', flex: 1, maxWidth: 360 }}>
+              <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#CBD5E1', pointerEvents: 'none' }} />
               <input type="text" placeholder="Search by name or roll number…"
                 value={search} onChange={e => setSearch(e.target.value)}
-                className="input-premium pl-9 py-2 text-xs" />
+                className="input-premium" style={{ paddingLeft: 36, paddingTop: 8, paddingBottom: 8, fontSize: 12, width: '100%', boxSizing: 'border-box' }} />
             </div>
-            <span className="ml-auto text-xs font-medium flex-shrink-0" style={{ color: '#94A3B8' }}>
+            <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 500, color: '#94A3B8', flexShrink: 0 }}>
               {filtered.length} / {students.length} students
             </span>
           </div>
           {/* Row 2: Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)}
-              className="input-premium py-2 text-xs" style={{ width: 'auto', minWidth: '120px' }}>
+              className="input-premium" style={{ width: 'auto', minWidth: 120, fontSize: 12, padding: '6px 10px' }}>
               <option value="all">All Classes</option>
               {['9-A','9-B','10-A','10-B','11-A','11-B','12-A','12-B'].map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <select value={selectedFee} onChange={e => setSelectedFee(e.target.value)}
-              className="input-premium py-2 text-xs" style={{ width: 'auto', minWidth: '140px' }}>
+              className="input-premium" style={{ width: 'auto', minWidth: 140, fontSize: 12, padding: '6px 10px' }}>
               <option value="all">All Fee Status</option>
               <option value="paid">Paid</option>
               <option value="partial">Partial</option>
@@ -746,13 +839,38 @@ export default function StudentsClient() {
             </select>
             {branches.length > 0 && (
               <select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)}
-                className="input-premium py-2 text-xs" style={{ width: 'auto', minWidth: '140px' }}>
+                className="input-premium" style={{ width: 'auto', minWidth: 140, fontSize: 12, padding: '6px 10px' }}>
                 <option value="all">All Branches</option>
                 {branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
                 <option value="__none__">No Branch</option>
               </select>
             )}
           </div>
+          {/* Row 3: Bulk action bar — only when students are selected */}
+          {selectedIds.size > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10 }}>
+              <div style={{ width: 20, height: 20, borderRadius: 6, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <CheckCircle size={12} color="#FFF" />
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1D4ED8' }}>
+                {selectedIds.size} student{selectedIds.size > 1 ? 's' : ''} selected
+              </span>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                <button onClick={handleBulkExport}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: '1px solid #BFDBFE', background: '#FFFFFF', color: '#2563EB', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                  <Download size={12} /> Export CSV
+                </button>
+                <button onClick={() => setBulkDeleteConfirm(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                  <Trash2 size={12} /> Delete
+                </button>
+                <button onClick={() => setSelectedIds(new Set())}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#64748B', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                  <X size={11} /> Clear
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Table */}
@@ -760,7 +878,7 @@ export default function StudentsClient() {
           <table className="table-premium">
             <thead>
               <tr>
-                <th className="w-10"><input type="checkbox" className="w-3.5 h-3.5 rounded accent-blue-600" /></th>
+                <th className="w-10"><input ref={headerCheckRef} type="checkbox" className="w-3.5 h-3.5 rounded accent-blue-600" onChange={handleSelectAll} /></th>
                 <th>Student</th>
                 <th>Roll No.</th>
                 <th>Class</th>
@@ -792,7 +910,7 @@ export default function StudentsClient() {
                 const rowKey = student.supabaseId || student.email || `local-${student.id}`
                 return (
                   <motion.tr key={rowKey} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}>
-                    <td><input type="checkbox" className="w-3.5 h-3.5 rounded accent-blue-600" /></td>
+                    <td><input type="checkbox" className="w-3.5 h-3.5 rounded accent-blue-600" checked={selectedIds.has(rowKey)} onChange={() => toggleStudent(rowKey)} /></td>
                     <td>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: color }}>
@@ -821,20 +939,15 @@ export default function StudentsClient() {
                     </td>
                     <td><span className="badge badge-success text-xs">Active</span></td>
                     <td>
-                      <div className="flex items-center justify-end gap-1">
-                        <button title="View" onClick={() => setViewStudent(student)}
-                          className="p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: '#64748B' }}><Eye size={14} /></button>
-                        <button title="Edit" onClick={() => setEditStudent(student)}
-                          className="p-1.5 rounded-lg transition-colors hover:bg-gray-100" style={{ color: '#64748B' }}><Edit size={14} /></button>
+                      <div className="action-group">
+                        <button title="View"   onClick={() => setViewStudent(student)}   className="action-btn action-btn-view"><Eye size={13} /></button>
+                        <button title="Edit"   onClick={() => setEditStudent(student)}   className="action-btn action-btn-edit"><Edit size={13} /></button>
                         {student.supabaseId && branches.length > 0 && (
                           <button title="Transfer Branch"
                             onClick={() => { setTransferStudent(student); setTransferBranchId(student.branchId || '') }}
-                            className="p-1.5 rounded-lg transition-colors hover:bg-blue-50" style={{ color: '#2563EB' }}>
-                            <ArrowLeftRight size={14} />
-                          </button>
+                            className="action-btn action-btn-green"><ArrowLeftRight size={13} /></button>
                         )}
-                        <button title="Delete" onClick={() => setDeleteConfirm(student)}
-                          className="p-1.5 rounded-lg transition-colors hover:bg-red-50" style={{ color: '#DC2626' }}><Trash2 size={14} /></button>
+                        <button title="Delete" onClick={() => setDeleteConfirm(student)} className="action-btn action-btn-delete"><Trash2 size={13} /></button>
                       </div>
                     </td>
                   </motion.tr>
@@ -906,11 +1019,43 @@ export default function StudentsClient() {
         )}
       </AnimatePresence>
 
+      {/* Bulk Delete Confirm Modal */}
+      <AnimatePresence>
+        {bulkDeleteConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={OVERLAY} onClick={() => !bulkDeleting && setBulkDeleteConfirm(false)}>
+            <motion.div initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              onClick={e => e.stopPropagation()}
+              style={{ background: '#FFF', borderRadius: 18, padding: 28, width: '100%', maxWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                  <Trash2 size={22} color="#DC2626" />
+                </div>
+                <p style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', margin: 0 }}>Remove {selectedIds.size} Student{selectedIds.size > 1 ? 's' : ''}?</p>
+                <p style={{ fontSize: 13, color: '#64748B', marginTop: 8, lineHeight: 1.5 }}>
+                  All selected students will be deactivated and removed from this list. This also deactivates their logins.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setBulkDeleteConfirm(false)} disabled={bulkDeleting}
+                  style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#64748B', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button onClick={handleBulkDelete} disabled={bulkDeleting}
+                  style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', background: '#DC2626', color: '#FFF', fontSize: 13, fontWeight: 700, cursor: bulkDeleting ? 'default' : 'pointer' }}>
+                  {bulkDeleting ? 'Removing…' : `Yes, Remove All`}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Transfer Branch Modal */}
       <AnimatePresence>
         {transferStudent && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
             onClick={() => setTransferStudent(null)}>
             <motion.div initial={{ scale: 0.95, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 8 }}
               onClick={e => e.stopPropagation()}

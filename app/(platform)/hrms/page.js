@@ -80,11 +80,11 @@ function ApplyLeaveModal({ onClose, onAdd, employees }) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
       onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         onClick={e => e.stopPropagation()}
-        style={{ background: '#FFFFFF', borderRadius: 18, width: '100%', maxWidth: 460, boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
+        style={{ background: '#FFFFFF', borderRadius: 18, width: '100%', maxWidth: 460, boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflowX: 'hidden', overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 64px)' }}>
         <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9' }}>
           <p style={{ fontSize: 15, fontWeight: 700, color: '#0F172A' }}>Apply Leave</p>
           <p style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>Submit a leave request</p>
@@ -196,7 +196,7 @@ export default function HRMSPage() {
   if (!mounted) return null
 
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
       {/* Header */}
       <div className="page-header">
@@ -235,7 +235,7 @@ export default function HRMSPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           { label: 'Total Employees',   value: String(empKpis.totalEmployees), icon: Users,       iconColor: '#2563EB', iconBg: '#EFF6FF' },
           { label: 'On Leave (Approved)', value: String(approvedToday),         icon: Calendar,    iconColor: '#D97706', iconBg: '#FFFBEB' },
@@ -412,7 +412,7 @@ export default function HRMSPage() {
 
       {/* ── Payroll Tab ── */}
       {activeTab === 'payroll' && (
-        <div className="space-y-5">
+        <div className="space-y-8">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#FFFFFF', fontSize: 13, color: '#475569', cursor: 'pointer' }}>
               Cycle: {cycle} <ChevronDown size={12} />
@@ -512,11 +512,11 @@ export default function HRMSPage() {
       {/* Reason detail modal */}
       {viewReason && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
           onClick={() => setViewReason(null)}>
           <motion.div initial={{ opacity: 0, scale: 0.95, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }}
             onClick={e => e.stopPropagation()}
-            style={{ background: '#FFFFFF', borderRadius: 18, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
+            style={{ background: '#FFFFFF', borderRadius: 18, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflowX: 'hidden', overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 64px)' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)' }}>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Leave Reason</p>

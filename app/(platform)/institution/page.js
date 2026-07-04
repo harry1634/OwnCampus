@@ -21,7 +21,8 @@ const STATES = [
 
 const OVERLAY = {
   position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200,
-  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
+  overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px',
 }
 
 function Field({ label, children }) {
@@ -47,7 +48,7 @@ function EditInstitutionModal({ profile, onClose, onSave }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={OVERLAY} onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-        style={{ background: '#FFF', borderRadius: 20, width: '100%', maxWidth: 580, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(15,23,42,0.22)' }}
+        style={{ background: '#FFF', borderRadius: 20, width: '100%', maxWidth: 580, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto', boxShadow: '0 24px 64px rgba(15,23,42,0.22)' }}
         onClick={e => e.stopPropagation()}>
 
         <div style={{ padding: '18px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#FFF', zIndex: 1 }}>

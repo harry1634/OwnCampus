@@ -47,11 +47,29 @@ export async function POST(req) {
     if (error) return Response.json({ error: error.message }, { status: 500 })
 
     const { data: { publicUrl } } = admin.storage.from(BUCKET).getPublicUrl(data.path)
+    // Append a cache-buster so every upload produces a distinct URL in the DB.
+    // This prevents browsers and CDNs from serving stale images when the same
+    // storage path is overwritten (upsert). The timestamp is permanent — it travels
+    // through the DB into UserContext and survives navigation.
+    const urlWithBuster = publicUrl + '?t=' + Date.now()
 
-    // Atomically update avatar_url in user_profiles
-    await admin.from('user_profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
+    // Update avatar_url in user_profiles; select back to confirm the write
+    const { data: updatedRows, error: dbErr } = await admin
+      .from('user_profiles')
+      .update({ avatar_url: urlWithBuster })
+      .eq('id', user.id)
+      .select('id')
 
-    return Response.json({ url: publicUrl })
+    if (dbErr) {
+      console.error('[upload/photo] DB update failed:', dbErr.message, dbErr)
+      return Response.json({ error: 'Saved to storage but failed to update profile: ' + dbErr.message }, { status: 500 })
+    }
+    if (!updatedRows || updatedRows.length === 0) {
+      console.error('[upload/photo] DB update matched 0 rows. user.id =', user.id)
+      return Response.json({ error: 'Profile row not found — avatar saved to storage but not linked to your account' }, { status: 404 })
+    }
+
+    return Response.json({ url: urlWithBuster })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }

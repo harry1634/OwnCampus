@@ -33,13 +33,13 @@ function getInitials(name) {
 const OVERLAY = {
   position: 'fixed', inset: 0, zIndex: 1000,
   background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  padding: 24,
+  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start',
+  overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px',
 }
 
 const MODAL = {
   background: '#FFFFFF', borderRadius: 20, boxShadow: '0 24px 64px rgba(15,23,42,0.20)',
-  width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto',
+  width: '100%', maxWidth: 480, maxHeight: 'calc(100vh - var(--header-height) - 64px)', overflowY: 'auto',
 }
 
 // ── View Modal ─────────────────────────────────────────────────────────────
@@ -688,7 +688,7 @@ export default function FacultyPage() {
       <AnimatePresence>
         {deleteConfirm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
             onClick={() => setDeleteConfirm(null)}>
             <motion.div initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
               onClick={e => e.stopPropagation()}
@@ -722,7 +722,7 @@ export default function FacultyPage() {
       <AnimatePresence>
         {transferFaculty && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
             onClick={() => setTransferFaculty(null)}>
             <motion.div initial={{ scale: 0.95, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 8 }}
               onClick={e => e.stopPropagation()}
