@@ -246,41 +246,56 @@ export default function StudentProfile() {
         {
           title: 'Personal Information',
           fields: [
-            ['Full Name', 'name'], ['Date of Birth', 'dob'], ['Gender', 'gender'], ['Blood Group', 'blood'],
-            ['Email', 'email'], ['Phone', 'phone'],
+            ['Full Name',    'name',   false],
+            ['Date of Birth','dob',    false],
+            ['Gender',       'gender', false],
+            ['Blood Group',  'blood',  false],
+            ['Email',        'email',  true ],
+            ['Phone',        'phone',  false],
           ]
         },
         {
           title: 'Academic Information',
+          adminNote: 'Class, section and roll number are managed by the admin.',
           fields: [
-            ['Class', 'class'], ['Section', 'section'], ['Branch', 'branch'], ['Admission Date', 'admission'],
-            ['Roll Number', 'rollNo'], ['House', 'house'],
+            ['Class',          'class',     true ],
+            ['Section',        'section',   true ],
+            ['Branch',         'branch',    true ],
+            ['Admission Date', 'admission', true ],
+            ['Roll Number',    'rollNo',    true ],
+            ['House',          'house',     false],
           ]
         },
         {
           title: 'Parent / Guardian',
           fields: [
-            ['Parent Name', 'parentName'], ['Parent Phone', 'parentPhone'],
+            ['Parent Name',  'parentName',  false],
+            ['Parent Phone', 'parentPhone', false],
           ]
         },
         {
           title: 'Address',
-          fields: [['Address', 'address']],
+          fields: [['Address', 'address', false]],
         },
       ].map(section => (
         <div key={section.title} style={{ background: '#FFFFFF', borderRadius: 18, border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 22px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC' }}>
+          <div style={{ padding: '14px 22px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0 }}>{section.title}</h3>
+            {editing && section.adminNote && (
+              <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 500 }}>{section.adminNote}</span>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 0 }}>
-            {section.fields.map(([label, key], i) => (
+            {section.fields.map(([label, key, readOnly], i) => (
               <div key={key} style={{ padding: '14px 22px', borderBottom: '1px solid #F8FAFC', borderRight: i % 2 === 0 ? '1px solid #F8FAFC' : 'none' }}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 6 }}>{label}</p>
-                {editing ? (
+                {editing && !readOnly ? (
                   <input value={profile[key]} onChange={e => setProfile(p => ({ ...p, [key]: e.target.value }))}
                     style={{ width: '100%', padding: '7px 10px', borderRadius: 9, border: '1.5px solid #DDD6FE', fontSize: 13, color: '#0F172A', outline: 'none', fontFamily: 'inherit', background: '#F5F3FF', boxSizing: 'border-box' }} />
                 ) : (
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1E293B', margin: 0 }}>{profile[key]}</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: profile[key] ? '#1E293B' : '#CBD5E1', margin: 0 }}>
+                    {profile[key] || (readOnly ? 'Set by admin' : '—')}
+                  </p>
                 )}
               </div>
             ))}
