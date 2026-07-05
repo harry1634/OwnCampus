@@ -36,6 +36,13 @@ export default function StudentContact() {
 
   useEffect(() => { load() }, [load])
 
+  // Live debounced search — fires 400 ms after the user stops typing
+  useEffect(() => {
+    const t = setTimeout(() => { load(search, deptFilter) }, 400)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search])
+
   function handleSearch(e) {
     e.preventDefault()
     load(search, deptFilter)

@@ -109,6 +109,7 @@ function ApplyModal({ onClose, onSubmit, myName }) {
                 <div key={lbl}>
                   <p style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, marginBottom: 5 }}>{lbl}</p>
                   <input type="date" value={val} onChange={e => setter(e.target.value)}
+                    min="2000-01-01" max="2099-12-31"
                     style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, color: '#0F172A', outline: 'none', fontFamily: 'inherit', background: '#F8FAFC', cursor: 'pointer' }} />
                 </div>
               ))}

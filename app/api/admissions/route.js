@@ -1,5 +1,6 @@
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient }      from '@/lib/supabase/server'
+import { createAdminClient }            from '@/lib/supabase/admin'
+import { createClient }                 from '@/lib/supabase/server'
+import { checkStudentLimit, limitExceededResponse } from '@/lib/licenseEngine'
 
 const ADMIN_ROLES = ['owner','super_admin','principal','vice_principal','academic_coordinator','chairman','director','administrator']
 
@@ -108,6 +109,10 @@ export async function POST(req) {
     if (type === 'bulk') {
       const leads = Array.isArray(body.leads) ? body.leads : []
       if (!leads.length) return Response.json({ inserted: 0 })
+      if (institutionId) {
+        const limit = await checkStudentLimit(institutionId)
+        if (!limit.allowed) return limitExceededResponse('Student', limit.current, limit.max)
+      }
       const rows = leads.map(l => ({ ...mapLeadToRow(l), institution_id: institutionId }))
       const { data, error } = await admin.from('leads').insert(rows).select('id, first_name, last_name, phone, city, interested_program, source, status, score, notes, metadata, created_at')
       if (error) return Response.json({ error: error.message }, { status: 400 })
@@ -118,6 +123,10 @@ export async function POST(req) {
     const { name, phone } = body
     if (!name?.trim() || !phone?.trim()) {
       return Response.json({ error: 'name and phone are required' }, { status: 400 })
+    }
+    if (institutionId) {
+      const limit = await checkStudentLimit(institutionId)
+      if (!limit.allowed) return limitExceededResponse('Student', limit.current, limit.max)
     }
     const row = { ...mapLeadToRow(body), institution_id: institutionId }
     const { data, error } = await admin.from('leads').insert(row)

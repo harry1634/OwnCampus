@@ -201,7 +201,7 @@ export default function StudentMarks() {
                             </div>
                           )}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexShrink: 0, minWidth: 120 }}>
                           {exam.isAbsent ? (
                             <span style={{ fontSize: 11.5, fontWeight: 700, padding: '4px 12px', borderRadius: 8, background: '#F9FAFB', color: '#6B7280', border: '1px solid #E5E7EB' }}>Absent</span>
                           ) : exam.obtained === null ? (

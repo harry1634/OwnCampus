@@ -53,7 +53,7 @@ export default function StudentSidebar({ profile, collapsed, setCollapsed, isMob
 
   const institutionName = profile?.institutions?.name || 'OwnCampus'
   const displayName     = cu.name  || profile?.full_name || 'Student'
-  const displayClass    = cu.classSection ? `Class ${cu.classSection}${cu.roll ? ' · Roll ' + cu.roll : ''}` : 'Class 10-A · Roll A001'
+  const displayClass    = cu.classSection ? `Class ${cu.classSection}${cu.roll ? ' · Roll ' + cu.roll : ''}` : 'Student'
   const displayInitial  = cu.initials || (displayName.charAt(0).toUpperCase())
 
   return (

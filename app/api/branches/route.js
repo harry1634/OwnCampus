@@ -1,5 +1,6 @@
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient }      from '@/lib/supabase/server'
+import { createAdminClient }                                from '@/lib/supabase/admin'
+import { createClient }                                    from '@/lib/supabase/server'
+import { checkBranchLimit, limitExceededResponse }         from '@/lib/licenseEngine'
 
 const ADMIN_ROLES = ['owner','super_admin','principal','vice_principal',
                      'academic_coordinator','chairman','director','administrator','hr']
@@ -64,6 +65,9 @@ export async function POST(req) {
     if (!institutionId) {
       return Response.json({ error: 'No institution linked to your account.' }, { status: 400 })
     }
+
+    const branchLimit = await checkBranchLimit(institutionId)
+    if (!branchLimit.allowed) return limitExceededResponse('Branch', branchLimit.current, branchLimit.max)
 
     const { data, error } = await supabase
       .from('branches')

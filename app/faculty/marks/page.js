@@ -6,9 +6,6 @@ import { BookOpen, Save, ChevronDown, Send, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 
-const MARKS_KEY     = 'owncampus_marks_v1'
-const PUBLISHED_KEY = 'owncampus_marks_published_v1'
-
 const EXAMS = ['Unit Test 1', 'Unit Test 2', 'Mid Term', 'Half-Yearly', 'Annual Exam']
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#059669','#DC2626','#D97706','#0891B2']
 
@@ -26,39 +23,6 @@ function gradeColor(m, max) {
 function letterGrade(m, max) {
   const p = (m / max) * 100
   if (p >= 90) return 'A+'; if (p >= 80) return 'A'; if (p >= 70) return 'B+'; if (p >= 60) return 'B'; if (p >= 50) return 'C'; if (p >= 40) return 'D'; return 'F'
-}
-function loadMarks() { try { return JSON.parse(localStorage.getItem(MARKS_KEY)) || {} } catch { return {} } }
-function saveMarks(d) { try { localStorage.setItem(MARKS_KEY, JSON.stringify(d)) } catch {} }
-function loadPublished() { try { return JSON.parse(localStorage.getItem(PUBLISHED_KEY)) || {} } catch { return {} } }
-function savePublished(d) { try { localStorage.setItem(PUBLISHED_KEY, JSON.stringify(d)) } catch {} }
-
-function migrateMarksKeys(students) {
-  try {
-    const all = loadMarks()
-    let changed = false
-    Object.keys(all).forEach(key => {
-      const raw = all[key] || {}
-      const remap = (obj) => {
-        const out = {}
-        let remapped = false
-        Object.entries(obj || {}).forEach(([k, v]) => {
-          const num = Number(k)
-          if (Number.isInteger(num) && String(num) === k) {
-            const stu = students.find(s => s.id === num || String(s.id) === k)
-            if (stu?.supabaseId) { out[stu.supabaseId] = v; remapped = true }
-            else out[k] = v
-          } else {
-            out[k] = v
-          }
-        })
-        return { out, remapped }
-      }
-      const { out: nm, remapped: mr } = remap(raw.marks)
-      const { out: nr, remapped: rr } = remap(raw.remarks)
-      if (mr || rr) { all[key] = { ...raw, marks: nm, remarks: nr }; changed = true }
-    })
-    if (changed) saveMarks(all)
-  } catch {}
 }
 
 export default function FacultyMarks() {
@@ -121,7 +85,6 @@ export default function FacultyMarks() {
       .then(r => r.json())
       .then(d => {
         if (Array.isArray(d)) {
-          migrateMarksKeys(d)
           setAllStudents(d)
         }
       })
@@ -129,42 +92,23 @@ export default function FacultyMarks() {
       .finally(() => { setLoading(false); setMounted(true) })
   }, [cu.mounted, myName])
 
-  // Load saved marks + published status when class/exam/subject changes
+  // Load saved marks from DB whenever class/exam/subject changes (DB is the only source of truth)
   useEffect(() => {
     if (!selClass || !selExam) return
-    const key  = selSubject ? `${selClass}__${selExam}__${selSubject}` : `${selClass}__${selExam}`
-    const all  = loadMarks()
-    const data = all[key] || {}
-
-    if (Object.keys(data.marks || {}).length > 0) {
-      // localStorage cache hit — use it immediately
-      setMarks(data.marks || {})
-      setRemarks(data.remarks || {})
-      setMaxMark(data.maxMark ?? 100)
-      setSaved(true)
-      setPosted(!!loadPublished()[key])
-    } else if (selSubject) {
-      // No cache — try to load from DB (supports cross-device access)
-      setMarks({}); setRemarks({}); setSaved(false); setPosted(false)
-      const params = new URLSearchParams({ className: selClass, examName: selExam, subject: selSubject })
-      fetch(`/api/faculty/marks?${params}`)
-        .then(r => r.ok ? r.json() : null)
-        .then(d => {
-          if (d?.found && Object.keys(d.marks || {}).length > 0) {
-            setMarks(d.marks)
-            setRemarks(d.remarks || {})
-            setMaxMark(d.maxMark ?? 100)
-            setSaved(true)
-            // Warm the localStorage cache from DB data
-            const fresh = loadMarks()
-            fresh[key] = { marks: d.marks, remarks: d.remarks || {}, maxMark: d.maxMark ?? 100 }
-            saveMarks(fresh)
-          }
-        })
-        .catch(() => {})
-    } else {
-      setMarks({}); setRemarks({}); setMaxMark(100); setSaved(false); setPosted(false)
-    }
+    setMarks({}); setRemarks({}); setSaved(false); setPosted(false)
+    if (!selSubject) { setMaxMark(100); return }
+    const params = new URLSearchParams({ className: selClass, examName: selExam, subject: selSubject })
+    fetch(`/api/faculty/marks?${params}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.found && Object.keys(d.marks || {}).length > 0) {
+          setMarks(d.marks)
+          setRemarks(d.remarks || {})
+          setMaxMark(d.maxMark ?? 100)
+          setSaved(true)
+        }
+      })
+      .catch(() => {})
   }, [selClass, selExam, selSubject])
 
   const students = allStudents.filter(s => matchClass(selClass, s.class || s.classSection || ''))
@@ -197,10 +141,6 @@ export default function FacultyMarks() {
       })
       const json = await res.json()
       if (!res.ok) { toast.error(json.error || 'Save failed'); return }
-      // Cache in localStorage only after DB confirms
-      const all = loadMarks()
-      all[marksKey] = { marks: { ...marks }, remarks: { ...remarks }, maxMark: safeMax }
-      saveMarks(all)
       setSaved(true)
       toast.success(`Draft saved — ${selClass} · ${selExam} · ${selSubject}`)
     } catch (err) {
@@ -251,13 +191,6 @@ export default function FacultyMarks() {
         return
       }
 
-      // Cache draft + posted state only after DB confirms
-      const all = loadMarks()
-      all[marksKey] = { marks: { ...marks }, remarks: { ...remarks }, maxMark: safeMax }
-      saveMarks(all)
-      const pub = loadPublished()
-      pub[marksKey] = { postedAt: new Date().toISOString() }
-      savePublished(pub)
       setPosted(true)
       setSaved(true)
       toast.success(`Marks posted! Students can now view their ${selExam} results.`)

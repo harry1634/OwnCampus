@@ -398,7 +398,7 @@ export const useAppStore = create(
       setActiveCampus: (campus) => set({ activeCampus: campus }),
 
       // ── Role ──
-      userRole: (typeof window !== 'undefined' ? localStorage.getItem('oc_role') : null) || 'admin',
+      userRole: 'admin',
       setUserRole: (role) => set({ userRole: role }),
 
       // ── Mobile sidebar drawer ──

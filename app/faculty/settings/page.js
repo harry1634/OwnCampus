@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Shield, Bell, Save, Check, Lock, Eye, EyeOff,
@@ -46,6 +46,40 @@ export default function FacultySettings() {
     announcements:      true,
     systemUpdates:      false,
   })
+
+  const [notifSaving, setNotifSaving] = useState(false)
+  const [notifSaved,  setNotifSaved ] = useState(false)
+
+  // Load notification preferences from DB on mount
+  useEffect(() => {
+    fetch('/api/profile')
+      .then(r => r.json())
+      .then(p => {
+        const prefs = p?.metadata?.notif_prefs
+        if (prefs && typeof prefs === 'object') {
+          setNotifs(prev => ({ ...prev, ...prefs }))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  async function handleSaveNotifs() {
+    setNotifSaving(true)
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ metadata: { notif_prefs: notifs } }),
+      })
+      if (!res.ok) throw new Error('Failed to save')
+      setNotifSaved(true)
+      setTimeout(() => setNotifSaved(false), 2000)
+    } catch {
+      toast.error('Failed to save notification preferences.')
+    } finally {
+      setNotifSaving(false)
+    }
+  }
 
   const [isMobileLayout, setIsMobileLayout] = useState(false)
   useState(() => {
@@ -252,6 +286,15 @@ export default function FacultySettings() {
                       </div>
                     )
                   })}
+                </div>
+
+                <div style={{ padding: '16px 24px', borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={handleSaveNotifs} disabled={notifSaving}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 10, border: 'none', background: notifSaved ? '#059669' : notifSaving ? '#94A3B8' : '#059669', color: '#FFFFFF', fontSize: 13, fontWeight: 600, cursor: notifSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    {notifSaving ? <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid white', borderRadius: '50%' }} className="animate-spin" />
+                      : notifSaved ? <><Check size={14} /> Saved!</>
+                      : <><Save size={14} /> Save Preferences</>}
+                  </button>
                 </div>
               </motion.div>
             )}

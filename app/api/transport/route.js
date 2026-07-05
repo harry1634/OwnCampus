@@ -1,5 +1,6 @@
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient }      from '@/lib/supabase/server'
+import { createAdminClient }                                          from '@/lib/supabase/admin'
+import { createClient }                                              from '@/lib/supabase/server'
+import { checkTransportRouteLimit, checkVehicleLimit, limitExceededResponse } from '@/lib/licenseEngine'
 
 export const dynamic = 'force-dynamic'
 
@@ -246,6 +247,11 @@ export async function POST(req) {
       const { name, route_number, stops, departure_time, arrival_time, monthly_fee, vehicle_id } = body
       if (!name) return Response.json({ error: 'name is required.' }, { status: 400 })
 
+      if (institutionId) {
+        const limit = await checkTransportRouteLimit(institutionId)
+        if (!limit.allowed) return limitExceededResponse('Transport Route', limit.current, limit.max)
+      }
+
       const { data, error } = await admin.from('transport_routes').insert({
         institution_id: institutionId,
         vehicle_id:     vehicle_id     || null,
@@ -265,6 +271,11 @@ export async function POST(req) {
     if (action === 'add_vehicle') {
       const { registration_number, type, make, model, year, capacity, fuel_type } = body
       if (!registration_number) return Response.json({ error: 'registration_number is required.' }, { status: 400 })
+
+      if (institutionId) {
+        const limit = await checkVehicleLimit(institutionId)
+        if (!limit.allowed) return limitExceededResponse('Vehicle', limit.current, limit.max)
+      }
 
       const { data, error } = await admin.from('vehicles').insert({
         institution_id:      institutionId,

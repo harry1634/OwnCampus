@@ -55,10 +55,30 @@ export default function NewEmployeePage() {
     ev.preventDefault()
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
-    setSaving(false); setSaved(true)
-    await new Promise(r => setTimeout(r, 700))
-    router.push('/hrms')
+    try {
+      const res  = await fetch('/api/faculty', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          name:        form.name.trim(),
+          email:       form.email.trim(),
+          phone:       form.phone.trim() || null,
+          dept:        form.dept,
+          designation: form.role,
+          type:        form.type,
+          salary:      form.gross,
+          joiningDate: form.joiningDate || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      setSaved(true)
+      setTimeout(() => router.push('/hrms'), 700)
+    } catch (err) {
+      setErrors({ _global: err.message })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const initials = form.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)

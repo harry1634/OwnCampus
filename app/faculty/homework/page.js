@@ -89,7 +89,7 @@ function HomeworkModal({ hw, classes, onClose, onSaved }) {
             </div>
             <div>
               <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>Due Date</label>
-              <input type="date" className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} value={form.due_date} onChange={set('due_date')} />
+              <input type="date" className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} value={form.due_date} onChange={set('due_date')} min="2000-01-01" max="2099-12-31" />
             </div>
           </div>
 

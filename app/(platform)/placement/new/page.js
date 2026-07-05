@@ -53,10 +53,21 @@ export default function NewCompanyPage() {
     ev.preventDefault()
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
-    setSaving(false); setSaved(true)
-    await new Promise(r => setTimeout(r, 700))
-    router.push('/placement')
+    try {
+      const res  = await fetch('/api/placement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_name: form.name, industry: form.industry, role: form.role, ctc: form.ctc, drive_date: form.date, slots: form.slots }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      setSaved(true)
+      setTimeout(() => router.push('/placement'), 700)
+    } catch (err) {
+      setErrors({ _global: err.message })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (

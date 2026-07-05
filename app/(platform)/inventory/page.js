@@ -1,19 +1,10 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Package, AlertCircle, TrendingDown, Plus, Search, Edit } from 'lucide-react'
 import Link from 'next/link'
 
-
-const items = [
-  { id: 1, name: 'Whiteboard Marker (Pack of 10)', category: 'Stationery', quantity: 45, unit: 'Packs', minStock: 20, value: 18000, status: 'ok' },
-  { id: 2, name: 'A4 Paper Ream', category: 'Stationery', quantity: 8, unit: 'Reams', minStock: 20, value: 4000, status: 'low' },
-  { id: 3, name: 'Projector — Epson', category: 'Electronics', quantity: 12, unit: 'Units', minStock: 2, value: 360000, status: 'ok' },
-  { id: 4, name: 'Laptop — Dell Inspiron', category: 'Electronics', quantity: 2, unit: 'Units', minStock: 5, value: 80000, status: 'critical' },
-  { id: 5, name: 'Chemistry Lab Glassware Set', category: 'Lab Equipment', quantity: 15, unit: 'Sets', minStock: 10, value: 75000, status: 'ok' },
-  { id: 6, name: 'Science Textbook Grade 9', category: 'Books', quantity: 0, unit: 'Books', minStock: 40, value: 0, status: 'out' },
-]
 
 const statusConfig = {
   ok:       { label: 'In Stock',     color: '#16A34A', bg: '#F0FDF4' },
@@ -27,6 +18,14 @@ const categoryColors = { Stationery: '#2563EB', Electronics: '#0891B2', 'Lab Equ
 export default function InventoryPage() {
   const [allItems, setAllItems] = useState([])
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    fetch('/api/inventory')
+      .then(r => r.json())
+      .then(d => { if (d.items) setAllItems(d.items.map(i => ({ ...i, minStock: i.min_stock }))) })
+      .catch(() => {})
+  }, [])
+
   const items = search.trim()
     ? allItems.filter(it =>
         it.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -51,10 +50,10 @@ export default function InventoryPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[
-          { label: 'Total Items',   value: '284',     icon: Package,    iconColor: '#2563EB', iconBg: '#EFF6FF' },
-          { label: 'Low Stock',     value: '12',      icon: TrendingDown,iconColor: '#F59E0B', iconBg: '#FFFBEB' },
-          { label: 'Out of Stock',  value: '4',       icon: AlertCircle,iconColor: '#EF4444', iconBg: '#FEF2F2' },
-          { label: 'Total Value',   value: '₹28.4L',  icon: Package,    iconColor: '#10B981', iconBg: '#F0FDF4' },
+          { label: 'Total Items',   value: String(allItems.length),                                                                               icon: Package,    iconColor: '#2563EB', iconBg: '#EFF6FF' },
+          { label: 'Low Stock',     value: String(allItems.filter(i => i.status === 'low' || i.status === 'critical').length),                    icon: TrendingDown,iconColor: '#F59E0B', iconBg: '#FFFBEB' },
+          { label: 'Out of Stock',  value: String(allItems.filter(i => i.status === 'out').length),                                               icon: AlertCircle,iconColor: '#EF4444', iconBg: '#FEF2F2' },
+          { label: 'Total Value',   value: `₹${(allItems.reduce((s, i) => s + (parseFloat(i.value) || 0), 0)).toLocaleString('en-IN')}`,          icon: Package,    iconColor: '#10B981', iconBg: '#F0FDF4' },
         ].map((stat, i) => {
           const StatIcon = stat.icon
           return (

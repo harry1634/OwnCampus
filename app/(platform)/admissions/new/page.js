@@ -58,10 +58,30 @@ export default function NewLeadPage() {
     e.preventDefault()
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
-    setSaving(false); setSaved(true)
-    await new Promise(r => setTimeout(r, 700))
-    router.push('/admissions')
+    try {
+      const res  = await fetch('/api/admissions', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          name:       form.name.trim(),
+          phone:      form.phone.trim(),
+          program:    form.program,
+          source:     form.source,
+          status:     form.status,
+          counsellor: form.counsellor || null,
+          score:      form.score      || 0,
+          city:       form.city.trim() || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      setSaved(true)
+      setTimeout(() => router.push('/admissions'), 700)
+    } catch (err) {
+      setErrors({ _global: err.message || 'Failed to save' })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const sourceLabel = { website:'Website', google:'Google', facebook:'Facebook', instagram:'Instagram', whatsapp:'WhatsApp', referral:'Referral', walk_in:'Walk-in' }

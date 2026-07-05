@@ -224,11 +224,11 @@ export default function StudentLeaves() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>From *</label>
-                    <input type="date" value={form.dateFrom} onChange={set('dateFrom')} required {...inp} />
+                    <input type="date" value={form.dateFrom} onChange={set('dateFrom')} required min="2000-01-01" max="2099-12-31" {...inp} />
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 5 }}>To *</label>
-                    <input type="date" value={form.dateTo} onChange={set('dateTo')} min={form.dateFrom} required {...inp} />
+                    <input type="date" value={form.dateTo} onChange={set('dateTo')} min={form.dateFrom || '2000-01-01'} max="2099-12-31" required {...inp} />
                   </div>
                 </div>
 

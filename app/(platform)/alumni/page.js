@@ -1,35 +1,53 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Briefcase, MapPin, Search, Plus, Mail, ExternalLink, Users, Globe, Building2, GraduationCap, SlidersHorizontal, Star } from 'lucide-react'
 import Link from 'next/link'
 
 
-const alumni = [
-  { id: 1, name: 'Vikram Nair',  batch: '2018', program: 'B.Tech CSE',  company: 'Google',        role: 'Software Engineer', location: 'Bangalore', isMentor: true,  avatarColor: '#2563EB' },
-  { id: 2, name: 'Ananya Patel', batch: '2019', program: 'MBA',          company: 'McKinsey',      role: 'Business Analyst',  location: 'Mumbai',    isMentor: false, avatarColor: '#7C3AED' },
-  { id: 3, name: 'Rohit Sharma', batch: '2017', program: 'B.Com',        company: 'HDFC Bank',     role: 'Branch Manager',    location: 'Delhi',     isMentor: true,  avatarColor: '#0891B2' },
-  { id: 4, name: 'Priya Mehta',  batch: '2020', program: 'B.Tech ECE',   company: 'Qualcomm',      role: 'VLSI Engineer',     location: 'Hyderabad', isMentor: false, avatarColor: '#10B981' },
-  { id: 5, name: 'Arjun Kumar',  batch: '2016', program: 'B.Sc Physics', company: 'ISRO',          role: 'Scientist',         location: 'Ahmedabad', isMentor: true,  avatarColor: '#F59E0B' },
-  { id: 6, name: 'Sneha Joshi',  batch: '2021', program: 'B.Ed',         company: 'Self-Employed', role: 'Educator',          location: 'Pune',      isMentor: false, avatarColor: '#DB2777' },
-]
-
 function getInitials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
+const SORT_OPTIONS = ['name', 'batch-desc', 'company']
+
 export default function AlumniPage() {
-  const [alumni, setAlumni] = useState([])
+  const [alumniList, setAlumniList] = useState([])
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('name')
 
-  const filtered = alumni.filter(a => {
-    const q = search.toLowerCase()
-    const matchSearch = a.name.toLowerCase().includes(q) || a.company.toLowerCase().includes(q) || a.program.toLowerCase().includes(q)
-    const matchFilter = filter === 'all' || (filter === 'mentor' && a.isMentor)
-    return matchSearch && matchFilter
-  })
+  useEffect(() => {
+    fetch('/api/alumni')
+      .then(r => r.json())
+      .then(d => {
+        if (d.alumni) {
+          setAlumniList(d.alumni.map(a => ({ ...a, avatarColor: a.avatar_color, isMentor: a.is_mentor })))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleSort = () => {
+    const idx = SORT_OPTIONS.indexOf(sortBy)
+    setSortBy(SORT_OPTIONS[(idx + 1) % SORT_OPTIONS.length])
+  }
+
+  const sortLabel = sortBy === 'name' ? 'Name A–Z' : sortBy === 'batch-desc' ? 'Batch (New→Old)' : 'Company A–Z'
+
+  const filtered = alumniList
+    .filter(a => {
+      const q = search.toLowerCase()
+      const matchSearch = a.name.toLowerCase().includes(q) || a.company.toLowerCase().includes(q) || a.program.toLowerCase().includes(q)
+      const matchFilter = filter === 'all' || (filter === 'mentor' && a.isMentor)
+      return matchSearch && matchFilter
+    })
+    .sort((a, b) => {
+      if (sortBy === 'batch-desc') return Number(b.batch) - Number(a.batch)
+      if (sortBy === 'company') return a.company.localeCompare(b.company)
+      return a.name.localeCompare(b.name)
+    })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -105,10 +123,10 @@ export default function AlumniPage() {
           ))}
         </div>
 
-        <span style={{ fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap', marginLeft: 'auto' }}>{filtered.length} of {alumni.length}</span>
+        <span style={{ fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap', marginLeft: 'auto' }}>{filtered.length} of {alumniList.length}</span>
 
-        <button style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#64748B', cursor: 'pointer' }}>
-          <SlidersHorizontal size={12} /> Sort
+        <button onClick={handleSort} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#64748B', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <SlidersHorizontal size={12} /> {sortLabel}
         </button>
       </div>
 

@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GraduationCap, Clock, ShieldCheck, LogOut, Mail, RefreshCw, PartyPopper, ArrowRight } from 'lucide-react'
 
 export default function PendingPage() {
-  const router  = useRouter()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
   const [email,    setEmail   ] = useState('')
   const [roleKey,  setRoleKey ] = useState('')
   const [name,     setName    ] = useState('')
@@ -15,17 +16,17 @@ export default function PendingPage() {
   const intervalRef = useRef(null)
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem('oc_pending_email') || ''
-    const storedRole  = localStorage.getItem('oc_pending_role')  || ''
-    const storedName  = localStorage.getItem('oc_pending_name')  || ''
-    setEmail(storedEmail)
-    setRoleKey(storedRole)
-    setName(storedName)
+    const paramEmail = searchParams.get('email') || ''
+    const paramRole  = searchParams.get('role')  || ''
+    const paramName  = searchParams.get('name')  || ''
+    setEmail(paramEmail)
+    setRoleKey(paramRole)
+    setName(paramName)
 
-    if (!storedEmail) { router.push('/auth/login'); return }
+    if (!paramEmail) { router.push('/auth/login'); return }
 
-    pollStatus(storedEmail)
-    intervalRef.current = setInterval(() => pollStatus(storedEmail), 8000)
+    pollStatus(paramEmail)
+    intervalRef.current = setInterval(() => pollStatus(paramEmail), 8000)
     return () => clearInterval(intervalRef.current)
   }, [])
 
@@ -42,8 +43,7 @@ export default function PendingPage() {
 
   async function checkNow() {
     setChecking(true)
-    const e = email || localStorage.getItem('oc_pending_email') || ''
-    await pollStatus(e)
+    await pollStatus(email)
     setChecking(false)
   }
 
@@ -60,10 +60,6 @@ export default function PendingPage() {
       const { createClient } = await import('@/lib/supabase/client')
       await createClient().auth.signOut()
     } catch {}
-    localStorage.removeItem('oc_pending_email')
-    localStorage.removeItem('oc_pending_role')
-    localStorage.removeItem('oc_pending_name')
-    localStorage.removeItem('oc_role')
     router.push('/auth/login')
   }
 

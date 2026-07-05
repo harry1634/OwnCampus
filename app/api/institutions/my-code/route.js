@@ -59,7 +59,75 @@ export async function GET() {
       } catch (_) {}
     }
 
-    return Response.json({ id: inst.id, name: inst.name, type: inst.type, code, logo_url: inst.logo_url || null })
+    // Fetch extended fields for settings page
+    let ext = {}
+    try {
+      const { data: full } = await supabase
+        .from('institutions')
+        .select('email, phone, website, address, city, state, pincode, established_year, affiliation, accreditation')
+        .eq('id', inst.id)
+        .single()
+      if (full) ext = full
+    } catch (_) {}
+
+    return Response.json({
+      id:               inst.id,
+      name:             inst.name,
+      type:             inst.type,
+      code,
+      logo_url:         inst.logo_url || null,
+      email:            ext.email            || '',
+      phone:            ext.phone            || '',
+      website:          ext.website          || '',
+      address:          ext.address          || '',
+      city:             ext.city             || '',
+      state:            ext.state            || '',
+      pincode:          ext.pincode          || '',
+      established_year: ext.established_year || '',
+      affiliation:      ext.affiliation      || '',
+      accreditation:    ext.accreditation    || '',
+    })
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 500 })
+  }
+}
+
+// PATCH /api/institutions/my-code — update institution fields (logo_url, name, type, contact, etc.)
+export async function PATCH(req) {
+  try {
+    const serverClient = await createClient()
+    const { data: { user } } = await serverClient.auth.getUser()
+    if (!user) return Response.json({ error: 'Unauthorized.' }, { status: 401 })
+
+    const body = await req.json()
+    const admin = createAdminClient()
+    const { data: profile } = await admin
+      .from('user_profiles')
+      .select('institution_id, role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.institution_id) {
+      return Response.json({ error: 'No institution linked to this account.' }, { status: 404 })
+    }
+
+    const ADMIN_ROLES = ['owner', 'super_admin', 'principal', 'vice_principal', 'administrator']
+    if (!ADMIN_ROLES.includes(profile.role)) {
+      return Response.json({ error: 'Forbidden.' }, { status: 403 })
+    }
+
+    const ALLOWED = ['logo_url','name','type','email','phone','website','address','city','state','pincode','established_year','affiliation','accreditation']
+    const patch = Object.fromEntries(Object.entries(body).filter(([k]) => ALLOWED.includes(k)))
+    if (Object.keys(patch).length === 0) return Response.json({ error: 'No valid fields to update.' }, { status: 400 })
+
+    const { error } = await admin
+      .from('institutions')
+      .update(patch)
+      .eq('id', profile.institution_id)
+
+    if (error) throw new Error(error.message)
+
+    return Response.json({ ok: true })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }

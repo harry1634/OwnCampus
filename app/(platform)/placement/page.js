@@ -1,21 +1,9 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Award, Building2, Briefcase, Users, TrendingUp, Plus, CheckCircle } from 'lucide-react'
+import { Award, Building2, Briefcase, TrendingUp, Plus, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
-
-const companies = [
-  { id: 1, name: 'Infosys', industry: 'Technology', role: 'Software Engineer', ctc: '4.5 LPA', date: '2025-11-10', slots: 20, applied: 45, shortlisted: 12, status: 'upcoming' },
-  { id: 2, name: 'HDFC Bank', industry: 'Banking', role: 'Management Trainee', ctc: '6.0 LPA', date: '2025-11-15', slots: 10, applied: 38, shortlisted: 8, status: 'upcoming' },
-  { id: 3, name: 'Wipro', industry: 'Technology', role: 'Project Engineer', ctc: '3.8 LPA', date: '2025-10-20', slots: 15, applied: 52, shortlisted: 18, status: 'completed' },
-  { id: 4, name: 'Deloitte', industry: 'Consulting', role: 'Business Analyst', ctc: '8.5 LPA', date: '2025-11-20', slots: 5, applied: 28, shortlisted: 6, status: 'upcoming' },
-]
-
-const placementStats = [
-  { batch: '2021', placed: 85, total: 120 }, { batch: '2022', placed: 92, total: 115 },
-  { batch: '2023', placed: 108, total: 122 }, { batch: '2024', placed: 98, total: 118 },
-]
 
 const statusConfig = {
   upcoming:  { label: 'Upcoming',  color: '#2563EB', bg: '#EFF6FF' },
@@ -28,6 +16,19 @@ const industryColors = { Technology: '#2563EB', Banking: '#16A34A', Consulting: 
 export default function PlacementPage() {
   const [companies, setCompanies] = useState([])
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    fetch('/api/placement')
+      .then(r => r.json())
+      .then(d => {
+        if (d.drives) setCompanies(d.drives.map(dr => ({
+          ...dr,
+          name: dr.company_name,
+          date: dr.drive_date || '',
+        })))
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
@@ -46,12 +47,19 @@ export default function PlacementPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-        {[
-          { label: 'Placed Students',  value: '98',       icon: Award,      iconColor: '#10B981', iconBg: '#F0FDF4' },
-          { label: 'Companies Visited',value: '34',       icon: Building2,  iconColor: '#2563EB', iconBg: '#EFF6FF' },
-          { label: 'Highest Package',  value: '₹18 LPA',  icon: TrendingUp, iconColor: '#F59E0B', iconBg: '#FFFBEB' },
-          { label: 'Avg. Package',     value: '₹5.8 LPA', icon: Briefcase,  iconColor: '#0891B2', iconBg: '#ECFEFF' },
-        ].map((stat, i) => {
+        {(() => {
+          const totalShortlisted = companies.reduce((s, c) => s + (c.shortlisted || 0), 0)
+          const totalApplied     = companies.reduce((s, c) => s + (c.applied    || 0), 0)
+          const ctcNums = companies.map(c => parseFloat((c.ctc || '').replace(/[^\d.]/g, ''))).filter(n => !isNaN(n) && n > 0)
+          const highCTC = ctcNums.length ? `₹${Math.max(...ctcNums)} LPA` : '—'
+          const avgCTC  = ctcNums.length ? `₹${(ctcNums.reduce((a,b)=>a+b,0)/ctcNums.length).toFixed(1)} LPA` : '—'
+          return [
+            { label: 'Shortlisted',      value: String(totalShortlisted), icon: Award,      iconColor: '#10B981', iconBg: '#F0FDF4' },
+            { label: 'Companies',        value: String(companies.length), icon: Building2,  iconColor: '#2563EB', iconBg: '#EFF6FF' },
+            { label: 'Highest Package',  value: highCTC,                  icon: TrendingUp, iconColor: '#F59E0B', iconBg: '#FFFBEB' },
+            { label: 'Total Applied',    value: String(totalApplied),     icon: Briefcase,  iconColor: '#0891B2', iconBg: '#ECFEFF' },
+          ]
+        })().map((stat, i) => {
           const StatIcon = stat.icon
           return (
             <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
@@ -117,19 +125,21 @@ export default function PlacementPage() {
         <div className="space-y-4">
           <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 18, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9' }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>Year-wise Placement</p>
+              <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>Drive Summary</p>
             </div>
             <div style={{ padding: '8px 0' }}>
-              {placementStats.map((row, i) => {
-                const pct = Math.round((row.placed / row.total) * 100)
+              {companies.length === 0 && (
+                <p style={{ padding: '16px 20px', fontSize: 12, color: '#94A3B8' }}>No drives added yet.</p>
+              )}
+              {companies.slice(0, 5).map((c, i) => {
+                const pct = c.applied > 0 ? Math.round((c.shortlisted / c.applied) * 100) : 0
                 return (
-                  <div key={row.batch} style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: i < placementStats.length - 1 ? '1px solid #F8FAFC' : 'none' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', width: 40, flexShrink: 0 }}>{row.batch}</span>
+                  <div key={c.id} style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: i < Math.min(companies.length, 5) - 1 ? '1px solid #F8FAFC' : 'none' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', width: 80, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
                     <div style={{ flex: 1, height: 6, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
                       <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: '#2563EB' }} />
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#2563EB', width: 36, textAlign: 'right', flexShrink: 0 }}>{pct}%</span>
-                    <span style={{ fontSize: 11, color: '#94A3B8', width: 52, textAlign: 'right', flexShrink: 0 }}>{row.placed}/{row.total}</span>
                   </div>
                 )
               })}
@@ -137,21 +147,19 @@ export default function PlacementPage() {
           </div>
 
           <div className="rounded-2xl p-5" style={{ background: '#FFFFFF', border: '1px solid #E8ECF0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <h3 className="font-semibold text-sm mb-3" style={{ color: '#0F172A' }}>Recent Offers</h3>
+            <h3 className="font-semibold text-sm mb-3" style={{ color: '#0F172A' }}>Upcoming Drives</h3>
             <div className="space-y-3">
-              {[
-                { student: 'Ananya Singh', company: 'Wipro', ctc: '3.8 LPA', color: '#16A34A' },
-                { student: 'Rohan Verma', company: 'HDFC', ctc: '6.0 LPA', color: '#2563EB' },
-                { student: 'Sneha Jain', company: 'Deloitte', ctc: '8.5 LPA', color: '#D97706' },
-              ].map((offer, i) => (
+              {companies.filter(c => c.status === 'upcoming').slice(0, 3).length === 0
+                ? <p style={{ fontSize: 12, color: '#94A3B8' }}>No upcoming drives.</p>
+                : companies.filter(c => c.status === 'upcoming').slice(0, 3).map((c, i) => (
                 <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl"
                   style={{ background: '#F8FAFC', border: '1px solid #F1F5F9' }}>
-                  <CheckCircle size={14} style={{ color: '#16A34A' }} />
+                  <CheckCircle size={14} style={{ color: '#2563EB' }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold" style={{ color: '#0F172A' }}>{offer.student}</p>
-                    <p className="text-xs" style={{ color: '#94A3B8' }}>{offer.company}</p>
+                    <p className="text-xs font-semibold" style={{ color: '#0F172A' }}>{c.name}</p>
+                    <p className="text-xs" style={{ color: '#94A3B8' }}>{c.date || 'Date TBD'}</p>
                   </div>
-                  <span className="text-xs font-bold" style={{ color: offer.color }}>{offer.ctc}</span>
+                  <span className="text-xs font-bold" style={{ color: '#16A34A' }}>{c.ctc || '—'}</span>
                 </div>
               ))}
             </div>

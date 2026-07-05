@@ -1,5 +1,6 @@
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient }      from '@/lib/supabase/server'
+import { createAdminClient }                                    from '@/lib/supabase/admin'
+import { createClient }                                        from '@/lib/supabase/server'
+import { checkLibraryBookLimit, limitExceededResponse }        from '@/lib/licenseEngine'
 
 // GET  /api/library?type=catalog|issued|overdue&q=...&category=...
 // POST /api/library  { action: 'add_book'|'issue'|'return' }
@@ -151,6 +152,11 @@ export async function POST(req) {
       const { title, author, isbn, publisher, category, total, rack } = body
       if (!title) return Response.json({ error: 'title is required.' }, { status: 400 })
       const copies = parseInt(total) || 1
+
+      if (institutionId) {
+        const limit = await checkLibraryBookLimit(institutionId)
+        if (!limit.allowed) return limitExceededResponse('Library Book', limit.current, limit.max)
+      }
 
       const { data, error } = await admin.from('books').insert({
         institution_id:  institutionId,

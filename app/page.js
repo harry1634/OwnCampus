@@ -14,14 +14,29 @@ export default async function RootPage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role')
+    .select('role, metadata')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
-  const role = profile?.role || ''
+  const roleSource = [
+    profile?.role,
+    profile?.metadata?.role,
+    profile?.metadata?.portal_role,
+    user?.user_metadata?.role,
+    user?.user_metadata?.portal_role,
+  ].find(Boolean)
+  const role = String(roleSource || '').toLowerCase().trim()
+
+  const { data: studentRecord } = await supabase
+    .from('students')
+    .select('id')
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .maybeSingle()
+
   if (ADMIN_ROLES.includes(role))   redirect('/dashboard')
   if (FACULTY_ROLES.includes(role)) redirect('/faculty/dashboard')
-  if (role === 'student')           redirect('/student/dashboard')
+  if (role === 'student' || studentRecord) redirect('/student/dashboard')
 
-  redirect('/auth/login')
+  redirect('/auth/login?redirect=/')
 }

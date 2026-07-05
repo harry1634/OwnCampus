@@ -5,9 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, CheckCircle, Clock, AlertCircle, Plus, FileText, Check, X, Package, Users } from 'lucide-react'
 import { toast } from 'sonner'
 
-const PO_KEY       = 'owncampus_procurement_orders_v1'
-const REQUESTS_KEY = 'owncampus_equipment_requests_v1'
-
 const PO_STATUS = {
   pending:   { label: 'Pending Approval', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', icon: Clock        },
   approved:  { label: 'Approved',         color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', icon: CheckCircle  },
@@ -29,79 +26,74 @@ const URGENCY_CONF = {
 
 const PO_CATEGORIES = ['Stationery','Electronics','Lab Equipment','Books','Furniture','Sports','Other']
 
-function loadPOs()     { try { return JSON.parse(localStorage.getItem(PO_KEY))       || [] } catch { return [] } }
-function savePOs(d)    { try { localStorage.setItem(PO_KEY, JSON.stringify(d))                               } catch {} }
-function loadReqs()    { try { return JSON.parse(localStorage.getItem(REQUESTS_KEY)) || [] } catch { return [] } }
-function saveReqs(d)   { try { localStorage.setItem(REQUESTS_KEY, JSON.stringify(d))                         } catch {} }
-
 export default function ProcurementPage() {
-  const [tab,         setTab        ] = useState('orders')  // 'orders' | 'requests'
+  const [tab,         setTab        ] = useState('orders')
   const [orders,      setOrders     ] = useState([])
   const [reqs,        setReqs       ] = useState([])
+  const [loading,     setLoading    ] = useState(true)
   const [showForm,    setShowForm   ] = useState(false)
   const [confirming,  setConfirming ] = useState({})
   const [form, setForm] = useState({ vendor: '', items: '', amount: '', category: PO_CATEGORIES[0] })
 
-  const reloadOrders = () => setOrders(loadPOs())
-  const reloadReqs   = () => setReqs(loadReqs())
+  const fetchAll = async () => {
+    try {
+      const [ordRes, reqRes] = await Promise.all([
+        fetch('/api/procurement/orders'),
+        fetch('/api/procurement/requests'),
+      ])
+      const [ordData, reqData] = await Promise.all([ordRes.json(), reqRes.json()])
+      setOrders(ordData.orders || [])
+      setReqs(reqData.requests || [])
+    } catch {}
+    setLoading(false)
+  }
 
-  useEffect(() => {
-    reloadOrders()
-    reloadReqs()
-    const onStorage = (e) => {
-      if (e.key === PO_KEY) reloadOrders()
-      if (e.key === REQUESTS_KEY) reloadReqs()
-    }
-    const onVisible = () => { if (document.visibilityState === 'visible') { reloadOrders(); reloadReqs() } }
-    window.addEventListener('storage', onStorage)
-    document.addEventListener('visibilitychange', onVisible)
-    return () => {
-      window.removeEventListener('storage', onStorage)
-      document.removeEventListener('visibilitychange', onVisible)
-    }
-  }, [])
+  useEffect(() => { fetchAll() }, [])
 
-  const setPOStatus = (id, newStatus) => {
+  const setPOStatus = async (id, newStatus) => {
     setConfirming(prev => ({ ...prev, [id]: newStatus }))
-    setTimeout(() => {
-      const updated = loadPOs().map(o => o.id === id ? { ...o, status: newStatus } : o)
-      savePOs(updated)
-      setOrders(updated)
-      setConfirming(prev => { const n = { ...prev }; delete n[id]; return n })
+    try {
+      await fetch('/api/procurement/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus }),
+      })
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o))
       toast.success(`Order ${newStatus}`)
-    }, 600)
+    } catch { toast.error('Update failed') }
+    setConfirming(prev => { const n = { ...prev }; delete n[id]; return n })
   }
 
-  const setReqStatus = (id, newStatus) => {
+  const setReqStatus = async (id, newStatus) => {
     setConfirming(prev => ({ ...prev, [`r_${id}`]: newStatus }))
-    setTimeout(() => {
-      const updated = loadReqs().map(r => r.id === id ? { ...r, status: newStatus } : r)
-      saveReqs(updated)
-      setReqs(updated)
-      setConfirming(prev => { const n = { ...prev }; delete n[`r_${id}`]; return n })
+    try {
+      await fetch('/api/procurement/requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus }),
+      })
+      setReqs(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r))
       toast.success(`Request ${newStatus}`)
-    }, 600)
+    } catch { toast.error('Update failed') }
+    setConfirming(prev => { const n = { ...prev }; delete n[`r_${id}`]; return n })
   }
 
-  const handleNewPO = (e) => {
+  const handleNewPO = async (e) => {
     e.preventDefault()
     if (!form.vendor.trim() || !form.items.trim() || !form.amount) { toast.error('Fill all required fields'); return }
-    const all = loadPOs()
-    const newPO = {
-      id: `PO-${new Date().getFullYear()}-${String(all.length + 1).padStart(3, '0')}`,
-      vendor: form.vendor.trim(),
-      items: form.items.trim(),
-      amount: parseFloat(form.amount),
-      category: form.category,
-      raised: new Date().toISOString().split('T')[0],
-      status: 'pending',
-    }
-    all.unshift(newPO)
-    savePOs(all)
-    setOrders(all)
-    setShowForm(false)
-    setForm({ vendor: '', items: '', amount: '', category: PO_CATEGORIES[0] })
-    toast.success('Purchase order created!')
+    try {
+      const res  = await fetch('/api/procurement/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendor: form.vendor, items: form.items, amount: form.amount, category: form.category }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || 'Failed to create order'); return }
+      setOrders(prev => [data.order, ...prev])
+      setShowForm(false)
+      setForm({ vendor: '', items: '', amount: '', category: PO_CATEGORIES[0] })
+      toast.success('Purchase order created!')
+    } catch { toast.error('Network error') }
   }
 
   const pendingPOs   = orders.filter(o => o.status === 'pending').length
@@ -193,11 +185,11 @@ export default function ProcurementPage() {
                     const ck       = confirming[po.id]
                     return (
                       <motion.tr key={po.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
-                        <td><span style={{ fontFamily: 'monospace', fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{po.id}</span></td>
+                        <td><span style={{ fontFamily: 'monospace', fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{po.po_number}</span></td>
                         <td><p style={{ fontSize: 12, fontWeight: 600, color: '#0F172A', margin: 0 }}>{po.vendor}</p></td>
                         <td><p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>{po.items}</p></td>
                         <td><span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>₹{(po.amount||0).toLocaleString('en-IN')}</span></td>
-                        <td><span style={{ fontSize: 12, color: '#94A3B8' }}>{po.raised}</span></td>
+                        <td><span style={{ fontSize: 12, color: '#94A3B8' }}>{po.raised_at || po.raised}</span></td>
                         <td>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
                             <StatusIcon size={10} /> {st.label}
@@ -280,7 +272,7 @@ export default function ProcurementPage() {
                       </div>
                       <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 4px' }}>{req.reason}</p>
                       <p style={{ fontSize: 11, color: '#94A3B8' }}>
-                        By <strong style={{ color: '#475569' }}>{req.facultyName}</strong> · {req.date}
+                        By <strong style={{ color: '#475569' }}>{req.faculty_name || req.facultyName}</strong> · {(req.created_at || req.date || '').split('T')[0]}
                       </p>
                     </div>
                     <AnimatePresence mode="wait">

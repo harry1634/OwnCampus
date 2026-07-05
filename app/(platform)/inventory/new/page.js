@@ -54,10 +54,21 @@ export default function NewItemPage() {
     ev.preventDefault()
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
-    setSaving(false); setSaved(true)
-    await new Promise(r => setTimeout(r, 700))
-    router.push('/inventory')
+    try {
+      const res  = await fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: form.name, category: form.category, quantity: form.quantity, unit: form.unit, minStock: form.minStock, value: form.value }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      setSaved(true)
+      setTimeout(() => router.push('/inventory'), 700)
+    } catch (err) {
+      setErrors({ _global: err.message })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const qty = parseInt(form.quantity) || 0

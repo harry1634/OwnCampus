@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Building2, Shield, Bell, User, Trash2,
+  Building2, Shield, User, Trash2,
   Save, Check, Upload, ChevronRight, Lock,
-  Globe, Phone, Mail, MapPin, Hash, Calendar, Copy,
+  Globe, Phone, Mail, MapPin, Hash, Calendar, Copy, X, Layers,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -15,6 +15,25 @@ const tabs = [
   { key: 'institution', label: 'Institution', icon: Building2, desc: 'Profile & branding'      },
   { key: 'profile',     label: 'My Profile',  icon: User,      desc: 'Personal photo & info'   },
   { key: 'security',    label: 'Security',    icon: Shield,    desc: 'Auth & access'            },
+  { key: 'modules',     label: 'Modules',     icon: Layers,    desc: 'Module access & requests' },
+]
+
+const ALL_MODULES = [
+  { key: 'students',      label: 'Students'        },
+  { key: 'faculty',       label: 'Faculty'         },
+  { key: 'attendance',    label: 'Attendance'      },
+  { key: 'finance',       label: 'Finance & Fees'  },
+  { key: 'library',       label: 'Library'         },
+  { key: 'hostel',        label: 'Hostel'          },
+  { key: 'transport',     label: 'Transport'       },
+  { key: 'timetable',     label: 'Timetable'       },
+  { key: 'hrms',          label: 'HRMS'            },
+  { key: 'lms',           label: 'LMS'             },
+  { key: 'analytics',     label: 'Analytics'       },
+  { key: 'communication', label: 'Communication'   },
+  { key: 'examinations',  label: 'Examinations'    },
+  { key: 'admissions',    label: 'Admissions'      },
+  { key: 'placement',     label: 'Placement'       },
 ]
 
 const FIELD_STYLE = {
@@ -52,8 +71,11 @@ export default function SettingsPage() {
   const [pwdBusy,    setPwdBusy   ] = useState(false)
   const [instCode,      setInstCode     ] = useState(null)
   const [instId,        setInstId       ] = useState(null)
+  const [instFields,    setInstFields   ] = useState({ name: '', type: 'school', email: '', phone: '', website: '', address: '', affiliation: '', established_year: '' })
+  const [instSaving,    setInstSaving   ] = useState(false)
   const [logoUrl,       setLogoUrl      ] = useState(null)
   const [logoUploading, setLogoUploading] = useState(false)
+  const [logoRemoving,  setLogoRemoving ] = useState(false)
   const [codeCopied,    setCodeCopied   ] = useState(false)
   const [avatarUrl,     setAvatarUrl    ] = useState(undefined)   // undefined = not yet overridden
   const [avatarUploading, setAvatarUploading] = useState(false)
@@ -67,9 +89,20 @@ export default function SettingsPage() {
     fetch('/api/institutions/my-code')
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        if (d?.code)     setInstCode(d.code)
-        if (d?.id)       setInstId(d.id)
-        if (d?.logo_url) setLogoUrl(d.logo_url)
+        if (!d) return
+        if (d.code)     setInstCode(d.code)
+        if (d.id)       setInstId(d.id)
+        if (d.logo_url) setLogoUrl(d.logo_url)
+        setInstFields({
+          name:             d.name             || '',
+          type:             d.type             || 'school',
+          email:            d.email            || '',
+          phone:            d.phone            || '',
+          website:          d.website          || '',
+          address:          d.address          || '',
+          affiliation:      d.affiliation      || '',
+          established_year: d.established_year ? String(d.established_year) : '',
+        })
       })
       .catch(() => {})
   }, [])
@@ -111,6 +144,42 @@ export default function SettingsPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
+  const [modReqs,       setModReqs      ] = useState([])
+  const [enabledMods,   setEnabledMods  ] = useState(null)
+  const [submittingMod, setSubmittingMod] = useState(null)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/module-requests').then(r => r.ok ? r.json() : { requests: [] }),
+      fetch('/api/license').then(r => r.ok ? r.json() : {}),
+    ]).then(([reqData, licData]) => {
+      setModReqs(reqData.requests || [])
+      if (licData.modules) {
+        const map = {}
+        ;(licData.modules || []).forEach(m => { map[m.module_key] = m.is_enabled })
+        setEnabledMods(map)
+      }
+    }).catch(() => {})
+  }, [])
+
+  async function requestModule(moduleKey) {
+    setSubmittingMod(moduleKey)
+    try {
+      const res  = await fetch('/api/module-requests', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ module_key: moduleKey }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      toast.success('Request submitted. OwnCampus will review it shortly.')
+      setModReqs(prev => [json.request, ...prev])
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setSubmittingMod(null)
+    }
+  }
+
   async function handleLogoUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -118,23 +187,43 @@ export default function SettingsPage() {
     if (!instId) { toast.error('Institution not loaded yet.'); return }
     setLogoUploading(true)
     try {
-      const ext  = file.name.split('.').pop().toLowerCase()
-      const path = `logos/${instId}/${Date.now()}.${ext}`
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('path', path)
-      const res = await fetch('/api/upload/photo', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Upload failed')
-      const supabase = createClient()
-      await supabase.from('institutions').update({ logo_url: json.url }).eq('id', instId)
-      setLogoUrl(json.url)
+      const uploadRes = await fetch('/api/upload/photo', { method: 'POST', body: fd })
+      const uploadJson = await uploadRes.json()
+      if (!uploadRes.ok) throw new Error(uploadJson.error || 'Upload failed')
+      // Save via API so it bypasses client-side RLS
+      const saveRes = await fetch('/api/institutions/my-code', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logo_url: uploadJson.url }),
+      })
+      if (!saveRes.ok) throw new Error((await saveRes.json()).error || 'Failed to save logo')
+      setLogoUrl(uploadJson.url)
       toast.success('Logo updated!')
     } catch (err) {
       toast.error(err.message || 'Upload failed.')
     } finally {
       setLogoUploading(false)
       e.target.value = ''
+    }
+  }
+
+  async function handleLogoRemove() {
+    setLogoRemoving(true)
+    try {
+      const res = await fetch('/api/institutions/my-code', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logo_url: null }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to remove logo')
+      setLogoUrl(null)
+      toast.success('Logo removed.')
+    } catch (err) {
+      toast.error(err.message || 'Failed to remove logo.')
+    } finally {
+      setLogoRemoving(false)
     }
   }
 
@@ -175,9 +264,24 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2200)
+  const handleSave = async () => {
+    setInstSaving(true)
+    try {
+      const res  = await fetch('/api/institutions/my-code', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(instFields),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      setSaved(true)
+      toast.success('Institution settings saved.')
+      setTimeout(() => setSaved(false), 2200)
+    } catch (err) {
+      toast.error(err.message || 'Failed to save institution settings.')
+    } finally {
+      setInstSaving(false)
+    }
   }
 
   return (
@@ -261,9 +365,9 @@ export default function SettingsPage() {
                     <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', margin: 0 }}>Institution Profile</h2>
                     <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Update your school's information and branding</p>
                   </div>
-                  <motion.button onClick={handleSave} whileHover={{ scale: 1.02 }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 600, color: '#FFFFFF', background: saved ? '#10B981' : '#2563EB', cursor: 'pointer', transition: 'background 0.2s', boxShadow: saved ? '0 2px 8px rgba(16,185,129,0.30)' : '0 2px 8px rgba(37,99,235,0.28)' }}>
-                    {saved ? <><Check size={14} /> Saved!</> : <><Save size={14} /> Save Changes</>}
+                  <motion.button onClick={handleSave} disabled={instSaving} whileHover={{ scale: 1.02 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 600, color: '#FFFFFF', background: saved ? '#10B981' : '#2563EB', cursor: instSaving ? 'default' : 'pointer', opacity: instSaving ? 0.7 : 1, transition: 'background 0.2s', boxShadow: saved ? '0 2px 8px rgba(16,185,129,0.30)' : '0 2px 8px rgba(37,99,235,0.28)' }}>
+                    {saved ? <><Check size={14} /> Saved!</> : instSaving ? <>Saving…</> : <><Save size={14} /> Save Changes</>}
                   </motion.button>
                 </div>
 
@@ -280,13 +384,24 @@ export default function SettingsPage() {
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>Institution Logo</p>
                       <p style={{ fontSize: 12, color: '#94A3B8', marginBottom: 12 }}>PNG or JPG. Recommended 256×256px. Max 2MB.</p>
-                      <button onClick={() => logoRef.current?.click()} disabled={logoUploading}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#374151', cursor: logoUploading ? 'default' : 'pointer', opacity: logoUploading ? 0.7 : 1 }}>
-                        {logoUploading
-                          ? <><div style={{ width: 12, height: 12, border: '2px solid #E2E8F0', borderTop: '2px solid #2563EB', borderRadius: '50%' }} className="animate-spin" /> Uploading…</>
-                          : <><Upload size={13} /> {logoUrl ? 'Change Logo' : 'Upload Logo'}</>
-                        }
-                      </button>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button onClick={() => logoRef.current?.click()} disabled={logoUploading || logoRemoving}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#374151', cursor: (logoUploading || logoRemoving) ? 'default' : 'pointer', opacity: (logoUploading || logoRemoving) ? 0.7 : 1 }}>
+                          {logoUploading
+                            ? <><div style={{ width: 12, height: 12, border: '2px solid #E2E8F0', borderTop: '2px solid #2563EB', borderRadius: '50%' }} className="animate-spin" /> Uploading…</>
+                            : <><Upload size={13} /> {logoUrl ? 'Change Logo' : 'Upload Logo'}</>
+                          }
+                        </button>
+                        {logoUrl && (
+                          <button onClick={handleLogoRemove} disabled={logoRemoving || logoUploading}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', cursor: (logoRemoving || logoUploading) ? 'default' : 'pointer', opacity: (logoRemoving || logoUploading) ? 0.7 : 1 }}>
+                            {logoRemoving
+                              ? <><div style={{ width: 12, height: 12, border: '2px solid #FECACA', borderTop: '2px solid #DC2626', borderRadius: '50%' }} className="animate-spin" /> Removing…</>
+                              : <><X size={13} /> Remove</>
+                            }
+                          </button>
+                        )}
+                      </div>
                       <input ref={logoRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleLogoUpload} />
                     </div>
                   </div>
@@ -313,24 +428,23 @@ export default function SettingsPage() {
                     <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94A3B8', marginBottom: 16 }}>Basic Information</p>
                     <div className="rg-2">
                       <FieldGroup label="Institution Name" icon={Building2}>
-                        <input type="text" defaultValue="OwnCampus Demo School" style={FIELD_STYLE} />
+                        <input type="text" value={instFields.name} onChange={e => setInstFields(f => ({...f, name: e.target.value}))} style={FIELD_STYLE} />
                       </FieldGroup>
                       <FieldGroup label="Institution Type">
-                        <select style={FIELD_STYLE}>
-                          <option>School</option><option>College</option><option>University</option><option>Coaching Center</option>
+                        <select value={instFields.type} onChange={e => setInstFields(f => ({...f, type: e.target.value}))} style={FIELD_STYLE}>
+                          <option value="school">School</option><option value="college">College</option><option value="university">University</option><option value="coaching">Coaching Center</option>
                         </select>
                       </FieldGroup>
                       <FieldGroup label="Affiliation Board" icon={Hash}>
-                        <input type="text" defaultValue="CBSE" style={FIELD_STYLE} />
-                      </FieldGroup>
-                      <FieldGroup label="Registration No." icon={Hash}>
-                        <input type="text" defaultValue="REG/2010/000123" style={FIELD_STYLE} />
+                        <input type="text" value={instFields.affiliation} onChange={e => setInstFields(f => ({...f, affiliation: e.target.value}))} style={FIELD_STYLE} />
                       </FieldGroup>
                       <FieldGroup label="Established Year" icon={Calendar}>
-                        <input type="text" defaultValue="2010" style={FIELD_STYLE} />
+                        <input type="text" value={instFields.established_year} maxLength={4}
+                          onChange={e => setInstFields(f => ({...f, established_year: e.target.value.replace(/\D/g, '').slice(0, 4)}))}
+                          style={FIELD_STYLE} />
                       </FieldGroup>
                       <FieldGroup label="Website" icon={Globe}>
-                        <input type="text" defaultValue="https://owncampus.com" style={FIELD_STYLE} />
+                        <input type="text" value={instFields.website} onChange={e => setInstFields(f => ({...f, website: e.target.value}))} style={FIELD_STYLE} />
                       </FieldGroup>
                     </div>
                   </div>
@@ -340,15 +454,15 @@ export default function SettingsPage() {
                     <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94A3B8', marginBottom: 16 }}>Contact Details</p>
                     <div className="rg-2">
                       <FieldGroup label="Email Address" icon={Mail}>
-                        <input type="email" defaultValue="admin@owncampus.com" style={FIELD_STYLE} />
+                        <input type="email" value={instFields.email} onChange={e => setInstFields(f => ({...f, email: e.target.value}))} style={FIELD_STYLE} />
                       </FieldGroup>
                       <FieldGroup label="Phone Number" icon={Phone}>
-                        <input type="text" defaultValue="+91 98765 00000" style={FIELD_STYLE} />
+                        <input type="text" value={instFields.phone} onChange={e => setInstFields(f => ({...f, phone: e.target.value}))} style={FIELD_STYLE} />
                       </FieldGroup>
                     </div>
                     <div style={{ marginTop: 16 }}>
                       <FieldGroup label="Address" icon={MapPin}>
-                        <textarea rows={3} defaultValue="123, Knowledge Street, Education City, Delhi - 110001"
+                        <textarea rows={3} value={instFields.address} onChange={e => setInstFields(f => ({...f, address: e.target.value}))}
                           style={{ ...FIELD_STYLE, resize: 'none' }} />
                       </FieldGroup>
                     </div>
@@ -489,6 +603,68 @@ export default function SettingsPage() {
                       </div>
                     </form>
                   </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Modules ── */}
+            {activeTab === 'modules' && (
+              <motion.div key="modules" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+                style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 2px 6px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
+                <div style={{ padding: '20px 28px', borderBottom: '1px solid #F1F5F9' }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', margin: 0 }}>Module Access</h2>
+                  <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>Request access to additional modules for your institution.</p>
+                </div>
+                <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {ALL_MODULES.map(m => {
+                    const isEnabled = enabledMods === null ? true : enabledMods[m.key] !== false
+                    const pendingReq = modReqs.find(r => r.module_key === m.key && r.status === 'pending')
+                    const approvedReq = modReqs.find(r => r.module_key === m.key && r.status === 'approved')
+                    const rejectedReq = modReqs.find(r => r.module_key === m.key && r.status === 'rejected')
+                    const isSubmitting = submittingMod === m.key
+
+                    return (
+                      <div key={m.key} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '14px 18px', borderRadius: 12,
+                        background: isEnabled ? '#F0FDF4' : '#F8FAFC',
+                        border: `1.5px solid ${isEnabled ? '#A7F3D0' : '#E2E8F0'}`,
+                      }}>
+                        <div>
+                          <span style={{ fontSize: 13.5, fontWeight: 600, color: isEnabled ? '#065F46' : '#374151' }}>{m.label}</span>
+                          {pendingReq && (
+                            <p style={{ fontSize: 11.5, color: '#D97706', margin: '3px 0 0', fontWeight: 600 }}>
+                              Request pending review
+                            </p>
+                          )}
+                          {rejectedReq && !pendingReq && (
+                            <p style={{ fontSize: 11.5, color: '#DC2626', margin: '3px 0 0' }}>
+                              Rejected{rejectedReq.rejection_reason ? ` · ${rejectedReq.rejection_reason}` : ''}
+                            </p>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          {isEnabled ? (
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: '#D1FAE5', color: '#065F46' }}>Enabled</span>
+                          ) : pendingReq ? (
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: '#FFFBEB', color: '#D97706' }}>Pending</span>
+                          ) : (
+                            <button
+                              onClick={() => requestModule(m.key)}
+                              disabled={isSubmitting}
+                              style={{
+                                padding: '6px 14px', borderRadius: 8, border: '1.5px solid #2563EB25',
+                                background: '#2563EB0f', color: '#2563EB', fontSize: 12, fontWeight: 700,
+                                cursor: isSubmitting ? 'default' : 'pointer', fontFamily: 'inherit',
+                                opacity: isSubmitting ? 0.7 : 1,
+                              }}>
+                              {isSubmitting ? 'Requesting…' : 'Request Access'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </motion.div>
             )}

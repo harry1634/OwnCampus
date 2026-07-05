@@ -6,8 +6,6 @@ import { Package, Plus, Clock, CheckCircle, XCircle, X, Trash2, Filter } from 'l
 import { toast } from 'sonner'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 
-const REQUESTS_KEY = 'owncampus_equipment_requests_v1'
-
 const STATUS_CONF = {
   approved: { color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', icon: CheckCircle, label: 'Approved' },
   pending:  { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', icon: Clock,        label: 'Pending'  },
@@ -20,62 +18,55 @@ const URGENCY_CONF = {
   high:   { color: '#DC2626', bg: '#FEF2F2', label: 'Urgent' },
 }
 
-function loadAll() { try { return JSON.parse(localStorage.getItem(REQUESTS_KEY)) || [] } catch { return [] } }
-function saveAll(d) { try { localStorage.setItem(REQUESTS_KEY, JSON.stringify(d)) } catch {} }
-
 export default function FacultyProcurement() {
-  const cu     = useCurrentUser()
-  const myName = cu.name || cu.email || ''
+  const cu = useCurrentUser()
 
   const [requests, setRequests] = useState([])
   const [showForm, setShowForm ] = useState(false)
   const [filter,   setFilter  ] = useState('all')
   const [form, setForm] = useState({ item: '', reason: '', qty: '', urgency: 'medium' })
 
-  const reload = () => {
-    const all  = loadAll()
-    const mine = myName ? all.filter(r => (r.facultyName || '').toLowerCase() === myName.toLowerCase()) : []
-    setRequests(mine)
+  const fetchRequests = async () => {
+    try {
+      const res  = await fetch('/api/procurement/requests')
+      const data = await res.json()
+      setRequests(data.requests || [])
+    } catch {}
   }
 
   useEffect(() => {
     if (!cu.mounted) return
-    reload()
-    const onStorage = (e) => { if (e.key === REQUESTS_KEY) reload() }
-    const onVisible = () => { if (document.visibilityState === 'visible') reload() }
-    window.addEventListener('storage', onStorage)
-    document.addEventListener('visibilitychange', onVisible)
-    return () => {
-      window.removeEventListener('storage', onStorage)
-      document.removeEventListener('visibilitychange', onVisible)
-    }
-  }, [cu.mounted, myName])
+    fetchRequests()
+  }, [cu.mounted])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.item.trim() || !form.reason.trim()) { toast.error('Fill all required fields'); return }
-    const all = loadAll()
-    all.unshift({
-      id: Date.now(),
-      facultyName: myName,
-      item: `${form.item.trim()}${form.qty ? ` (${form.qty} units)` : ''}`,
-      reason: form.reason.trim(),
-      urgency: form.urgency,
-      status: 'pending',
-      date: new Date().toISOString().split('T')[0],
-    })
-    saveAll(all)
-    reload()
-    setShowForm(false)
-    setForm({ item: '', reason: '', qty: '', urgency: 'medium' })
-    toast.success('Request submitted to admin!')
+    try {
+      const res  = await fetch('/api/procurement/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item: form.item, reason: form.reason, qty: form.qty, urgency: form.urgency }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || 'Failed to submit'); return }
+      setRequests(prev => [data.request, ...prev])
+      setShowForm(false)
+      setForm({ item: '', reason: '', qty: '', urgency: 'medium' })
+      toast.success('Request submitted to admin!')
+    } catch { toast.error('Network error') }
   }
 
-  const cancelRequest = (id) => {
-    const all = loadAll().filter(r => r.id !== id)
-    saveAll(all)
-    reload()
-    toast.success('Request cancelled')
+  const cancelRequest = async (id) => {
+    try {
+      await fetch('/api/procurement/requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, cancel: true }),
+      })
+      setRequests(prev => prev.filter(r => r.id !== id))
+      toast.success('Request cancelled')
+    } catch { toast.error('Cancel failed') }
   }
 
   const filtered   = filter === 'all' ? requests : requests.filter(r => r.status === filter)
@@ -153,7 +144,7 @@ export default function FacultyProcurement() {
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: urgConf.bg, color: urgConf.color }}>{urgConf.label}</span>
                     </div>
                     <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 4px', lineHeight: 1.5 }}>{req.reason}</p>
-                    <p style={{ fontSize: 11, color: '#94A3B8' }}>Requested on {req.date}</p>
+                    <p style={{ fontSize: 11, color: '#94A3B8' }}>Requested on {(req.created_at || req.date || '').split('T')[0]}</p>
                   </div>
                   {req.status === 'pending' && (
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}

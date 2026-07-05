@@ -12,15 +12,8 @@ const FACULTY_ROLES = [
 const VALID_BLOOD_GROUPS = ['A+','A-','B+','B-','O+','O-','AB+','AB-']
 const VALID_GENDERS      = ['male','female','other','prefer_not_to_say']
 
-const UP_SELECT = `
-  id, first_name, last_name, email, phone, avatar_url, role,
-  institution_id, branch_id,
-  gender, date_of_birth, blood_group,
-  address, city, state, pincode,
-  metadata,
-  branches     ( id, name ),
-  institutions ( id, name )
-`
+// Use * so partial-migration deployments still work; joins appended explicitly.
+const UP_SELECT = '*, branches(id,name), institutions(id,name)'
 
 function buildProfileShape(up, meta) {
   return {
@@ -207,7 +200,7 @@ export async function PATCH(req) {
     }
 
     // Only persist truly orphaned metadata fields (no proper DB column)
-    const ORPHANED_META_KEYS = ['house', 'classes_assigned', 'temp_password']
+    const ORPHANED_META_KEYS = ['house', 'classes_assigned', 'temp_password', 'notif_prefs']
     const orphanedMeta = {}
     for (const key of ORPHANED_META_KEYS) {
       if (key in bodyMeta) orphanedMeta[key] = bodyMeta[key]

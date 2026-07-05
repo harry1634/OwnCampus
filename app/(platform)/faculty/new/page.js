@@ -58,10 +58,31 @@ export default function NewFacultyPage() {
     e.preventDefault()
     if (!validate()) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
-    setSaving(false); setSaved(true)
-    await new Promise(r => setTimeout(r, 700))
-    router.push('/faculty')
+    try {
+      const res  = await fetch('/api/faculty', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          name:        `${form.prefix} ${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+          email:       form.email.trim(),
+          phone:       form.phone.trim() || null,
+          dept:        form.dept,
+          designation: form.designation,
+          type:        form.type,
+          exp:         form.exp,
+          subjects:    form.subjects,
+          code:        form.code.trim() || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      setSaved(true)
+      setTimeout(() => router.push('/faculty'), 700)
+    } catch (err) {
+      setErrors({ _global: err.message })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const hasName = form.firstName || form.lastName

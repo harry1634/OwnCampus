@@ -138,7 +138,7 @@ export default function Header({ user, profile, institution }) {
 
   const currentPage = allNavItems.find(item =>
     pathname === item.href ||
-    (item.href !== '/dashboard' && pathname.startsWith(item.href))
+    (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
   )
 
   const pageName = currentPage?.name || 'Dashboard'

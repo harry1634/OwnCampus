@@ -229,6 +229,43 @@ export default function LoginPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
+  // If user is already authenticated and navigated here directly (no ?redirect=),
+  // send them to their portal. If the portal they came FROM rejected them (?redirect=
+  // points at their own portal), sign them out so they can log in with the right
+  // account — otherwise we'd just bounce them straight back into the same rejection.
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+      const effectiveRole = profile?.role || user.user_metadata?.role || ''
+      const portalRole    = resolvePortalRole(effectiveRole)
+
+      let destination = null
+      if      (portalRole === 'admin')   destination = '/dashboard'
+      else if (portalRole === 'faculty') destination = '/faculty/dashboard'
+      else if (portalRole === 'student') destination = '/student/dashboard'
+
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect') || ''
+
+      const portalRejectedUs = destination
+        ? (redirectParam === destination || redirectParam.startsWith(destination + '/'))
+        : true
+      if (portalRejectedUs) {
+        // No recognized portal, or the portal they'd be sent to is the one that
+        // rejected them — sign out so they can authenticate with the right account.
+        await supabase.auth.signOut()
+        return
+      }
+
+      router.replace(destination)
+    })
+  }, [])
+
   const [instCode,    setInstCode   ] = useState('')
   const [instInfo,    setInstInfo   ] = useState(null)
   const [instError,   setInstError  ] = useState('')
@@ -270,57 +307,11 @@ export default function LoginPage() {
       if (!portalRole) throw new Error('Account role not configured. Contact admin.')
 
       let institutionId = profile?.institution_id || null
-      if ((!profile?.role || profile.role === 'guest') && portalRole === 'admin') {
-        const uMeta     = authData.user.user_metadata || {}
-        const firstName = uMeta.first_name || authData.user.email.split('@')[0]
-        const lastName  = uMeta.last_name  || ''
 
-        if (!institutionId) {
-          const instName = uMeta.institution_name || 'My Institution'
-          const slug = instName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-          const namePrefix  = instName.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6).padEnd(4, 'X')
-          const codeSuffix  = Date.now().toString(36).toUpperCase().slice(-4)
-          const generatedCode = namePrefix + codeSuffix
-          const { data: instRow } = await supabase
-            .from('institutions')
-            .insert({
-              name: instName, type: (uMeta.institution_type || 'school').toLowerCase().replace(/\s+/g, '_'),
-              slug: slug + '-' + Date.now().toString(36), code: generatedCode,
-              email: authData.user.email, is_active: true, setup_done: false,
-            })
-            .select('id, code').single()
-          institutionId = instRow?.id || null
-        }
-
-        await supabase.from('user_profiles').update({
-          role: 'owner', first_name: firstName, last_name: lastName, institution_id: institutionId,
-        }).eq('id', authData.user.id)
+      const targetPath = portalRole === 'admin' ? '/dashboard' : portalRole === 'student' ? '/student/dashboard' : '/faculty/dashboard'
+      if (typeof window !== 'undefined' && window.location.pathname !== targetPath) {
+        router.replace(targetPath)
       }
-
-      const KEYS = ['oc_role','oc_user_id','oc_user_name','oc_user_email',
-                    'oc_user_class','oc_user_roll','oc_user_dept','oc_user_desig',
-                    'oc_institution_id','oc_branch_id']
-      KEYS.forEach(k => localStorage.removeItem(k))
-
-      const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ')
-        || authData.user.user_metadata?.full_name
-        || authData.user.email.split('@')[0]
-
-      localStorage.setItem('oc_role',       portalRole)
-      localStorage.setItem('oc_user_id',    authData.user.id)
-      localStorage.setItem('oc_user_name',  displayName)
-      localStorage.setItem('oc_user_email', authData.user.email)
-      if (institutionId)      localStorage.setItem('oc_institution_id', institutionId)
-      if (profile?.branch_id) localStorage.setItem('oc_branch_id',     profile.branch_id)
-      if (profile?.metadata) {
-        const m = profile.metadata
-        if (m.class_section) localStorage.setItem('oc_user_class', m.class_section)
-        if (m.roll_number)   localStorage.setItem('oc_user_roll',  m.roll_number)
-        if (m.department)    localStorage.setItem('oc_user_dept',  m.department)
-        if (m.designation)   localStorage.setItem('oc_user_desig', m.designation)
-      }
-
-      router.push(portalRole === 'admin' ? '/dashboard' : portalRole === 'student' ? '/student/dashboard' : '/faculty/dashboard')
       router.refresh()
     } catch (err) { toast.error(err.message || 'Login failed.')
     } finally { setLoading(false) }
@@ -372,11 +363,9 @@ export default function LoginPage() {
           institutionId: instInfo?.id || null, institutionCode: instCode || null }) })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to submit.')
-      localStorage.setItem('oc_pending_email', email); localStorage.setItem('oc_pending_role', role)
-      localStorage.setItem('oc_pending_name', details.name.trim()); localStorage.setItem('oc_user_name', details.name.trim())
-      localStorage.setItem('oc_user_email', email)
       toast.success('Request submitted! Admin will email your credentials.')
-      router.push('/auth/pending')
+      const params = new URLSearchParams({ email, role, name: details.name.trim() })
+      router.push(`/auth/pending?${params.toString()}`)
     } catch (err) { toast.error(err.message || 'Failed to submit.')
     } finally { setLoading(false) }
   }
@@ -661,7 +650,7 @@ export default function LoginPage() {
                 </motion.div>
 
                 <motion.div {...fade(0.36)} style={{ display: 'flex', justifyContent: 'center' }}>
-                  <Link href="/auth/signup" style={{
+                  <Link href="/auth/activate" style={{
                     display: 'inline-flex', alignItems: 'center', gap: 7,
                     padding: '10px 22px', borderRadius: 99,
                     border: '1.5px solid #E2E8F0', background: 'white',
@@ -670,7 +659,7 @@ export default function LoginPage() {
                     transition: 'all 0.15s',
                   }}>
                     New institution?{' '}
-                    <span style={{ color: T.accent }}>Register here</span>
+                    <span style={{ color: T.accent }}>Activate here</span>
                     <ArrowRight size={13} color={T.accent} />
                   </Link>
                 </motion.div>
@@ -834,12 +823,6 @@ export default function LoginPage() {
                     </motion.button>
                   </form>
 
-                  {role === 'admin' && mode === 'signin' && (
-                    <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: T.radius.md, background: '#EFF6FF', border: '1px solid #BFDBFE', display: 'flex', gap: 10 }}>
-                      <Zap size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 1 }} />
-                      <p style={{ fontSize: 12.5, color: '#1E40AF', margin: 0, lineHeight: 1.6 }}>Use the admin credentials configured in your Supabase project.</p>
-                    </div>
-                  )}
                   {mode === 'signup' && (
                     <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: T.radius.md, background: '#FFFBEB', border: '1px solid #FDE68A', display: 'flex', gap: 10 }}>
                       <Clock size={14} color="#D97706" style={{ flexShrink: 0, marginTop: 1 }} />
@@ -883,7 +866,7 @@ export default function LoginPage() {
                   <Clock size={15} style={{ color: C, flexShrink: 0, marginTop: 1 }} />
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C, margin: '0 0 2px' }}>Pending admin approval</p>
-                    <p style={{ fontSize: 12.5, color: T.muted, margin: 0, lineHeight: 1.55 }}>Once approved, you'll receive an email with your login credentials.</p>
+                    <p style={{ fontSize: 12.5, color: T.muted, margin: 0, lineHeight: 1.55 }}>Once approved, you&apos;ll receive an email with your login credentials.</p>
                   </div>
                 </div>
 

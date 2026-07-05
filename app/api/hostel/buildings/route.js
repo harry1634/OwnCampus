@@ -1,5 +1,6 @@
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient }      from '@/lib/supabase/server'
+import { createAdminClient }                                    from '@/lib/supabase/admin'
+import { createClient }                                        from '@/lib/supabase/server'
+import { checkHostelRoomLimit, limitExceededResponse }         from '@/lib/licenseEngine'
 
 export const dynamic = 'force-dynamic'
 
@@ -121,6 +122,13 @@ export async function POST(req) {
     const capacityPerRoom = numRooms > 0 && numBeds > 0
       ? Math.max(1, Math.ceil(numBeds / numRooms))
       : 1
+
+    if (institutionId && numRooms > 0) {
+      const limit = await checkHostelRoomLimit(institutionId)
+      if (limit.max !== Infinity && limit.current + numRooms > limit.max) {
+        return limitExceededResponse('Hostel Room', limit.current, limit.max)
+      }
+    }
 
     const { data, error } = await admin
       .from('hostel_buildings')

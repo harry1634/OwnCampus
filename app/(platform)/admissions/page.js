@@ -675,7 +675,7 @@ export default function AdmissionsPage() {
               <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Admission Pipeline</h3>
               <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>{pipelineTotal} leads across all tracked stages</p>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', cursor: 'pointer' }}>View all →</span>
+            <Link href="#leads" style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', textDecoration: 'none' }}>View all →</Link>
           </div>
 
           {/* Stage cards with arrows */}
@@ -785,7 +785,7 @@ export default function AdmissionsPage() {
       </div>
 
       {/* Leads Table */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 2px 6px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
+      <div id="leads" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 2px 6px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
 
         {/* Toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px 20px', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap' }}>

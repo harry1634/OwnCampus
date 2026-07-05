@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 const SIDEBAR_BG    = '#1E40AF'
 const SIDEBAR_HOVER = '#1D4ED8'
 
-export default function Sidebar({ profile }) {
+export default function Sidebar({ profile, enabledModules }) {
   const pathname = usePathname()
   const {
     sidebarCollapsed: _sidebarCollapsed, toggleSidebar,
@@ -56,7 +56,7 @@ export default function Sidebar({ profile }) {
 
   const isActive = (href) => {
     if (href === '/dashboard') return pathname === '/dashboard'
-    return pathname.startsWith(href)
+    return pathname === href || pathname.startsWith(href + '/')
   }
 
   const institutionName  = profile?.institutions?.name || 'OwnCampus'
@@ -338,7 +338,11 @@ export default function Sidebar({ profile }) {
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {group.items.map((item) => {
+              {group.items.filter(item => {
+                if (!item.moduleKey) return true
+                if (!enabledModules) return true
+                return enabledModules[item.moduleKey] !== false
+              }).map((item) => {
                 const active = isActive(item.href)
                 const Icon   = item.icon
 

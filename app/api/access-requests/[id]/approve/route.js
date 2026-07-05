@@ -2,6 +2,12 @@ import { randomBytes }       from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient }      from '@/lib/supabase/server'
 import { notifyUser }        from '@/lib/services/notification.service'
+import {
+  checkStudentLimit,
+  checkFacultyLimit,
+  checkAdminLimit,
+  limitExceededResponse,
+} from '@/lib/licenseEngine'
 
 function generatePassword() {
   const upper   = 'ABCDEFGHJKMNPQRSTUVWXYZ'
@@ -136,6 +142,21 @@ export async function POST(req, { params }) {
 
     if (!request.email) {
       return Response.json({ error: 'No email on this request. Cannot approve.' }, { status: 400 })
+    }
+
+    // Enforce license limits before creating user
+    const ADMIN_ROLES_SET = new Set(['owner','super_admin','principal','vice_principal','academic_coordinator','chairman','director','administrator'])
+    if (institutionId) {
+      if (profileRole === 'student') {
+        const limit = await checkStudentLimit(institutionId)
+        if (!limit.allowed) return limitExceededResponse('Student', limit.current, limit.max)
+      } else if (ADMIN_ROLES_SET.has(profileRole)) {
+        const limit = await checkAdminLimit(institutionId)
+        if (!limit.allowed) return limitExceededResponse('Admin User', limit.current, limit.max)
+      } else {
+        const limit = await checkFacultyLimit(institutionId)
+        if (!limit.allowed) return limitExceededResponse('Faculty', limit.current, limit.max)
+      }
     }
 
     // Create the Supabase Auth user

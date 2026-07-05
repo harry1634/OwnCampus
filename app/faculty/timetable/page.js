@@ -53,7 +53,7 @@ export default function FacultyTimetable() {
 
   useEffect(() => {
     setLoading(true)
-    fetch('/api/timetable')
+    fetch(`/api/timetable?week_offset=${weekOffset}`)
       .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
       .then(data => {
         setByDay(data.byDay || {})
@@ -61,7 +61,7 @@ export default function FacultyTimetable() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [weekOffset])
 
   // Build all unique periods (sorted by period_number)
   const periodsMap = {}

@@ -1,5 +1,21 @@
+import { randomBytes }       from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient }      from '@/lib/supabase/server'
+import { checkFacultyLimit, limitExceededResponse } from '@/lib/licenseEngine'
+
+function generatePassword() {
+  const upper = 'ABCDEFGHJKMNPQRSTUVWXYZ'
+  const lower = 'abcdefghjkmnpqrstuvwxyz'
+  const digits = '23456789'
+  const special = '@#$!'
+  const all = upper + lower + digits + special
+  const buf = randomBytes(12)
+  const required = [upper[buf[0]%upper.length], lower[buf[1]%lower.length], digits[buf[2]%digits.length], special[buf[3]%special.length]]
+  const rest = Array.from({ length: 6 }, (_, i) => all[buf[4+i] % all.length])
+  const combined = [...required, ...rest]
+  const shuffle = randomBytes(combined.length)
+  return combined.map((c, i) => ({ c, r: shuffle[i] })).sort((a, b) => a.r - b.r).map(x => x.c).join('')
+}
 
 const FACULTY_ROLES = [
   'teacher','faculty','trainer','hod','academic_coordinator',
@@ -222,6 +238,108 @@ export async function GET(req) {
     // Exclude the currently logged-in admin from the faculty list
     const faculty = all.filter(p => p.supabaseId !== user.id)
     return Response.json(faculty)
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 500 })
+  }
+}
+
+// POST /api/faculty — directly create a new faculty/staff member (admin-initiated)
+// Body: { name, email, phone, dept, designation, type, exp, subjects, code, salary, joiningDate }
+export async function POST(req) {
+  try {
+    const serverClient = await createClient()
+    const { data: { user } } = await serverClient.auth.getUser()
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const admin = createAdminClient()
+    const { data: callerProfile } = await admin
+      .from('user_profiles').select('institution_id, role').eq('id', user.id).single()
+    const ADMIN_ROLES_POST = ['owner','super_admin','principal','vice_principal','academic_coordinator','hr','administrator']
+    if (!ADMIN_ROLES_POST.includes(callerProfile?.role || '')) {
+      return Response.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+    const institutionId = callerProfile?.institution_id || null
+
+    const body = await req.json()
+    const { name, email, phone, dept, designation, type, exp, subjects, code, salary, joiningDate } = body
+    if (!name?.trim())  return Response.json({ error: 'Name is required' },  { status: 400 })
+    if (!email?.trim()) return Response.json({ error: 'Email is required' }, { status: 400 })
+
+    if (institutionId) {
+      const limit = await checkFacultyLimit(institutionId)
+      if (!limit.allowed) return limitExceededResponse('Faculty', limit.current, limit.max)
+    }
+
+    const password  = generatePassword()
+    const nameParts = name.trim().split(/\s+/)
+    const firstName = nameParts[0]
+    const lastName  = nameParts.slice(1).join(' ') || null
+
+    const { data: authData, error: authErr } = await admin.auth.admin.createUser({
+      email:         email.trim(),
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: name, first_name: firstName, last_name: lastName, role: 'teacher' },
+    })
+    if (authErr) {
+      const msg = authErr.message.toLowerCase().includes('already registered')
+        ? 'This email is already registered.'
+        : authErr.message
+      return Response.json({ error: msg }, { status: 400 })
+    }
+    const userId = authData.user.id
+
+    // Resolve department ID
+    let deptId = null
+    if (dept && institutionId) {
+      const { data: dRow } = await admin.from('departments').select('id')
+        .eq('institution_id', institutionId).ilike('name', dept.trim()).limit(1).maybeSingle()
+      deptId = dRow?.id || null
+    }
+
+    const subjectsArr = subjects
+      ? (typeof subjects === 'string' ? subjects.split(',').map(s => s.trim()).filter(Boolean) : subjects)
+      : []
+
+    await admin.from('user_profiles').upsert({
+      id:             userId,
+      email:          email.trim(),
+      first_name:     firstName,
+      last_name:      lastName,
+      role:           'teacher',
+      phone:          phone || null,
+      institution_id: institutionId,
+      is_active:      true,
+      metadata: {
+        department:       dept        || null,
+        designation:      designation || null,
+        subjects_teaching: subjectsArr,
+        employee_id:      code        || null,
+        temp_password:    password,
+      },
+    }, { onConflict: 'id' })
+
+    await admin.from('faculty').upsert({
+      user_id:          userId,
+      institution_id:   institutionId,
+      department_id:    deptId,
+      designation:      designation || null,
+      employment_type:  type        || 'full_time',
+      experience_years: parseInt(exp) || 0,
+      salary:           parseFloat(salary) || 0,
+      joining_date:     joiningDate || null,
+      status:           'active',
+    }, { onConflict: 'user_id' })
+
+    await admin.from('audit_logs').insert({
+      institution_id: institutionId,
+      actor_id:       user.id,
+      action:         'create',
+      entity_type:    'faculty',
+      new_value:      { user_id: userId, name, email: email.trim(), dept, designation },
+    }).then(null, () => {})
+
+    return Response.json({ success: true, userId, email: email.trim(), password })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }

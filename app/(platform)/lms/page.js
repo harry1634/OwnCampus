@@ -79,10 +79,6 @@ function buildModules(course) {
   }).filter(Boolean)
 }
 
-const LMS_KEY = 'owncampus_lms_courses_v1'
-function loadCourses() { try { return JSON.parse(localStorage.getItem(LMS_KEY)) || [] } catch { return [] } }
-function saveCourses(d) { try { localStorage.setItem(LMS_KEY, JSON.stringify(d)) } catch {} }
-
 const STATUS_FILTERS = [
   { key: 'all', label: 'All' }, { key: 'published', label: 'Published' }, { key: 'draft', label: 'Draft' },
 ]
@@ -527,8 +523,7 @@ function CreateCourseModal({ courseCount, onClose, onAdd }) {
     setSaved(true)
     await new Promise(r => setTimeout(r, 700))
     const palette = COURSE_PALETTE[courseCount % COURSE_PALETTE.length]
-    onAdd({ id:Date.now(), title:form.title, instructor:form.instructor, subject:form.subject||'General', lessons:0, duration:form.duration||'TBD', enrolled:0, progress:0, ...palette, rating:0, status:form.status, modules:[] })
-    onClose()
+    onAdd({ title:form.title, instructor:form.instructor, subject:form.subject||'General', lessons:0, duration:form.duration||'TBD', enrolled:0, progress:0, ...palette, rating:0, status:form.status, modules:[] })
   }
 
   return (
@@ -601,19 +596,49 @@ export default function LMSPage() {
   const [showModal, setShowModal]     = useState(false)
   const [selectedCourse, setSelected] = useState(null)
 
-  useEffect(() => { setCourses(loadCourses()); setMounted(true) }, [])
+  useEffect(() => {
+    fetch('/api/lms')
+      .then(r => r.json())
+      .then(d => {
+        const rows = (d.courses || []).map(row => ({
+          ...row.metadata,
+          id:          row.id,
+          title:       row.title,
+          subject:     row.subject || 'General',
+          description: row.description,
+          status:      row.status,
+          modules:     row.modules || [],
+          lessons:     (row.modules || []).reduce((s, m) => s + (m.lessons?.length || 0), 0),
+        }))
+        setCourses(rows)
+      })
+      .catch(() => {})
+      .finally(() => setMounted(true))
+  }, [])
 
-  const saveThenSet = (next) => { saveCourses(next); setCourses(next) }
+  const apiUpdateCourse = async (course) => {
+    const { id, title, subject, description, status, modules, ...rest } = course
+    await fetch('/api/lms', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id, title, subject, description, status,
+        modules: modules || [],
+        metadata: rest,
+      }),
+    })
+  }
 
   const filtered = courses.filter(c =>
     c.title.toLowerCase().includes(search.toLowerCase()) &&
     (filter === 'all' || c.status === filter)
   )
 
-  const updateCourse = (updated) => {
+  const updateCourse = async (updated) => {
     const next = courses.map(c => c.id === updated.id ? updated : c)
-    saveThenSet(next)
+    setCourses(next)
     setSelected(updated)
+    await apiUpdateCourse(updated)
   }
 
   // Dynamic KPIs from real courses
@@ -763,7 +788,21 @@ export default function LMSPage() {
           <CreateCourseModal
             courseCount={courses.length}
             onClose={() => setShowModal(false)}
-            onAdd={course => { const next = [course, ...courses]; saveThenSet(next); setSelected(course) }}
+            onAdd={async (course) => {
+              const { id: _id, title, subject, description, status, modules, ...rest } = course
+              const res  = await fetch('/api/lms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, subject, description, status, modules: modules || [], metadata: rest }),
+              })
+              const data = await res.json()
+              if (data.course) {
+                const newCourse = { ...rest, id: data.course.id, title, subject: subject || 'General', description, status, modules: modules || [], lessons: 0 }
+                setCourses(prev => [newCourse, ...prev])
+                setSelected(newCourse)
+              }
+              setShowModal(false)
+            }}
           />
         )}
       </AnimatePresence>

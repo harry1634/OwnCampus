@@ -1,14 +1,43 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-const PUBLIC_ROUTES = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/auth/reset-password', '/']
-const SUPER_ADMIN_ROUTES = ['/super-admin']
+// Exact paths that unauthenticated users can access without being redirected to login
+const PUBLIC_ROUTES = new Set([
+  '/auth/login', '/auth/signup', '/auth/forgot-password',
+  '/auth/reset-password', '/auth/activate', '/',
+])
+const CONTROL_PUBLIC = new Set(['/control/login'])
 
 export async function proxy(request) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const { pathname } = request.nextUrl
+
+  // ── Control Center routes ──────────────────────────────────────
+  // Completely isolated from institution auth. Only cc_uid cookie matters here.
+  if (pathname.startsWith('/control')) {
+    const ccUid = request.cookies.get('cc_uid')?.value
+
+    if (CONTROL_PUBLIC.has(pathname)) {
+      // Already authenticated as a company user → go to dashboard
+      if (ccUid) {
+        return NextResponse.redirect(new URL('/control/dashboard', request.url))
+      }
+      return NextResponse.next()
+    }
+
+    // All other /control/* require cc_uid
+    if (!ccUid) {
+      return NextResponse.redirect(new URL('/control/login', request.url))
+    }
+
+    // Authenticated — pass through (layout will re-validate against DB)
+    return NextResponse.next()
+  }
+
+  // ── Institution routes ────────────────────────────────────────
+  const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // If Supabase env vars are not configured, pass through all requests
+  // If Supabase env vars are not configured, pass through
   if (!supabaseUrl || !supabaseAnonKey || !supabaseUrl.startsWith('http')) {
     return NextResponse.next({ request })
   }
@@ -39,38 +68,17 @@ export async function proxy(request) {
     const { data } = await supabase.auth.getUser()
     user = data?.user ?? null
   } catch {
-    // stale or invalid refresh token — treat as unauthenticated, cookies will be cleared on redirect
+    // stale or invalid refresh token — treat as unauthenticated
   }
-  const { pathname } = request.nextUrl
 
-  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route))
-  const isSuperAdminRoute = SUPER_ADMIN_ROUTES.some(route => pathname.startsWith(route))
+  // Exact-match for public paths (using a Set so '/' doesn't match every route via startsWith)
+  const isPublicRoute = PUBLIC_ROUTES.has(pathname)
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     url.searchParams.set('redirect', pathname)
     return NextResponse.redirect(url)
-  }
-
-  if (user && pathname.startsWith('/auth/')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
-
-  if (user && isSuperAdminRoute) {
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'super_admin') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
-      return NextResponse.redirect(url)
-    }
   }
 
   return supabaseResponse
