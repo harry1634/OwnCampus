@@ -276,7 +276,19 @@ export async function PATCH(req) {
     if (Object.keys(upUpdate).length > 0) {
       const { error } = await admin
         .from('user_profiles').update(upUpdate).eq('id', user.id)
-      if (error) return Response.json({ error: error.message }, { status: 400 })
+      if (error) {
+        // Migration 017 may not be applied yet — retry with only base columns
+        if (error.message?.includes('schema cache')) {
+          const baseKeys = ['first_name', 'last_name', 'phone', 'avatar_url', 'metadata']
+          const safeUpdate = Object.fromEntries(Object.entries(upUpdate).filter(([k]) => baseKeys.includes(k)))
+          if (Object.keys(safeUpdate).length > 0) {
+            const { error: err2 } = await admin.from('user_profiles').update(safeUpdate).eq('id', user.id)
+            if (err2) return Response.json({ error: err2.message }, { status: 400 })
+          }
+        } else {
+          return Response.json({ error: error.message }, { status: 400 })
+        }
+      }
     }
 
     // ── 2. Faculty table ─────────────────────────────────────────────
