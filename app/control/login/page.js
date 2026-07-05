@@ -72,7 +72,7 @@ export default function ControlLoginPage() {
 
       {/* ── Left panel — same gradient treatment as institution login ── */}
       <div className="cc-left" style={{
-        display: 'none', flex: '0 0 460px',
+        display: 'none', flex: 1,
         background: 'linear-gradient(160deg, #080E2E 0%, #0F1F6B 30%, #1740B8 60%, #1D4ED8 80%, #2563EB 100%)',
         flexDirection: 'column', justifyContent: 'space-between',
         padding: '48px 44px', position: 'relative', overflow: 'hidden',
