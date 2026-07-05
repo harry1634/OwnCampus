@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { Suspense, useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GraduationCap, Clock, ShieldCheck, LogOut, Mail, RefreshCw, PartyPopper, ArrowRight } from 'lucide-react'
 
-export default function PendingPage() {
+function PendingContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const [email,    setEmail   ] = useState('')
@@ -272,5 +272,13 @@ export default function PendingPage() {
         </p>
       </motion.div>
     </div>
+  )
+}
+
+export default function PendingPage() {
+  return (
+    <Suspense fallback={null}>
+      <PendingContent />
+    </Suspense>
   )
 }
