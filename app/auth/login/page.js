@@ -512,23 +512,25 @@ export default function LoginPage() {
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: isDesktop ? 'flex-start' : 'center',
         background: '#FFFFFF',
-        padding: isDesktop ? '48px 24px 40px' : '40px 24px', boxSizing: 'border-box',
+        padding: isDesktop ? '48px 24px 40px' : '0 24px 40px', boxSizing: 'border-box',
       }}>
 
         {/* ── Mobile / tablet hero (hidden on desktop) ── */}
         {!isDesktop && <div style={{
           padding: '48px 24px 44px', display: 'flex', flexDirection: 'column',
           alignItems: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0,
+          background: '#1E3A8A',
+          margin: '-40px -24px 0', width: 'calc(100% + 48px)',
         }}>
           {/* Dot-grid texture */}
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
-            backgroundImage: 'radial-gradient(rgba(255,255,255,0.055) 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px)',
             backgroundSize: '22px 22px' }} />
           {/* Glow orbs */}
           <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', pointerEvents: 'none',
-            background: 'radial-gradient(circle, rgba(99,102,241,0.38) 0%, transparent 65%)' }} />
+            background: 'radial-gradient(circle, rgba(99,102,241,0.40) 0%, transparent 65%)' }} />
           <div style={{ position: 'absolute', bottom: -20, left: -30, width: 160, height: 160, borderRadius: '50%', pointerEvents: 'none',
-            background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 65%)' }} />
+            background: 'radial-gradient(circle, rgba(59,130,246,0.32) 0%, transparent 65%)' }} />
 
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 20, position: 'relative', zIndex: 1 }}>
@@ -557,13 +559,13 @@ export default function LoginPage() {
             ))}
           </div>
 
-          {/* Bottom shimmer line */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, pointerEvents: 'none',
-            opacity: 0 }} />
+          {/* Bottom fade into white */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 32, pointerEvents: 'none',
+            background: 'linear-gradient(to bottom, transparent, rgba(30,58,138,0.6))' }} />
         </div>}
 
         {/* ── Content sheet ── */}
-        <div className="lp-sheet" style={{ width: '100%', maxWidth: 448, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: 'min-content' }}>
+        <div className="lp-sheet" style={{ width: '100%', maxWidth: 448, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: 'min-content', paddingTop: isDesktop ? 0 : 32 }}>
 
           {/* Signup stepper */}
           <AnimatePresence>
