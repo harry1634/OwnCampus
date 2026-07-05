@@ -169,7 +169,7 @@ export default function FacultyAttendance() {
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handleSave}
           disabled={!selClass || students.length === 0 || saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: '#16A34A', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(5,150,105,0.35)', opacity: (!selClass || students.length === 0 || saving) ? 0.5 : 1 }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: '#064E3B', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(6,78,59,0.35)', opacity: (!selClass || students.length === 0 || saving) ? 0.5 : 1 }}>
           <Save size={14} /> {saving ? 'Saving…' : 'Save Attendance'}
         </motion.button>
       </div>

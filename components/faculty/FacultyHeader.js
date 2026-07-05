@@ -11,6 +11,9 @@ import { toast } from 'sonner'
 import { getInitials } from '@/lib/utils'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 
+const FAC  = '#064E3B'
+const FAC2 = '#059669'
+
 const NOTIF_ICONS = {
   payment:    { icon: CreditCard,  color: '#2563EB', bg: '#EFF6FF' },
   attendance: { icon: AlertCircle, color: '#D97706', bg: '#FFFBEB' },
@@ -84,22 +87,22 @@ export default function FacultyHeader({ user, profile, collapsed, isMobile, onHa
       left: isMobile ? 0 : (collapsed ? 68 : 260),
       right: 0, height: 64, zIndex: 40,
       background: '#FFFFFF',
-      borderBottom: '1px solid #D1FAE5',
-      boxShadow: '0 1px 0 #D1FAE5, 0 2px 8px rgba(6,95,70,0.05)',
+      borderBottom: '1px solid #E5E7EB',
+      boxShadow: '0 1px 0 #E5E7EB',
       display: 'flex', alignItems: 'center',
       paddingLeft: isMobile ? 14 : 32,
       paddingRight: isMobile ? 14 : 28,
       gap: 12,
       transition: 'left 0.28s cubic-bezier(0.4,0,0.2,1)',
     }}>
-      <button onClick={onHamburger} style={{ width: 36, height: 36, borderRadius: 10, background: '#F0FDF4', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-        <Menu size={16} color="#059669" />
+      <button onClick={onHamburger} style={{ width: 36, height: 36, borderRadius: 10, background: '#F8FAFC', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+        <Menu size={16} color={FAC} />
       </button>
 
       {!isMobile && (
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: '#065F46' }}>Good {getGreeting()}, {name.split(' ')[0]}!</p>
-          <p style={{ fontSize: 11, color: '#6EE7B7', marginTop: 1 }}>{today}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: FAC }}>Good {getGreeting()}, {name.split(' ')[0]}!</p>
+          <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>{today}</p>
         </div>
       )}
       {isMobile && <div style={{ flex: 1 }} />}
@@ -108,8 +111,8 @@ export default function FacultyHeader({ user, profile, collapsed, isMobile, onHa
       <div style={{ position: 'relative' }}>
         <button
           onClick={() => { setShowNotifications(o => !o); setShowMenu(false) }}
-          style={{ width: 36, height: 36, borderRadius: 10, background: showNotifications ? '#F0FDF4' : '#F8FAFC', border: `1px solid ${showNotifications ? '#A7F3D0' : '#E2E8F0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
-          <Bell size={15} color={showNotifications ? '#059669' : '#64748B'} />
+          style={{ width: 36, height: 36, borderRadius: 10, background: showNotifications ? 'rgba(6,78,59,0.07)' : '#F8FAFC', border: `1px solid ${showNotifications ? 'rgba(6,78,59,0.25)' : '#E2E8F0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
+          <Bell size={15} color={showNotifications ? FAC : '#64748B'} />
           {unreadCount > 0 && (
             <span style={{ position: 'absolute', top: -3, right: -3, width: 16, height: 16, borderRadius: 99, background: '#EF4444', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -119,14 +122,14 @@ export default function FacultyHeader({ user, profile, collapsed, isMobile, onHa
         {mounted && showNotifications && createPortal(
           <>
             <div onClick={() => setShowNotifications(false)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-            <div style={{ position: 'fixed', top: 72, right: isMobile ? 14 : 70, width: isMobile ? 'calc(100vw - 28px)' : 300, borderRadius: 16, background: '#FFFFFF', border: '1px solid #D1FAE5', boxShadow: '0 16px 48px rgba(6,95,70,0.14)', zIndex: 9999, overflow: 'hidden' }}>
-              <div style={{ padding: '12px 14px', borderBottom: '1px solid #F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ position: 'fixed', top: 72, right: isMobile ? 14 : 70, width: isMobile ? 'calc(100vw - 28px)' : 300, borderRadius: 16, background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 16px 48px rgba(15,23,42,0.14)', zIndex: 9999, overflow: 'hidden' }}>
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0 }}>Notifications</p>
                   <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>{unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}</p>
                 </div>
                 {unreadCount > 0 && (
-                  <button onClick={markAllRead} style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: '#F0FDF4', color: '#059669', border: '1px solid #A7F3D0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button onClick={markAllRead} style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: 'rgba(6,78,59,0.07)', color: FAC, border: `1px solid rgba(6,78,59,0.20)`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <CheckCheck size={11} /> Mark all read
                   </button>
                 )}
@@ -141,7 +144,7 @@ export default function FacultyHeader({ user, profile, collapsed, isMobile, onHa
                   const cfg = NOTIF_ICONS[n.type] || NOTIF_ICONS.general
                   const NIcon = cfg.icon
                   return (
-                    <div key={n.id} style={{ display: 'flex', gap: 10, padding: '10px 14px', background: n.is_read ? 'transparent' : '#F0FDF4', borderBottom: i < notifications.length - 1 ? '1px solid #F8FAFC' : 'none' }}>
+                    <div key={n.id} style={{ display: 'flex', gap: 10, padding: '10px 14px', background: n.is_read ? 'transparent' : '#FAFBFF', borderBottom: i < notifications.length - 1 ? '1px solid #F8FAFC' : 'none' }}>
                       <div style={{ width: 30, height: 30, borderRadius: 8, background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <NIcon size={13} style={{ color: cfg.color }} />
                       </div>
@@ -150,7 +153,7 @@ export default function FacultyHeader({ user, profile, collapsed, isMobile, onHa
                         <p style={{ fontSize: 11, color: '#64748B', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.body}</p>
                         <p style={{ fontSize: 10, color: '#CBD5E1', marginTop: 2 }}>{timeAgo(n.created_at)}</p>
                       </div>
-                      {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: 99, background: '#059669', flexShrink: 0, marginTop: 4 }} />}
+                      {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: 99, background: FAC, flexShrink: 0, marginTop: 4 }} />}
                     </div>
                   )
                 })}
@@ -165,45 +168,74 @@ export default function FacultyHeader({ user, profile, collapsed, isMobile, onHa
       <div style={{ position: 'relative' }}>
         <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
           onClick={() => setShowMenu(m => !m)}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 12, background: '#F0FDF4', border: '1px solid #A7F3D0', cursor: 'pointer' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: avatarUrl ? 'transparent' : '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFFFFF', overflow: 'hidden', flexShrink: 0 }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px 4px 4px', borderRadius: 99, background: '#FFFFFF', border: '1px solid #E2E8F0', cursor: 'pointer' }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#CBD5E1'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = '#E2E8F0'}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: avatarUrl ? 'transparent' : FAC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFFFFF', overflow: 'hidden', flexShrink: 0 }}>
             {avatarUrl
               ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : getInitials(name)
             }
           </div>
-          {!isMobile && <span style={{ fontSize: 13, fontWeight: 600, color: '#065F46' }}>{name.split(' ')[0]}</span>}
-          <ChevronDown size={12} color="#059669" style={{ transform: showMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          {!isMobile && <span style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>{name.split(' ')[0]}</span>}
+          <ChevronDown size={12} color="#94A3B8" style={{ transform: showMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
         </motion.button>
 
         {showMenu && (
-          <div style={{ position: 'fixed', right: isMobile ? 14 : 28, top: 72, width: 220, borderRadius: 14, background: '#FFFFFF', border: '1px solid #D1FAE5', boxShadow: '0 12px 40px rgba(6,95,70,0.14)', zIndex: 9999, overflow: 'hidden' }}>
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid #F0FDF4' }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#065F46' }}>{name}</p>
-              <p style={{ fontSize: 11, color: '#6EE7B7', marginTop: 2 }}>{user?.email}</p>
+          <div style={{ position: 'fixed', right: isMobile ? 14 : 28, top: 72, width: 240, borderRadius: 16, background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 20px 56px rgba(15,23,42,0.14)', zIndex: 9999, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 11, background: avatarUrl ? 'transparent' : FAC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: '#FFFFFF', overflow: 'hidden', flexShrink: 0 }}>
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : getInitials(name)
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0, lineHeight: 1.3 }}>{name}</p>
+                <p style={{ fontSize: 11, color: '#6B6B6B', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 400 }}>{user?.email}</p>
+                <span style={{ display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'rgba(6,78,59,0.08)', color: FAC, border: '1px solid rgba(6,78,59,0.20)', letterSpacing: '0.03em' }}>
+                  {profile?.role?.replace(/_/g, ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Faculty'}
+                </span>
+              </div>
             </div>
-            {[
-              { label: 'My Profile', icon: User,     href: '/faculty/profile'  },
-              { label: 'Settings',   icon: Settings, href: '/faculty/settings' },
-            ].map(item => (
-              <Link key={item.label} href={item.href} onClick={() => setShowMenu(false)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', textDecoration: 'none', transition: 'background 0.12s' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F0FDF4'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <item.icon size={14} color="#059669" />
-                <span style={{ fontSize: 13, color: '#065F46', fontWeight: 500 }}>{item.label}</span>
-              </Link>
-            ))}
-            <div style={{ borderTop: '1px solid #F0FDF4' }}>
+            <div style={{ padding: '8px' }}>
+              {[
+                { label: 'My Profile', icon: User,     href: '/faculty/profile',   desc: 'View & edit profile' },
+                { label: 'Settings',   icon: Settings, href: '/faculty/settings',  desc: 'App preferences'     },
+              ].map(item => (
+                <Link key={item.label} href={item.href} onClick={() => setShowMenu(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 10, textDecoration: 'none', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <item.icon size={14} style={{ color: '#64748B' }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', margin: 0, lineHeight: 1.2 }}>{item.label}</p>
+                    <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>{item.desc}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div style={{ padding: '8px', borderTop: '1px solid #F1F5F9' }}>
               <button onClick={handleLogout}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 10, background: 'transparent', border: 'none', cursor: 'pointer', transition: 'background 0.12s' }}
                 onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <LogOut size={14} color="#DC2626" />
-                <span style={{ fontSize: 13, color: '#DC2626', fontWeight: 500 }}>Sign Out</span>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <LogOut size={14} style={{ color: '#EF4444' }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#EF4444', margin: 0, lineHeight: 1.2 }}>Sign Out</p>
+                  <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>End your session</p>
+                </div>
               </button>
             </div>
           </div>
+        )}
+
+        {showMenu && (
+          <div onClick={() => setShowMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
         )}
       </div>
     </header>

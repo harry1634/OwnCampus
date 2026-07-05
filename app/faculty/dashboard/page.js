@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Calendar, Users, Clock, BookOpen,
-  ClipboardList, ChevronRight, UserCheck, Megaphone,
+  ClipboardList, ChevronRight, UserCheck, Megaphone, Zap,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useCurrentUser } from '@/lib/useCurrentUser'
@@ -20,6 +20,9 @@ const TYPE_META = {
 const SUBJECT_COLORS = ['#2563EB','#059669','#7C3AED','#D97706','#DC2626','#0891B2','#DB2777','#0F766E']
 const DAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
 
+const FAC = '#064E3B'   // sidebar anchor — all faculty-portal accents derive from this
+const FAC2 = '#059669'  // emerald-600 — lighter accent for links, icons
+
 function fmt12(t) {
   if (!t) return ''
   const [h, m] = t.split(':').map(Number)
@@ -29,10 +32,9 @@ function fmt12(t) {
 export default function FacultyDashboard() {
   const cu = useCurrentUser()
 
-  const [data,         setData        ] = useState(null)
-  const [loading,      setLoading     ] = useState(true)
+  const [data,    setData   ] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  // Single aggregated API call replaces 2+ separate fetches
   useEffect(() => {
     fetch('/api/dashboard/faculty')
       .then(r => r.ok ? r.json() : null)
@@ -51,9 +53,8 @@ export default function FacultyDashboard() {
     sortKey: slot.start_time || '0',
   }))
   const classesToday = data?.stats?.classesToday ?? null
-  const studentCount = null  // not provided in aggregation; removed for accuracy
+  const studentCount = null
   const pendingMarks = 0
-  const loadingAnn   = loading
 
   const date        = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const hour        = new Date().getHours()
@@ -61,7 +62,7 @@ export default function FacultyDashboard() {
   const displayName = cu.name ? cu.name.split(' ').slice(-1)[0] : 'Faculty'
 
   const QUICK_ACTIONS = [
-    { label: 'Mark Attendance', href: '/faculty/attendance',   icon: UserCheck,     color: '#059669' },
+    { label: 'Mark Attendance', href: '/faculty/attendance',   icon: UserCheck,     color: FAC2   },
     { label: 'Update Marks',    href: '/faculty/marks',        icon: BookOpen,      color: '#2563EB' },
     { label: 'Apply Leave',     href: '/faculty/leaves',       icon: Clock,         color: '#7C3AED' },
     { label: 'Invigilation',    href: '/faculty/invigilation', icon: ClipboardList, color: '#D97706' },
@@ -70,23 +71,35 @@ export default function FacultyDashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
 
-      {/* Welcome Banner */}
+      {/* Welcome Banner — matches sidebar color */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        style={{ borderRadius: 20, padding: '28px 32px', background: '#16A34A', boxShadow: '0 8px 32px rgba(22,163,74,0.25)' }}>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 6, fontWeight: 500 }}>{date}</p>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em', marginBottom: 6 }}>
-          {timeGreet}, {displayName}! 👋
-        </h1>
-        <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.75)', margin: 0 }}>
-          {cu.dept ? `Department: ${cu.dept}` : 'Welcome to your faculty portal'}
-        </p>
+        style={{ borderRadius: 20, padding: '28px 32px', background: FAC, position: 'relative', overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(6,78,59,0.22)' }}>
+        {/* dot-grid texture */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '24px 24px' }} />
+        {/* glow orbs */}
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', pointerEvents: 'none',
+          background: 'radial-gradient(circle, rgba(16,185,129,0.22) 0%, transparent 65%)' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 160, height: 160, borderRadius: '50%', pointerEvents: 'none',
+          background: 'radial-gradient(circle, rgba(5,150,105,0.18) 0%, transparent 65%)' }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 500, letterSpacing: '0.03em' }}>{date}</p>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em', marginBottom: 6 }}>
+            {timeGreet}, {displayName}! 👋
+          </h1>
+          <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+            {cu.dept ? `Department: ${cu.dept}` : 'Welcome to your faculty portal'}
+          </p>
+        </div>
       </motion.div>
 
       {/* Quick Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14 }}>
         {[
           { label: 'Announcements', value: announcements.length, icon: Megaphone, color: '#2563EB', bg: '#EFF6FF' },
-          { label: 'Classes Today', value: classesToday,         icon: Calendar,  color: '#059669', bg: '#ECFDF5' },
+          { label: 'Classes Today', value: classesToday,         icon: Calendar,  color: FAC2,      bg: '#ECFDF5' },
           { label: 'Classes',       value: studentCount,         icon: Users,     color: '#7C3AED', bg: '#F5F3FF' },
           { label: 'Pending Marks', value: pendingMarks,         icon: BookOpen,  color: '#D97706', bg: '#FFFBEB' },
         ].map((stat, i) => {
@@ -111,19 +124,19 @@ export default function FacultyDashboard() {
         {/* Announcements */}
         <div style={{ background: '#FFFFFF', borderRadius: 18, border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Megaphone size={15} color="#2563EB" />
+            <Megaphone size={15} color={FAC2} />
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0, flex: 1 }}>Announcements</h3>
           </div>
           <div style={{ padding: '10px 16px 14px' }}>
-            {loadingAnn && <p style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', padding: '16px 0', margin: 0 }}>Loading…</p>}
-            {!loadingAnn && !announcements.length && (
+            {loading && <p style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', padding: '16px 0', margin: 0 }}>Loading…</p>}
+            {!loading && !announcements.length && (
               <p style={{ color: '#CBD5E1', fontSize: 13, textAlign: 'center', padding: '20px 0', margin: 0 }}>No announcements yet.</p>
             )}
             {announcements.slice(0, 5).map(ann => {
               const meta = TYPE_META[ann.type] || TYPE_META.general
               const ts   = new Date(ann.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
               return (
-                <div key={ann.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px', borderRadius: 10, marginBottom: 4 }}
+                <div key={ann.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px', borderRadius: 10, marginBottom: 4, transition: 'background 0.12s' }}
                   onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color, flexShrink: 0, marginTop: 5 }} />
@@ -146,7 +159,7 @@ export default function FacultyDashboard() {
           <div style={{ background: '#FFFFFF', borderRadius: 18, border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Today's Schedule</h3>
-              <Link href="/faculty/timetable" style={{ fontSize: 12, fontWeight: 600, color: '#059669', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Link href="/faculty/timetable" style={{ fontSize: 12, fontWeight: 600, color: FAC2, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
                 View <ChevronRight size={13} />
               </Link>
             </div>
@@ -188,18 +201,24 @@ export default function FacultyDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div style={{ background: '#F0FDF4', borderRadius: 18, border: '1px solid #A7F3D0', padding: '18px 20px' }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#065F46', margin: '0 0 12px' }}>Quick Actions</h3>
+          <div style={{ background: '#FFFFFF', borderRadius: 18, border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: '18px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14 }}>
+              <Zap size={14} color={FAC2} />
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0 }}>Quick Actions</h3>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {QUICK_ACTIONS.map(a => {
                 const Icon = a.icon
                 return (
                   <Link key={a.label} href={a.href}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, background: '#FFFFFF', border: '1px solid #D1FAE5', textDecoration: 'none' }}
-                    onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(6,95,70,0.12)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                    onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
-                    <Icon size={14} style={{ color: a.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#1E293B' }}>{a.label}</span>
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10,
+                      background: '#F8FAFC', border: '1px solid #E2E8F0', textDecoration: 'none', transition: 'all 0.15s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${a.color}0d`; e.currentTarget.style.borderColor = `${a.color}30`; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.transform = 'none' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: `${a.color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon size={13} style={{ color: a.color }} />
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>{a.label}</span>
                   </Link>
                 )
               })}

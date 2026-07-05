@@ -37,7 +37,7 @@ function getWeekLabel(offset) {
 function Spinner() {
   return (
     <div style={{ padding: '48px', textAlign: 'center' }}>
-      <div style={{ width: 24, height: 24, borderRadius: '50%', border: '3px solid #E2E8F0', borderTopColor: '#059669', margin: '0 auto 10px', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ width: 24, height: 24, borderRadius: '50%', border: '3px solid #E2E8F0', borderTopColor: '#064E3B', margin: '0 auto 10px', animation: 'spin 0.8s linear infinite' }} />
       <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>Loading timetable…</p>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
@@ -100,22 +100,22 @@ export default function FacultyTimetable() {
           <button onClick={() => setWeekOffset(w => w - 1)} style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid #E2E8F0', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <ChevronLeft size={15} color="#64748B" />
           </button>
-          <div style={{ padding: '6px 16px', borderRadius: 9, border: '1px solid #A7F3D0', background: '#ECFDF5', display: 'flex', alignItems: 'center', gap: 7 }}>
-            <Calendar size={13} color="#059669" />
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#059669' }}>{getWeekLabel(weekOffset)}</span>
+          <div style={{ padding: '6px 16px', borderRadius: 9, border: '1px solid rgba(6,78,59,0.25)', background: 'rgba(6,78,59,0.07)', display: 'flex', alignItems: 'center', gap: 7 }}>
+            <Calendar size={13} color="#064E3B" />
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#064E3B' }}>{getWeekLabel(weekOffset)}</span>
           </div>
           <button onClick={() => setWeekOffset(w => w + 1)} style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid #E2E8F0', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <ChevronRight size={15} color="#64748B" />
           </button>
           {weekOffset !== 0 && (
-            <button onClick={() => setWeekOffset(0)} style={{ padding: '6px 12px', borderRadius: 9, border: '1px solid #A7F3D0', background: '#ECFDF5', fontSize: 12, fontWeight: 600, color: '#059669', cursor: 'pointer' }}>Today</button>
+            <button onClick={() => setWeekOffset(0)} style={{ padding: '6px 12px', borderRadius: 9, border: '1px solid rgba(6,78,59,0.25)', background: 'rgba(6,78,59,0.07)', fontSize: 12, fontWeight: 600, color: '#064E3B', cursor: 'pointer' }}>Today</button>
           )}
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {[
-          { label: 'Total Periods', value: totalPeriods,    color: '#059669', bg: '#ECFDF5', border: '#A7F3D0' },
+          { label: 'Total Periods', value: totalPeriods,    color: '#064E3B', bg: 'rgba(6,78,59,0.07)', border: 'rgba(6,78,59,0.20)' },
           { label: 'Classes',       value: myClasses.length, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
         ].map(s => (
           <div key={s.label} style={{ padding: '8px 16px', borderRadius: 10, background: s.bg, border: `1px solid ${s.border}` }}>
@@ -141,9 +141,9 @@ export default function FacultyTimetable() {
               <tr style={{ background: '#F8FAFC' }}>
                 <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#64748B', letterSpacing: '0.06em', textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0', width: 120 }}>Period / Time</th>
                 {DAYS_SHORT.map((d, di) => (
-                  <th key={d} style={{ padding: '14px 10px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: di === todayIdx ? '#059669' : '#64748B', letterSpacing: '0.05em', textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0', background: di === todayIdx ? '#F0FDF4' : 'transparent', minWidth: 100 }}>
+                  <th key={d} style={{ padding: '14px 10px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: di === todayIdx ? '#064E3B' : '#64748B', letterSpacing: '0.05em', textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0', background: di === todayIdx ? 'rgba(6,78,59,0.07)' : 'transparent', minWidth: 100 }}>
                     {d}
-                    {di === todayIdx && <span style={{ display: 'block', fontSize: 9, color: '#059669', fontWeight: 700, marginTop: 2 }}>TODAY</span>}
+                    {di === todayIdx && <span style={{ display: 'block', fontSize: 9, color: '#064E3B', fontWeight: 700, marginTop: 2 }}>TODAY</span>}
                   </th>
                 ))}
               </tr>
@@ -165,7 +165,7 @@ export default function FacultyTimetable() {
                     const theme   = slot ? (classColor[slot.class_id] || PALETTE[0]) : null
                     const clsName = slot?.classes ? `${slot.classes.name} ${slot.classes.section || ''}`.trim() : ''
                     return (
-                      <td key={day} style={{ padding: '8px', textAlign: 'center', background: isToday ? '#FAFFF9' : 'transparent' }}>
+                      <td key={day} style={{ padding: '8px', textAlign: 'center', background: isToday ? 'rgba(6,78,59,0.03)' : 'transparent' }}>
                         {slot ? (
                           <div style={{ padding: '8px', borderRadius: 10, background: theme.bg, border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                             <p style={{ fontSize: 11, fontWeight: 700, color: theme.color, margin: 0 }}>{slot.subjects?.name || '—'}</p>

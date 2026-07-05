@@ -381,7 +381,7 @@ export default function Header({ user, profile, institution }) {
               onMouseEnter={e => e.currentTarget.style.borderColor = '#CBD5E1'}
               onMouseLeave={e => e.currentTarget.style.borderColor = '#E2E8F0'}
             >
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: liveAvatarUrl ? 'transparent' : '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: liveAvatarUrl ? 'transparent' : (['teacher','faculty','trainer','hod','staff','librarian','counsellor','hr','admission_officer','transport_manager','hostel_manager','coordinator','tutor','instructor','professor','dean','vice_principal','principal','receptionist'].includes(profile?.role) ? '#064E3B' : profile?.role === 'student' ? '#5B21B6' : '#2563EB'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                 {liveAvatarUrl
                   ? <img src={liveAvatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : getInitials(userName)
@@ -404,7 +404,7 @@ export default function Header({ user, profile, institution }) {
                 >
                   {/* User info */}
                   <div style={{ padding: '16px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: liveAvatarUrl ? 'transparent' : '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: liveAvatarUrl ? 'transparent' : (['teacher','faculty','trainer','hod','staff','librarian','counsellor','hr','admission_officer','transport_manager','hostel_manager','coordinator','tutor','instructor','professor','dean','vice_principal','principal','receptionist'].includes(profile?.role) ? '#064E3B' : profile?.role === 'student' ? '#5B21B6' : '#1E3A8A'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                       {liveAvatarUrl
                         ? <img src={liveAvatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : getInitials(userName)
@@ -412,10 +412,22 @@ export default function Header({ user, profile, institution }) {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0, lineHeight: 1.3 }}>{userName}</p>
-                      <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
-                      <span style={{ display: 'inline-block', marginTop: 5, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', letterSpacing: '0.03em' }}>
-                        {ROLE_LABELS[profile?.role] || profile?.role || 'User'}
-                      </span>
+                      <p style={{ fontSize: 11, color: '#6B6B6B', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 400 }}>{user?.email}</p>
+                      {(() => {
+                        const r = profile?.role || ''
+                        const isFac = ['teacher','faculty','trainer','hod','staff','librarian','counsellor','hr',
+                          'admission_officer','transport_manager','hostel_manager','coordinator','tutor',
+                          'instructor','professor','dean','vice_principal','principal','receptionist'].includes(r)
+                        const isStu = r === 'student'
+                        const badgeBg    = isFac ? 'rgba(6,78,59,0.08)'  : isStu ? '#F5F3FF' : '#EFF6FF'
+                        const badgeClr   = isFac ? '#064E3B'             : isStu ? '#7C3AED' : '#2563EB'
+                        const badgeBdr   = isFac ? 'rgba(6,78,59,0.25)' : isStu ? '#DDD6FE' : '#BFDBFE'
+                        return (
+                          <span style={{ display: 'inline-block', marginTop: 5, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: badgeBg, color: badgeClr, border: `1px solid ${badgeBdr}`, letterSpacing: '0.03em' }}>
+                            {ROLE_LABELS[r] || r || 'User'}
+                          </span>
+                        )
+                      })()}
                     </div>
                   </div>
 

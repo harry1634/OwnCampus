@@ -74,7 +74,7 @@ function ApplyModal({ onClose, onSubmit, myName }) {
         onClick={e => e.stopPropagation()}
         style={{ background: '#FFFFFF', borderRadius: 24, width: '100%', maxWidth: 520, boxShadow: '0 32px 80px rgba(0,0,0,0.22)', overflow: 'hidden' }}>
 
-        <div style={{ padding: '20px 24px 18px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F0FDF4' }}>
+        <div style={{ padding: '20px 24px 18px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(6,78,59,0.06)' }}>
           <div>
             <p style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', margin: 0 }}>Apply for Leave</p>
             <p style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>Submitting as <strong>{myName}</strong></p>
@@ -142,7 +142,7 @@ function ApplyModal({ onClose, onSubmit, myName }) {
               Cancel
             </button>
             <motion.button type="submit" disabled={busy} whileHover={{ scale: busy ? 1 : 1.02 }} whileTap={{ scale: 0.97 }}
-              style={{ flex: 2, padding: '12px', borderRadius: 12, background: '#16A34A', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(5,150,105,0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: busy ? 0.7 : 1 }}>
+              style={{ flex: 2, padding: '12px', borderRadius: 12, background: '#064E3B', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(6,78,59,0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: busy ? 0.7 : 1 }}>
               {busy ? 'Submitting…' : <><FileText size={14} /> Submit Application</>}
             </motion.button>
           </div>
@@ -240,7 +240,7 @@ export default function FacultyLeaves() {
           <p style={{ fontSize: 13, color: '#64748B', marginTop: 3 }}>Apply for leave and track your requests</p>
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setShowModal(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: '#16A34A', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(5,150,105,0.35)' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: '#064E3B', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(6,78,59,0.35)' }}>
           <Plus size={15} /> Apply Leave
         </motion.button>
       </div>
