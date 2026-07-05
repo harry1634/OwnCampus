@@ -13,7 +13,15 @@ export async function proxy(request) {
 
   // ── Control Center routes ──────────────────────────────────────
   // Completely isolated from institution auth. Only cc_uid cookie matters here.
-  if (pathname.startsWith('/control')) {
+  // Both /control/* (pages) and /api/control/* (API routes) are handled here
+  // so they never reach the institution Supabase auth block below.
+  if (pathname.startsWith('/control') || pathname.startsWith('/api/control')) {
+    // API routes self-authenticate via requireControlUser() — always pass through.
+    // Never redirect API requests: a POST redirect causes 405 on the page target.
+    if (pathname.startsWith('/api/control')) {
+      return NextResponse.next()
+    }
+
     const ccUid = request.cookies.get('cc_uid')?.value
 
     if (CONTROL_PUBLIC.has(pathname)) {
@@ -24,7 +32,7 @@ export async function proxy(request) {
       return NextResponse.next()
     }
 
-    // All other /control/* require cc_uid
+    // All other /control/* pages require cc_uid
     if (!ccUid) {
       return NextResponse.redirect(new URL('/control/login', request.url))
     }
