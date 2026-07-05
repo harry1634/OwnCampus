@@ -100,7 +100,7 @@ export default function StudentTimetable() {
       )}
 
       {!loading && todaySlots.length > 0 && (
-        <div style={{ background: 'linear-gradient(135deg,#4C1D95,#7C3AED)', borderRadius: 18, padding: '18px 22px' }}>
+        <div style={{ background: '#7C3AED', borderRadius: 18, padding: '18px 22px' }}>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: '0 0 12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             Today — {DAYS_SHORT[todayIdx]}
           </p>
@@ -125,7 +125,7 @@ export default function StudentTimetable() {
       )}
 
       {!loading && todaySlots.length === 0 && allSlots.length > 0 && (
-        <div style={{ background: 'linear-gradient(135deg,#4C1D95,#7C3AED)', borderRadius: 18, padding: '18px 22px' }}>
+        <div style={{ background: '#7C3AED', borderRadius: 18, padding: '18px 22px' }}>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: '0 0 8px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             Today — {DAYS_SHORT[todayIdx]}
           </p>

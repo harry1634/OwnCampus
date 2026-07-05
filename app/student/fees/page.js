@@ -92,19 +92,29 @@ export default function StudentFees() {
 
   if (!cu.mounted) return null
 
-  const totalFee   = feeData.totalFee
-  const paidAmount = feeData.paidAmount
-  const balance    = Math.max(0, totalFee - paidAmount)
-  const feeStatus  = feeData.feeStatus
+  const totalFee       = feeData.totalFee
+  const paidAmount     = feeData.paidAmount
+  const balance        = Math.max(0, totalFee - paidAmount)
+  const feeStatus      = feeData.feeStatus
+  const hostelMonthlyFee = hostelAlloc?.monthlyFee || 0
 
-  // Build fee heads from real data
+  // Build fee heads from all available sources
   const feeHeads = []
   if (totalFee > 0) {
-    feeHeads.push({ head: 'Total Academic Fee', total: totalFee, paid: paidAmount, dueDate: 'Ongoing', status: feeStatus })
+    feeHeads.push({ head: 'Academic Fee', total: totalFee, paid: paidAmount, dueDate: 'Ongoing', status: feeStatus })
+  }
+  if (hostelAlloc && hostelMonthlyFee > 0) {
+    feeHeads.push({
+      head: `Hostel Fee — ${hostelAlloc.building} · Room ${hostelAlloc.room}${hostelAlloc.bed ? ' · ' + hostelAlloc.bed : ''}`,
+      total: hostelMonthlyFee,
+      paid: 0,
+      dueDate: 'Monthly',
+      status: 'pending',
+    })
   }
   if (myTransport) {
     feeHeads.push({
-      head: `Transport — ${myTransport.route}`,
+      head: `Transport — ${myTransport.route || myTransport.route_name || 'Route'}`,
       total: myTransport.monthlyFee || 0,
       paid: 0,
       dueDate: 'Monthly',
@@ -112,15 +122,13 @@ export default function StudentFees() {
     })
   }
 
-  // Fallback if no data yet
-  const hasFeeData = totalFee > 0 || myTransport
+  const hasFeeData = totalFee > 0 || hostelAlloc || myTransport
 
   const summaryTotal   = feeHeads.reduce((s, f) => s + f.total, 0)
   const summaryPaid    = feeHeads.reduce((s, f) => s + f.paid, 0)
   const summaryBalance = Math.max(0, summaryTotal - summaryPaid)
   const paidPct        = summaryTotal > 0 ? Math.round((summaryPaid / summaryTotal) * 100) : 0
 
-  const hostelMonthlyFee = hostelAlloc?.monthlyFee || 0
   const myRoute = myTransport ? {
     name:   myTransport.route || myTransport.route_name || 'Route',
     vehicle: myTransport.vehicle_number || myTransport.vehicle || '',
@@ -202,7 +210,7 @@ export default function StudentFees() {
       </div>
 
       {/* Summary banner */}
-      <div style={{ background: 'linear-gradient(135deg,#4C1D95,#7C3AED)', borderRadius: 20, padding: '24px 28px' }}>
+      <div style={{ background: '#7C3AED', borderRadius: 20, padding: '24px 28px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
           <div>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: '0 0 4px' }}>Total Fees</p>
@@ -278,8 +286,8 @@ export default function StudentFees() {
         {feeHeads.length === 0 ? (
           <div style={{ padding: '36px', textAlign: 'center' }}>
             <CreditCard size={28} color="#E2E8F0" style={{ marginBottom: 10 }} />
-            <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>No fee details available</p>
-            <p style={{ fontSize: 12, color: '#CBD5E1', marginTop: 4 }}>Admin will update your fee details</p>
+            <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>Fee structure not yet assigned</p>
+            <p style={{ fontSize: 12, color: '#CBD5E1', marginTop: 4 }}>Contact your admin to have your fee details updated</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>

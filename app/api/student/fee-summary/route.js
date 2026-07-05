@@ -21,23 +21,52 @@ export async function GET() {
 
     if (error) return Response.json({ error: error.message }, { status: 400 })
 
-    const totalFee   = Number(student?.total_fee   ?? 0)
-    const paidAmount = Number(student?.paid_amount  ?? 0)
-    const feeStatus  = student?.fee_status || computeFeeStatus(totalFee, paidAmount)
+    let resolvedStudent = student
 
-    // Fallback: if no students row yet, read from user_profiles.metadata
-    if (!student) {
-      const { data: profile } = await admin
+    // Fallback 1: student row exists but user_id wasn't linked yet —
+    // find via institution + look up by matching profile record
+    if (!resolvedStudent) {
+      const { data: myProfile } = await admin
         .from('user_profiles')
-        .select('metadata')
+        .select('institution_id, metadata')
         .eq('id', user.id)
         .maybeSingle()
-      const meta     = profile?.metadata || {}
-      const mTotal   = Number(meta.total_fee   || 0)
-      const mPaid    = Number(meta.paid_amount  || 0)
-      const mStatus  = meta.fee_status || computeFeeStatus(mTotal, mPaid)
-      return Response.json({ totalFee: mTotal, paidAmount: mPaid, feeStatus: mStatus, source: 'metadata' })
+
+      // Try metadata first (admin may have written fee data here directly)
+      if (myProfile?.metadata?.total_fee) {
+        const meta    = myProfile.metadata
+        const mTotal  = Number(meta.total_fee  || 0)
+        const mPaid   = Number(meta.paid_amount || 0)
+        const mStatus = meta.fee_status || computeFeeStatus(mTotal, mPaid)
+        return Response.json({ totalFee: mTotal, paidAmount: mPaid, feeStatus: mStatus, source: 'metadata' })
+      }
+
+      // Try finding an unlinked student record in same institution and link it
+      if (myProfile?.institution_id) {
+        const { data: unlinked } = await admin
+          .from('students')
+          .select('id, total_fee, paid_amount, fee_status')
+          .eq('institution_id', myProfile.institution_id)
+          .is('user_id', null)
+          .is('deleted_at', null)
+          .limit(1)
+          .maybeSingle()
+
+        if (unlinked) {
+          // Link this student row to the auth user so future queries work
+          await admin.from('students').update({ user_id: user.id }).eq('id', unlinked.id)
+          resolvedStudent = unlinked
+        }
+      }
     }
+
+    if (!resolvedStudent) {
+      return Response.json({ totalFee: 0, paidAmount: 0, feeStatus: 'pending', source: 'none' })
+    }
+
+    const totalFee   = Number(resolvedStudent.total_fee   ?? 0)
+    const paidAmount = Number(resolvedStudent.paid_amount  ?? 0)
+    const feeStatus  = resolvedStudent.fee_status || computeFeeStatus(totalFee, paidAmount)
 
     return Response.json({ totalFee, paidAmount, feeStatus, source: 'students' })
   } catch (err) {

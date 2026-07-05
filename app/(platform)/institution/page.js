@@ -252,7 +252,7 @@ export default function InstitutionPage() {
         style={{ background: '#FFF', border: '1px solid #E2E8F0', borderRadius: 20, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.06)' }}>
 
         {/* Banner */}
-        <div style={{ background: 'linear-gradient(135deg,#1E3A8A,#2563EB,#0891B2)', height: 110, position: 'relative' }}>
+        <div style={{ background: '#2563EB', height: 110, position: 'relative' }}>
           <div style={{ position: 'absolute', bottom: -36, left: 28, width: 72, height: 72, borderRadius: 18, background: '#FFFFFF', border: '4px solid #FFF', boxShadow: '0 4px 16px rgba(15,23,42,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#2563EB', fontFamily: 'Inter, sans-serif' }}>
             {initials}
           </div>

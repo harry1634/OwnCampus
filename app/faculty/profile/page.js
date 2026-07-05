@@ -65,7 +65,7 @@ export default function FacultyProfile() {
   useEffect(() => { loadProfile() }, [])
 
   async function handleDeletePhoto() {
-    if (!cu.userId || !avatarUrl) return
+    if (!cu.userId || (!avatarUrl && !cu.avatarUrl)) return
     try {
       const res = await fetch('/api/profile', {
         method: 'PATCH',
@@ -187,7 +187,7 @@ export default function FacultyProfile() {
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setEditing(false)} style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#F8FAFC', fontSize: 13, fontWeight: 600, color: '#64748B', cursor: 'pointer' }}>Cancel</button>
             <motion.button whileHover={{ scale: saving ? 1 : 1.02 }} onClick={handleSave} disabled={saving}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: 'linear-gradient(135deg,#065F46,#059669)', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.75 : 1 }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: '#16A34A', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.75 : 1 }}>
               {saving
                 ? <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid white', borderRadius: '50%' }} className="animate-spin" />
                 : <Save size={14} />}
@@ -200,7 +200,7 @@ export default function FacultyProfile() {
       </div>
 
       {/* Avatar + basic info */}
-      <div style={{ background: 'linear-gradient(135deg,#065F46,#059669)', borderRadius: 20, padding: '28px 32px', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+      <div style={{ background: '#16A34A', borderRadius: 20, padding: '28px 32px', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }}>
           <div style={{ width: 80, height: 80, borderRadius: 20, overflow: 'hidden', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#FFFFFF', border: '3px solid rgba(255,255,255,0.3)' }}>
             {(avatarUrl || cu.avatarUrl)
@@ -215,8 +215,8 @@ export default function FacultyProfile() {
               ? <div style={{ width: 12, height: 12, border: '2px solid rgba(5,150,105,0.3)', borderTop: '2px solid #059669', borderRadius: '50%' }} className="animate-spin" />
               : <Camera size={12} color="#059669" />}
           </button>
-          {/* Delete — only when a photo exists */}
-          {avatarUrl && (
+          {/* Delete — when any photo is visible */}
+          {(avatarUrl || cu.avatarUrl) && (
             <button onClick={handleDeletePhoto}
               style={{ position: 'absolute', bottom: -4, left: -4, width: 26, height: 26, borderRadius: 8, background: '#FEF2F2', border: '1.5px solid #FCA5A5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }}>
               <Trash2 size={11} color="#EF4444" />
@@ -297,7 +297,7 @@ export default function FacultyProfile() {
               </div>
             ))}
             <motion.button type="submit" disabled={pwdBusy} whileHover={{ scale: pwdBusy ? 1 : 1.015 }} whileTap={{ scale: pwdBusy ? 1 : 0.985 }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 20px', borderRadius: 11, background: 'linear-gradient(135deg,#065F46,#059669)', color: '#FFF', border: 'none', fontSize: 13.5, fontWeight: 700, cursor: pwdBusy ? 'default' : 'pointer', fontFamily: 'inherit', marginTop: 2 }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 20px', borderRadius: 11, background: '#16A34A', color: '#FFF', border: 'none', fontSize: 13.5, fontWeight: 700, cursor: pwdBusy ? 'default' : 'pointer', fontFamily: 'inherit', marginTop: 2 }}>
               {pwdBusy
                 ? <div style={{ width: 18, height: 18, border: '2.5px solid rgba(255,255,255,0.3)', borderTop: '2.5px solid white', borderRadius: '50%' }} className="animate-spin" />
                 : <><CheckCircle size={15} /> Update Password</>}

@@ -84,7 +84,7 @@ export default function FacultyProcurement() {
           <p style={{ fontSize: 13, color: '#64748B', marginTop: 3 }}>Request supplies and equipment from admin</p>
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setShowForm(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, background: 'linear-gradient(135deg,#065F46,#059669)', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(5,150,105,0.30)' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, background: '#16A34A', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(5,150,105,0.30)' }}>
           <Plus size={15} /> New Request
         </motion.button>
       </div>
@@ -170,7 +170,7 @@ export default function FacultyProcurement() {
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
               onClick={e => e.stopPropagation()}
               style={{ background: '#FFFFFF', borderRadius: 22, width: '100%', maxWidth: 460, boxShadow: '0 32px 80px rgba(0,0,0,0.22)', overflow: 'hidden' }}>
-              <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg,#F0FDF4,#ECFDF5)' }}>
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F0FDF4' }}>
                 <div>
                   <p style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', margin: 0 }}>New Equipment Request</p>
                   <p style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>Will be reviewed by admin</p>
@@ -219,7 +219,7 @@ export default function FacultyProcurement() {
                     Cancel
                   </button>
                   <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    style={{ flex: 2, padding: '12px', borderRadius: 12, background: 'linear-gradient(135deg,#065F46,#059669)', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(5,150,105,0.30)' }}>
+                    style={{ flex: 2, padding: '12px', borderRadius: 12, background: '#16A34A', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(5,150,105,0.30)' }}>
                     Send Request
                   </motion.button>
                 </div>

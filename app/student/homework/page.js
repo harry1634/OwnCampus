@@ -125,6 +125,13 @@ export default function StudentHomeworkPage() {
 
   useEffect(() => { load() }, [load])
 
+  // Reload when the tab regains focus so newly published homework shows immediately
+  useEffect(() => {
+    function onVisible() { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [load])
+
   function markSubmitted(id, status) {
     setHomework(prev => prev.map(h => h.id === id ? { ...h, submitted: true, submission_status: status } : h))
   }

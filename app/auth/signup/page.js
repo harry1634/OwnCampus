@@ -115,12 +115,10 @@ export default function SignupPage() {
       {/* ── Left panel ── */}
       <div style={{
         width: '50%', flexShrink: 0, minHeight: '100vh',
-        background: 'linear-gradient(165deg,#0C1445 0%,#1E3A8A 40%,#1D4ED8 72%,#2563EB 100%)',
+        background: '#1E3A8A',
         position: 'relative', overflow: 'hidden',
       }} className="hidden lg:flex flex-col">
         {/* Glow orbs */}
-        <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle,rgba(99,102,241,0.25) 0%,transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: 120, left: -60, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle,rgba(79,70,229,0.20) 0%,transparent 70%)', pointerEvents: 'none' }} />
         {/* Grid */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.035, backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
 
@@ -144,7 +142,7 @@ export default function SignupPage() {
             </p>
             <h1 style={{ fontSize: 42, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.1, letterSpacing: '-0.035em', marginBottom: 14 }}>
               Set Up Your<br />
-              <span style={{ background: 'linear-gradient(90deg,#93C5FD,#C4B5FD)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', display: 'inline-block' }}>Campus</span><br />
+              <span style={{ color: '#93C5FD' }}>Campus</span><br />
               in Minutes
             </h1>
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, maxWidth: 360 }}>
@@ -288,11 +286,11 @@ export default function SignupPage() {
                     onClick={() => step1Valid && setStep(2)}
                     style={{
                       width: '100%', height: 48, borderRadius: 13, border: 'none',
-                      background: step1Valid ? `linear-gradient(135deg,#4338CA,${ACCENT})` : '#E2E8F0',
+                      background: step1Valid ? '#2563EB' : '#E2E8F0',
                       color: step1Valid ? '#FFFFFF' : '#94A3B8',
                       fontSize: 14.5, fontWeight: 700, cursor: step1Valid ? 'pointer' : 'not-allowed',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      boxShadow: step1Valid ? '0 4px 16px rgba(79,70,229,0.35)' : 'none',
+                      boxShadow: step1Valid ? '0 4px 16px rgba(37,99,235,0.30)' : 'none',
                       transition: 'all 0.2s', fontFamily: 'inherit',
                     }}>
                     Continue <ChevronRight size={16} />
@@ -407,7 +405,7 @@ export default function SignupPage() {
                     disabled={!step2Valid || loading}
                     style={{
                       width: '100%', height: 48, borderRadius: 13, border: 'none',
-                      background: step2Valid ? `linear-gradient(135deg,#4338CA,${ACCENT})` : '#E2E8F0',
+                      background: step2Valid ? '#2563EB' : '#E2E8F0',
                       color: step2Valid ? '#FFFFFF' : '#94A3B8',
                       fontSize: 14.5, fontWeight: 700,
                       cursor: step2Valid && !loading ? 'pointer' : 'not-allowed',
@@ -441,7 +439,7 @@ export default function SignupPage() {
               <motion.div key="step3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}
                 style={{ textAlign: 'center', padding: '20px 0' }}>
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
-                  style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#10B981,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 8px 32px rgba(16,185,129,0.35)' }}>
+                  style={{ width: 80, height: 80, borderRadius: '50%', background: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 8px 32px rgba(22,163,74,0.30)' }}>
                   <Check size={36} color="white" strokeWidth={3} />
                 </motion.div>
 
@@ -471,7 +469,7 @@ export default function SignupPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <motion.button whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }}
                     onClick={() => router.push('/auth/login')}
-                    style={{ width: '100%', height: 48, borderRadius: 13, border: 'none', background: 'linear-gradient(135deg,#4338CA,#4F46E5)', color: '#FFFFFF', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 16px rgba(79,70,229,0.35)', fontFamily: 'inherit' }}>
+                    style={{ width: '100%', height: 48, borderRadius: 13, border: 'none', background: '#2563EB', color: '#FFFFFF', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 16px rgba(37,99,235,0.30)', fontFamily: 'inherit' }}>
                     Go to Sign In <ArrowRight size={16} />
                   </motion.button>
                   <p style={{ fontSize: 12, color: '#94A3B8' }}>Didn't receive the email? Check spam or <button onClick={() => toast.info('Verification email resent!')} style={{ background: 'none', border: 'none', color: ACCENT, fontWeight: 700, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', padding: 0 }}>resend</button></p>

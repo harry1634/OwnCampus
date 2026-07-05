@@ -18,7 +18,7 @@ export default async function StudentLayout({ children }) {
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from('user_profiles')
-    .select('*, branches(id,name), institutions(id,name)')
+    .select('*, branches(id,name)')
     .eq('id', user.id)
     .maybeSingle()
 

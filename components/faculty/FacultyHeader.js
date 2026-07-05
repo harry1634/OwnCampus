@@ -166,7 +166,7 @@ export default function FacultyHeader({ user, profile, collapsed, isMobile, onHa
         <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
           onClick={() => setShowMenu(m => !m)}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 12, background: '#F0FDF4', border: '1px solid #A7F3D0', cursor: 'pointer' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: avatarUrl ? 'transparent' : 'linear-gradient(135deg,#059669,#065F46)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFFFFF', overflow: 'hidden', flexShrink: 0 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: avatarUrl ? 'transparent' : '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: '#FFFFFF', overflow: 'hidden', flexShrink: 0 }}>
             {avatarUrl
               ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : getInitials(name)

@@ -34,7 +34,6 @@ const ROLES = [
     color:    '#2563EB',
     lightBg:  '#EFF6FF',
     border:   '#BFDBFE',
-    gradient: 'linear-gradient(135deg,#1E40AF 0%,#3B82F6 100%)',
     redirect: '/dashboard',
     desc:     'Full institution management, approvals & analytics',
     badge:    'Full Access',
@@ -47,7 +46,6 @@ const ROLES = [
     color:    '#059669',
     lightBg:  '#ECFDF5',
     border:   '#A7F3D0',
-    gradient: 'linear-gradient(135deg,#065F46 0%,#10B981 100%)',
     redirect: '/faculty/dashboard',
     desc:     'Timetable, attendance marking & student records',
     badge:    'Educator',
@@ -60,7 +58,6 @@ const ROLES = [
     color:    '#7C3AED',
     lightBg:  '#F5F3FF',
     border:   '#DDD6FE',
-    gradient: 'linear-gradient(135deg,#4C1D95 0%,#8B5CF6 100%)',
     redirect: '/student/dashboard',
     desc:     'Attendance, marks, timetable & campus services',
     badge:    'Learner',
@@ -128,7 +125,7 @@ function RoleCard({ role, index, onClick }) {
         transition={spring}
         style={{
           width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-          background: hovered ? role.gradient : `linear-gradient(135deg, ${role.color}18 0%, ${role.color}08 100%)`,
+          background: hovered ? role.color : `${role.color}14`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: hovered ? `0 8px 24px ${role.color}40` : `0 2px 8px ${role.color}12`,
           transition: 'all 0.22s ease',
@@ -274,7 +271,7 @@ export default function LoginPage() {
   const setD = k => e => setDetails(p => ({ ...p, [k]: e.target.value }))
   const sel  = ROLES.find(r => r.key === role)
   const C    = sel?.color    || T.accent
-  const G    = sel?.gradient || `linear-gradient(135deg,${T.accentDark},${T.accent})`
+  const G    = sel?.color    || T.accent
 
   /* ── Auth handlers ── */
   async function handleLogin(e) {
@@ -387,7 +384,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex" style={{
         width: '50%', minWidth: 0, flexShrink: 0,
         flexDirection: 'column', position: 'relative', overflow: 'hidden', minHeight: '100vh',
-        background: 'linear-gradient(160deg, #080E2E 0%, #0F1F6B 30%, #1740B8 60%, #1D4ED8 80%, #2563EB 100%)',
+        background: '#1E3A8A',
       }}>
         {/* Dot-grid texture */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
@@ -407,7 +404,7 @@ export default function LoginPage() {
             background: 'radial-gradient(circle, rgba(59,130,246,0.28) 0%, transparent 65%)', pointerEvents: 'none' }} />
         {/* Subtle shimmer line */}
         <div style={{ position: 'absolute', top: '38%', left: 0, right: 0, height: 1,
-          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)', pointerEvents: 'none' }} />
+          opacity: 0, pointerEvents: 'none' }} />
 
         {/* Content */}
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%', padding: '36px 52px' }}>
@@ -444,9 +441,7 @@ export default function LoginPage() {
 
               <h1 style={{ fontSize: 44, fontWeight: 900, color: '#FFFFFF', lineHeight: 1.08, letterSpacing: '-0.04em', marginBottom: 16 }}>
                 The platform every<br />
-                <span style={{ background: 'linear-gradient(90deg,#93C5FD,#C4B5FD,#86EFAC)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', display: 'inline-block' }}>
-                  institution
-                </span>{' '}trusts.
+                <span style={{ color: '#93C5FD' }}>institution</span>{' '}trusts.
               </h1>
               <p style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.42)', lineHeight: 1.7, maxWidth: 360, marginBottom: 28 }}>
                 Modern enterprise software for schools, colleges, and universities. Built for scale.
@@ -516,7 +511,7 @@ export default function LoginPage() {
       <div className="lp-right" style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: isDesktop ? 'flex-start' : 'center',
-        background: 'linear-gradient(160deg, #FFFFFF 0%, #F8FAFF 55%, #F3F7FF 100%)',
+        background: '#FFFFFF',
         padding: isDesktop ? '48px 24px 40px' : '40px 24px', boxSizing: 'border-box',
       }}>
 
@@ -564,7 +559,7 @@ export default function LoginPage() {
 
           {/* Bottom shimmer line */}
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, pointerEvents: 'none',
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)' }} />
+            opacity: 0 }} />
         </div>}
 
         {/* ── Content sheet ── */}

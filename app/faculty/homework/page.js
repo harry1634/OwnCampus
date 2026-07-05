@@ -22,7 +22,7 @@ function HomeworkModal({ hw, classes, onClose, onSaved }) {
     description: hw?.description || '',
     due_date:    hw?.due_date    || '',
     class_id:    hw?.class_id    || (classes[0]?.id || ''),
-    is_published: hw?.is_published ?? false,
+    is_published: hw?.is_published ?? true,
   })
   const [saving, setSaving] = useState(false)
   const [error,  setError ] = useState('')
@@ -101,7 +101,7 @@ function HomeworkModal({ hw, classes, onClose, onSaved }) {
 
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#374151' }}>
             <input type="checkbox" checked={form.is_published} onChange={set('is_published')} />
-            Publish immediately (visible to students)
+            Publish (visible to students)
           </label>
         </div>
 

@@ -72,7 +72,7 @@ export default function FacultyDashboard() {
 
       {/* Welcome Banner */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        style={{ borderRadius: 20, padding: '28px 32px', background: 'linear-gradient(135deg,#065F46 0%,#059669 60%,#34D399 100%)', boxShadow: '0 8px 32px rgba(6,95,70,0.30)' }}>
+        style={{ borderRadius: 20, padding: '28px 32px', background: '#16A34A', boxShadow: '0 8px 32px rgba(22,163,74,0.25)' }}>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 6, fontWeight: 500 }}>{date}</p>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em', marginBottom: 6 }}>
           {timeGreet}, {displayName}! 👋
@@ -188,7 +188,7 @@ export default function FacultyDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div style={{ background: 'linear-gradient(135deg,#F0FDF4,#ECFDF5)', borderRadius: 18, border: '1px solid #A7F3D0', padding: '18px 20px' }}>
+          <div style={{ background: '#F0FDF4', borderRadius: 18, border: '1px solid #A7F3D0', padding: '18px 20px' }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#065F46', margin: '0 0 12px' }}>Quick Actions</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {QUICK_ACTIONS.map(a => {

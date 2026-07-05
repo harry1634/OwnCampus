@@ -103,7 +103,7 @@ export default function StudentDashboard() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       {/* Welcome banner */}
-      <div style={{ background: 'linear-gradient(135deg,#4C1D95,#7C3AED)', borderRadius: 20, padding: '24px 28px', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ background: '#7C3AED', borderRadius: 20, padding: '24px 28px', overflow: 'hidden', position: 'relative' }}>
         <div style={{ position: 'absolute', top: -30, right: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: 500, margin: '0 0 4px' }}>{greeting}</p>

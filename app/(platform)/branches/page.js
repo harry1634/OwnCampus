@@ -123,7 +123,7 @@ export default function BranchesPage() {
               style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, color: '#0F172A', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }} />
           </div>
           <button type="submit" disabled={creating || !newName.trim()}
-            style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#1E40AF,#2563EB)', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: creating ? 'default' : 'pointer', opacity: !newName.trim() ? 0.5 : 1, whiteSpace: 'nowrap' }}>
+            style={{ padding: '9px 20px', borderRadius: 10, background: '#2563EB', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: creating ? 'default' : 'pointer', opacity: !newName.trim() ? 0.5 : 1, whiteSpace: 'nowrap' }}>
             {creating ? 'Creating…' : '+ Add Branch'}
           </button>
         </form>
@@ -156,7 +156,7 @@ export default function BranchesPage() {
                   initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                   style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 12px', borderRadius: 12, marginTop: 6, border: '1px solid #F1F5F9', background: isEditing ? '#FAFBFF' : '#FAFAFA' }}>
 
-                  <div style={{ width: 42, height: 42, borderRadius: 11, background: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 11, background: '#EFF6FF', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Building2 size={18} color="#2563EB" />
                   </div>
 

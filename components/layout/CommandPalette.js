@@ -285,7 +285,7 @@ export default function CommandPalette({ open, onClose }) {
           {/* Ambient glow */}
           <div style={{
             position: 'absolute', inset: -2, borderRadius: 24,
-            background: 'linear-gradient(135deg, #2563EB33 0%, #7C3AED33 100%)',
+            background: 'rgba(37,99,235,0.12)',
             filter: 'blur(12px)', zIndex: 0, pointerEvents: 'none',
           }} />
 
@@ -302,14 +302,12 @@ export default function CommandPalette({ open, onClose }) {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '16px 20px',
-              background: 'linear-gradient(135deg, #F8FAFF 0%, #F5F3FF 100%)',
+              background: '#F8FAFC',
               borderBottom: '1px solid #EEF2FF',
             }}>
               <div style={{
                 width: 38, height: 38, borderRadius: 12, flexShrink: 0,
-                background: searching
-                  ? 'linear-gradient(135deg,#7C3AED,#2563EB)'
-                  : 'linear-gradient(135deg,#2563EB,#7C3AED)',
+                background: '#2563EB',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 3px 10px rgba(37,99,235,0.35)',
                 transition: 'background 0.3s',
@@ -360,7 +358,7 @@ export default function CommandPalette({ open, onClose }) {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 4,
                 padding: '10px 20px 0',
-                background: 'linear-gradient(135deg, #F8FAFF 0%, #F5F3FF 100%)',
+                background: '#F8FAFC',
                 borderBottom: '1px solid #EEF2FF',
               }}>
                 {TABS.map(t => (
@@ -513,7 +511,7 @@ export default function CommandPalette({ open, onClose }) {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '44px 20px', gap: 12 }}>
                   <div style={{
                     width: 52, height: 52, borderRadius: 16,
-                    background: 'linear-gradient(135deg,#EFF6FF,#F5F3FF)',
+                    background: '#EFF6FF',
                     border: '1px solid #E2E8F0',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
@@ -532,7 +530,7 @@ export default function CommandPalette({ open, onClose }) {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '10px 18px',
               borderTop: '1px solid #F1F5F9',
-              background: 'linear-gradient(to right, #FAFAFE, #FAF9FF)',
+              background: '#F8FAFC',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 {[

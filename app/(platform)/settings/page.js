@@ -378,7 +378,7 @@ export default function SettingsPage() {
                     <div style={{ width: 72, height: 72, borderRadius: 18, overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 16px rgba(37,99,235,0.20)', border: '2px solid #E2E8F0' }}>
                       {logoUrl
                         ? <img src={logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#FFFFFF' }}>OC</div>
+                        : <div style={{ width: '100%', height: '100%', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#FFFFFF' }}>OC</div>
                       }
                     </div>
                     <div style={{ flex: 1 }}>
@@ -488,7 +488,7 @@ export default function SettingsPage() {
                     <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 16px rgba(37,99,235,0.20)', border: '2px solid #E2E8F0' }}>
                       {displayAvatarUrl
                         ? <img src={displayAvatarUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #2563EB, #7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#FFFFFF' }}>
+                        : <div style={{ width: '100%', height: '100%', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 22, color: '#FFFFFF' }}>
                             {cu?.email ? cu.email[0].toUpperCase() : 'A'}
                           </div>
                       }

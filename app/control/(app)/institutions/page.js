@@ -171,7 +171,7 @@ function AddInstitutionModal({ onClose, onCreated }) {
               }}>Cancel</button>
               <button type="submit" disabled={saving} style={{
                 flex: 2, height: 42, borderRadius: 9, border: 'none',
-                background: saving ? '#94A3B8' : 'linear-gradient(135deg, #1E40AF, #2563EB)',
+                background: saving ? '#94A3B8' : '#2563EB',
                 color: '#FFFFFF', fontSize: 13.5, fontWeight: 700,
                 cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 boxShadow: saving ? 'none' : '0 4px 14px rgba(37,99,235,0.35)',
@@ -247,7 +247,7 @@ function InstitutionsInner() {
           style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '9px 18px', borderRadius: 10, border: 'none',
-            background: 'linear-gradient(135deg, #1E40AF, #2563EB)',
+            background: '#2563EB',
             color: '#FFFFFF', fontSize: 13.5, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
             boxShadow: '0 4px 14px rgba(37,99,235,0.35)',

@@ -118,7 +118,7 @@ export default function StudentAttendance() {
       {!loading && subjects.length > 0 && (
         <>
           {/* Overall banner */}
-          <div style={{ background: `linear-gradient(135deg,${overallPct >= 75 ? '#065F46,#059669' : '#991B1B,#DC2626'})`, borderRadius: 20, padding: '24px 28px', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+          <div style={{ background: overallPct >= 75 ? '#16A34A' : '#DC2626', borderRadius: 20, padding: '24px 28px', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: '0 0 4px' }}>Overall Attendance</p>
               <p style={{ fontSize: 48, fontWeight: 900, color: '#FFFFFF', lineHeight: 1, margin: '0 0 6px', letterSpacing: '-0.04em' }}>{overallPct}%</p>

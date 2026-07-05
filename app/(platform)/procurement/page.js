@@ -207,7 +207,7 @@ export default function ProcurementPage() {
                                 {po.status === 'pending' && (
                                   <>
                                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} onClick={() => setPOStatus(po.id, 'approved')}
-                                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#16A34A,#15803D)', color: '#FFFFFF', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(22,163,74,0.30)' }}>
+                                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: 'none', background: '#16A34A', color: '#FFFFFF', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(22,163,74,0.30)' }}>
                                       <Check size={12} /> Approve
                                     </motion.button>
                                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} onClick={() => setPOStatus(po.id, 'rejected')}
@@ -284,7 +284,7 @@ export default function ProcurementPage() {
                       ) : req.status === 'pending' ? (
                         <motion.div key="act" style={{ display: 'flex', gap: 6, flexShrink: 0 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} onClick={() => setReqStatus(req.id, 'approved')}
-                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 9, border: 'none', background: 'linear-gradient(135deg,#16A34A,#15803D)', color: '#FFFFFF', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(22,163,74,0.28)' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 9, border: 'none', background: '#16A34A', color: '#FFFFFF', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(22,163,74,0.28)' }}>
                             <Check size={12} /> Approve
                           </motion.button>
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} onClick={() => setReqStatus(req.id, 'rejected')}
@@ -314,7 +314,7 @@ export default function ProcurementPage() {
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
               onClick={e => e.stopPropagation()}
               style={{ background: '#FFFFFF', borderRadius: 22, width: '100%', maxWidth: 460, boxShadow: '0 32px 80px rgba(0,0,0,0.22)', overflowX: 'hidden', overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 64px)' }}>
-              <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)' }}>
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#EFF6FF' }}>
                 <p style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', margin: 0 }}>New Purchase Order</p>
                 <button onClick={() => setShowForm(false)} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <X size={14} color="#64748B" />
@@ -346,7 +346,7 @@ export default function ProcurementPage() {
                     Cancel
                   </button>
                   <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    style={{ flex: 2, padding: '12px', borderRadius: 12, background: 'linear-gradient(135deg,#1D4ED8,#2563EB)', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(37,99,235,0.30)' }}>
+                    style={{ flex: 2, padding: '12px', borderRadius: 12, background: '#2563EB', color: '#FFFFFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(37,99,235,0.25)' }}>
                     Create PO
                   </motion.button>
                 </div>

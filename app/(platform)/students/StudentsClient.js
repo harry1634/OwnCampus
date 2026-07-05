@@ -58,7 +58,7 @@ function StudentViewModal({ student, onEdit, onClose }) {
     <div style={OVERLAY} onClick={onClose}>
       <motion.div style={MODAL} initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 340, damping: 30 }} onClick={e => e.stopPropagation()}>
-        <div style={{ background: 'linear-gradient(135deg,#1E3A8A,#2563EB)', borderRadius: '20px 20px 0 0', padding: '24px 24px 20px', position: 'relative' }}>
+        <div style={{ background: '#2563EB', borderRadius: '20px 20px 0 0', padding: '24px 24px 20px', position: 'relative' }}>
           <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, width: 28, height: 28, borderRadius: 7, border: 'none', background: 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}><X size={14} /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ width: 52, height: 52, borderRadius: 14, background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#FFF', border: '3px solid rgba(255,255,255,0.25)' }}>{getInitials(student.name)}</div>
@@ -215,6 +215,25 @@ function StudentEditModal({ student, onSave, onClose }) {
           throw new Error(d.error || 'Update failed')
         }
       }
+
+      // Always write fee/roll data to students table by students.id so student-side
+      // fee page reflects the correct values even when supabaseId was null.
+      if (student.id) {
+        const stuBody = {
+          total_fee:   totalFee,
+          paid_amount: paidAmount,
+          fee_status:  form.fees || null,
+          roll_number: form.roll || null,
+        }
+        // Link auth user → students row so student queries (eq user_id) work going forward
+        if (student.supabaseId) stuBody.user_id = student.supabaseId
+        await fetch(`/api/students?id=${student.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stuBody),
+        }).catch(() => {})
+      }
+
       onSave({
         ...student,
         ...form,
@@ -337,7 +356,7 @@ function StudentEditModal({ student, onSave, onClose }) {
 
           <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
             <button onClick={handleSave} disabled={saving}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#1E40AF,#2563EB)', color: '#FFF', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', borderRadius: 10, border: 'none', background: '#2563EB', color: '#FFF', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
               {saving ? 'Saving…' : <><Save size={13} /> Save Changes</>}
             </button>
             <button onClick={onClose}
@@ -1089,7 +1108,7 @@ export default function StudentsClient() {
                     Cancel
                   </button>
                   <button type="submit" disabled={transferring}
-                    style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#1E40AF,#2563EB)', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: transferring ? 'default' : 'pointer' }}>
+                    style={{ padding: '9px 20px', borderRadius: 10, background: '#2563EB', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: transferring ? 'default' : 'pointer' }}>
                     {transferring ? 'Transferring…' : 'Transfer'}
                   </button>
                 </div>

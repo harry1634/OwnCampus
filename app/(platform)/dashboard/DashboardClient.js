@@ -87,7 +87,7 @@ function CredentialsModal({ creds, onClose }) {
           </div>
         </div>
         <motion.button whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }} onClick={onClose}
-          style={{ width: '100%', height: 44, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#1E40AF,#2563EB)', color: '#FFF', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+          style={{ width: '100%', height: 44, borderRadius: 12, border: 'none', background: '#2563EB', color: '#FFF', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
           Done — I've noted the credentials
         </motion.button>
       </motion.div>
@@ -347,7 +347,7 @@ export default function DashboardClient({ user, profile, initialStats, initialRe
           <motion.div
             initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.22 }}
-            style={{ background: 'linear-gradient(135deg,#EFF6FF,#F5F3FF)', border: '1.5px solid #BFDBFE', borderRadius: 16, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+            style={{ background: '#EFF6FF', border: '1.5px solid #BFDBFE', borderRadius: 16, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
             <div style={{ width: 40, height: 40, borderRadius: 11, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <BookOpen size={18} color="white" />
             </div>
@@ -427,7 +427,7 @@ export default function DashboardClient({ user, profile, initialStats, initialRe
                 {AUDIENCE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
               <motion.button type="submit" disabled={posting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 9, background: 'linear-gradient(135deg,#1E40AF,#2563EB)', color: '#FFFFFF', border: 'none', fontSize: 12.5, fontWeight: 700, cursor: posting ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 9, background: '#2563EB', color: '#FFFFFF', border: 'none', fontSize: 12.5, fontWeight: 700, cursor: posting ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                 {posting ? <div style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%' }} className="animate-spin" /> : <Send size={12} />}
                 Post
               </motion.button>

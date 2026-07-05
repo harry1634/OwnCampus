@@ -519,7 +519,7 @@ export default function HRMSPage() {
           <motion.div initial={{ opacity: 0, scale: 0.95, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }}
             onClick={e => e.stopPropagation()}
             style={{ background: '#FFFFFF', borderRadius: 18, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflowX: 'hidden', overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 64px)' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#EFF6FF' }}>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Leave Reason</p>
                 <p style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{viewReason.name} · {viewReason.type}</p>

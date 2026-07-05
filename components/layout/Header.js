@@ -181,8 +181,8 @@ export default function Header({ user, profile, institution }) {
           left: isMobile ? 0 : (sidebarCollapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)'),
           height: 'var(--header-height)',
           background: '#FFFFFF',
-          borderBottom: '1px solid #E2E8F0',
-          boxShadow: '0 1px 0 #E2E8F0, 0 2px 8px rgba(15,23,42,0.04)',
+          borderBottom: '1px solid #E5E7EB',
+          boxShadow: '0 1px 0 #E5E7EB',
           transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           display: 'flex',
           alignItems: 'center',
@@ -381,7 +381,7 @@ export default function Header({ user, profile, institution }) {
               onMouseEnter={e => e.currentTarget.style.borderColor = '#CBD5E1'}
               onMouseLeave={e => e.currentTarget.style.borderColor = '#E2E8F0'}
             >
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: liveAvatarUrl ? 'transparent' : 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: liveAvatarUrl ? 'transparent' : '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                 {liveAvatarUrl
                   ? <img src={liveAvatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : getInitials(userName)
@@ -404,7 +404,7 @@ export default function Header({ user, profile, institution }) {
                 >
                   {/* User info */}
                   <div style={{ padding: '16px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: liveAvatarUrl ? 'transparent' : 'linear-gradient(135deg, #2563EB, #1E40AF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: liveAvatarUrl ? 'transparent' : '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: '#FFFFFF', fontFamily: 'Inter, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                       {liveAvatarUrl
                         ? <img src={liveAvatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : getInitials(userName)

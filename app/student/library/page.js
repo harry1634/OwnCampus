@@ -25,7 +25,8 @@ function bookStatus(dueDate, returned) {
 }
 
 const ICON_COLORS = ['#DC2626','#2563EB','#059669','#D97706']
-const ICON_BG     = ['#FEF2F2,#FECACA','#EFF6FF,#BFDBFE','#ECFDF5,#A7F3D0','#FFFBEB,#FDE68A']
+const ICON_BG     = ['#FEF2F2','#EFF6FF','#ECFDF5','#FFFBEB']
+const ICON_BORDER = ['#FECACA','#BFDBFE','#A7F3D0','#FDE68A']
 
 function Spinner() {
   return (
@@ -117,7 +118,7 @@ export default function StudentLibrary() {
               const ci     = i % 4
               return (
                 <div key={book.id} style={{ padding: '16px 20px', borderBottom: i < active.length - 1 ? '1px solid #F8FAFC' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 46, height: 60, borderRadius: 8, background: `linear-gradient(135deg,${ICON_BG[ci]})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1.5px solid ${ICON_BG[ci].split(',')[1]}` }}>
+                  <div style={{ width: 46, height: 60, borderRadius: 8, background: ICON_BG[ci], display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1.5px solid ${ICON_BORDER[ci]}` }}>
                     <BookOpen size={18} color={ICON_COLORS[ci]} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>

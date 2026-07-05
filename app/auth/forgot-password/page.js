@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
       >
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 36 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg,#1E40AF,#2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(37,99,235,0.35)' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(37,99,235,0.35)' }}>
             <GraduationCap size={20} color="white" />
           </div>
           <span style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>OwnCampus</span>
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
                     whileTap={{ scale: loading ? 1 : 0.985 }}
                     style={{
                       width: '100%', height: 48, borderRadius: 13, border: 'none',
-                      background: 'linear-gradient(135deg,#1E40AF,#2563EB)',
+                      background: '#2563EB',
                       color: '#FFFFFF', fontSize: 14.5, fontWeight: 700,
                       cursor: loading ? 'default' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

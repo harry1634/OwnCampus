@@ -9,9 +9,9 @@
   --primary-rgb:      37, 99, 235;
   --secondary:        #4F46E5;
   --accent:           #06B6D4;
-  --success:          #10B981;
+  --success:          #16A34A;
   --warning:          #F59E0B;
-  --danger:           #EF4444;
+  --danger:           #DC2626;
 
   /* ─── Backgrounds ─── */
   --bg-page:          #F8FAFC;
@@ -19,18 +19,18 @@
   --bg-surface:       #F1F5F9;
 
   /* ─── Text ─── */
-  --text-primary:     #0F172A;
-  --text-secondary:   #64748B;
-  --text-muted:       #94A3B8;
+  --text-primary:     #111827;
+  --text-secondary:   #6B7280;
+  --text-muted:       #9CA3AF;
 
   /* ─── Borders ─── */
-  --border:           #E2E8F0;
-  --border-hover:     #CBD5E1;
+  --border:           #E5E7EB;
+  --border-hover:     #D1D5DB;
 
   /* ─── Layout ─── */
-  --sidebar-bg:       #1E40AF;
-  --sidebar-width:    280px;
-  --sidebar-collapsed:68px;
+  --sidebar-bg:       #FFFFFF;
+  --sidebar-width:    260px;
+  --sidebar-collapsed:64px;
   --header-height:    64px;
 
   /* ─── Radius ─── */
@@ -194,9 +194,9 @@ h1, h2, h3, h4 { font-family: 'Inter', system-ui, sans-serif; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  border-radius: 9px;
-  color: rgba(255,255,255,0.80);
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.70);
   font-size: 13.5px;
   font-weight: 500;
   text-decoration: none;
@@ -207,14 +207,14 @@ h1, h2, h3, h4 { font-family: 'Inter', system-ui, sans-serif; }
 
 .sidebar-item:hover {
   background: rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.98);
+  color: rgba(255,255,255,0.95);
 }
 
 .sidebar-item.active {
-  background: #FFFFFF;
-  color: #1E40AF;
+  background: rgba(255,255,255,0.15);
+  color: #FFFFFF;
   font-weight: 600;
-  box-shadow: 0 1px 4px rgba(15,23,42,0.10);
+  box-shadow: none;
 }
 
 /* ─── Badges ─────────────────────────────────────────────────── */
@@ -795,21 +795,19 @@ main { will-change: auto; }
 
 /* Login page mobile / tablet tweaks (left panel is hidden below 1024px) */
 @media (max-width: 1023px) {
-  /* Turn the right panel into the deep-blue premium background */
   .lp-right {
-    background: linear-gradient(160deg, #080E2E 0%, #0F1F6B 35%, #1740B8 70%, #2563EB 100%) !important;
+    background: #F8FAFC !important;
     padding: 0 !important;
     justify-content: flex-start !important;
     align-items: stretch !important;
   }
-  /* White card that rises over the gradient */
   .lp-sheet {
     max-width: none !important;
     justify-content: flex-start !important;
     background: #FFFFFF !important;
-    border-radius: 28px 28px 0 0 !important;
+    border-radius: 0 !important;
     padding: 28px 20px calc(36px + env(safe-area-inset-bottom, 0px)) !important;
-    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.18) !important;
+    box-shadow: none !important;
   }
   .lp-pill-row { flex-wrap: wrap !important; row-gap: 8px !important; }
   .lp-grid-2   { grid-template-columns: 1fr !important; }

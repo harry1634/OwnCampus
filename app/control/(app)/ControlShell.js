@@ -28,7 +28,7 @@ const ROLE_LABEL = {
 }
 
 const SB = {
-  bg:      'linear-gradient(180deg, #080E2E 0%, #0F1F6B 45%, #1E40AF 100%)',
+  bg:      '#1E40AF',
   border:  'rgba(255,255,255,0.08)',
   accent:  '#93C5FD',
   text:    '#FFFFFF',
@@ -83,18 +83,6 @@ function Sidebar({ user, current, onClose, mobile }) {
       display: 'flex', flexDirection: 'column', flexShrink: 0,
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* Subtle dot grid texture */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
-        backgroundSize: '22px 22px', zIndex: 0,
-      }} />
-      {/* Ambient glow bottom */}
-      <div style={{
-        position: 'absolute', bottom: -60, left: -40, width: 280, height: 280,
-        borderRadius: '50%', pointerEvents: 'none', zIndex: 0,
-        background: 'radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 65%)',
-      }} />
 
       {/* Logo */}
       <div style={{
@@ -248,7 +236,7 @@ export default function ControlShell({ user, children }) {
             </div>
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #1D4ED8, #3B82F6)',
+              background: '#2563EB',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>

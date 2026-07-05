@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
               {/* Top accent bar */}
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                background: `linear-gradient(90deg, ${card.iconColor}, ${card.iconColor}55)`,
+                background: card.iconColor,
                 borderRadius: '18px 18px 0 0',
               }} />
 
@@ -290,7 +290,7 @@ export default function AnalyticsPage() {
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(card.pct, 100)}%` }}
                     transition={{ delay: 0.4 + i * 0.1, duration: 0.9, ease: 'easeOut' }}
-                    style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${card.iconColor}, ${card.iconColor}99)` }}
+                    style={{ height: '100%', borderRadius: 99, background: card.iconColor }}
                   />
                 </div>
               )}
@@ -442,10 +442,10 @@ export default function AnalyticsPage() {
                       style={{
                         height: '100%', borderRadius: 99,
                         background: subject.A >= 75
-                          ? 'linear-gradient(90deg, #10B981, #059669)'
+                          ? '#16A34A'
                           : subject.A >= 50
-                          ? 'linear-gradient(90deg, #F59E0B, #D97706)'
-                          : 'linear-gradient(90deg, #EF4444, #DC2626)',
+                          ? '#F59E0B'
+                          : '#DC2626',
                       }} />
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 700, color: '#0F172A', width: 32, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>

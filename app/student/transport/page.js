@@ -77,7 +77,7 @@ export default function StudentTransport() {
       ) : myRoute ? (
         <>
           {/* Hero card */}
-          <div style={{ background: 'linear-gradient(135deg,#1E40AF,#2563EB)', borderRadius: 20, padding: '24px 28px' }}>
+          <div style={{ background: '#2563EB', borderRadius: 20, padding: '24px 28px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Bus size={22} color="white" />

@@ -52,7 +52,7 @@ function ViewModal({ f, attColor, attPct, onEdit, onSetPwd, onClose }) {
         transition={{ type: 'spring', stiffness: 340, damping: 30 }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#1E3A8A,#2563EB)', borderRadius: '20px 20px 0 0', padding: '28px 24px 24px', position: 'relative' }}>
+        <div style={{ background: '#2563EB', borderRadius: '20px 20px 0 0', padding: '28px 24px 24px', position: 'relative' }}>
           <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 30, height: 30, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}>
             <X size={15} />
           </button>
@@ -756,7 +756,7 @@ export default function FacultyPage() {
                     Cancel
                   </button>
                   <button type="submit" disabled={transferring}
-                    style={{ padding: '9px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#1E40AF,#2563EB)', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: transferring ? 'default' : 'pointer' }}>
+                    style={{ padding: '9px 20px', borderRadius: 10, background: '#2563EB', color: '#FFF', border: 'none', fontSize: 13, fontWeight: 700, cursor: transferring ? 'default' : 'pointer' }}>
                     {transferring ? 'Transferring…' : 'Transfer'}
                   </button>
                 </div>

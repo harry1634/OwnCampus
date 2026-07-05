@@ -73,7 +73,7 @@ export default function ControlLoginPage() {
       {/* ── Left panel — same gradient treatment as institution login ── */}
       <div className="cc-left" style={{
         display: 'none', flex: 1,
-        background: 'linear-gradient(160deg, #080E2E 0%, #0F1F6B 30%, #1740B8 60%, #1D4ED8 80%, #2563EB 100%)',
+        background: '#0A1628',
         flexDirection: 'column', justifyContent: 'space-between',
         padding: '48px 44px', position: 'relative', overflow: 'hidden',
       }}>
@@ -105,7 +105,7 @@ export default function ControlLoginPage() {
         {/* Shimmer line */}
         <div style={{
           position: 'absolute', top: '38%', left: 0, right: 0, height: 1, pointerEvents: 'none',
-          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)',
+          opacity: 0,
         }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
@@ -145,11 +145,7 @@ export default function ControlLoginPage() {
             letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 14px',
           }}>
             Manage the entire<br />
-            <span style={{
-              background: 'linear-gradient(90deg, #93C5FD, #C4B5FD, #86EFAC)',
-              WebkitBackgroundClip: 'text', backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent', color: 'transparent', display: 'inline-block',
-            }}>platform</span>{' '}from<br />one place.
+            <span style={{ color: '#93C5FD' }}>platform</span>{' '}from<br />one place.
           </h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.42)', margin: '0 0 36px', lineHeight: 1.65, maxWidth: 300 }}>
             Internal access for OwnCampus staff. Institution owners use the standard portal.
@@ -201,7 +197,7 @@ export default function ControlLoginPage() {
       <div style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '32px 24px', position: 'relative',
-        background: 'linear-gradient(160deg, #FFFFFF 0%, #F8FAFF 55%, #F3F7FF 100%)',
+        background: '#FFFFFF',
       }}>
 
         <motion.div
@@ -215,7 +211,7 @@ export default function ControlLoginPage() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <div style={{
                 width: 40, height: 40, borderRadius: 12,
-                background: 'linear-gradient(135deg, #1E40AF, #2563EB)',
+                background: '#2563EB',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 4px 16px rgba(37,99,235,0.35)',
               }}>
@@ -320,7 +316,7 @@ export default function ControlLoginPage() {
               whileTap={loading ? {} : { scale: 0.985 }}
               style={{
                 width: '100%', height: 54, marginTop: 4,
-                background: loading ? '#94A3B8' : 'linear-gradient(135deg, #1E40AF 0%, #2563EB 100%)',
+                background: loading ? '#94A3B8' : '#2563EB',
                 border: 'none', borderRadius: 14,
                 color: 'white', fontSize: 15, fontWeight: 700, fontFamily: 'inherit',
                 cursor: loading ? 'not-allowed' : 'pointer',

@@ -227,7 +227,7 @@ export default function FacultyMarks() {
           </motion.button>
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handlePost}
             disabled={!selClass || students.length === 0 || posted || posting}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, background: posted ? '#ECFDF5' : 'linear-gradient(135deg,#065F46,#059669)', color: posted ? '#059669' : '#FFFFFF', border: posted ? '1.5px solid #A7F3D0' : 'none', fontSize: 13, fontWeight: 700, cursor: (posted || posting) ? 'default' : 'pointer', boxShadow: posted ? 'none' : '0 4px 14px rgba(5,150,105,0.35)', opacity: (!selClass || students.length === 0) ? 0.5 : 1 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, background: posted ? '#ECFDF5' : '#16A34A', color: posted ? '#059669' : '#FFFFFF', border: posted ? '1.5px solid #A7F3D0' : 'none', fontSize: 13, fontWeight: 700, cursor: (posted || posting) ? 'default' : 'pointer', boxShadow: posted ? 'none' : '0 4px 14px rgba(5,150,105,0.35)', opacity: (!selClass || students.length === 0) ? 0.5 : 1 }}>
             <Send size={14} /> {posting ? 'Posting…' : posted ? 'Posted' : 'Post Marks'}
           </motion.button>
         </div>

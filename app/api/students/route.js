@@ -210,6 +210,45 @@ export async function GET(req) {
   }
 }
 
+// PATCH /api/students?id=<students.id>  — update fee/roll fields + optionally link user_id
+export async function PATCH(req) {
+  try {
+    const serverClient = await createClient()
+    const { data: { user } } = await serverClient.auth.getUser()
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const admin = createAdminClient()
+    const { data: caller } = await admin
+      .from('user_profiles').select('institution_id, role').eq('id', user.id).single()
+    const ADMIN_ROLES = ['owner','super_admin','principal','vice_principal','academic_coordinator','administrator','chairman','director']
+    if (!ADMIN_ROLES.includes(caller?.role || '')) {
+      return Response.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) return Response.json({ error: 'id is required' }, { status: 400 })
+
+    const body   = await req.json()
+    const update = {}
+    if ('total_fee'   in body) update.total_fee   = Number(body.total_fee)   || 0
+    if ('paid_amount' in body) update.paid_amount  = Number(body.paid_amount) || 0
+    if ('fee_status'  in body) update.fee_status   = body.fee_status          || null
+    if ('roll_number' in body) update.roll_number  = body.roll_number         || null
+    // Link the student to their auth user so student-side queries work
+    if (body.user_id)          update.user_id      = body.user_id
+
+    const { error } = await admin
+      .from('students').update(update)
+      .eq('id', id).eq('institution_id', caller.institution_id)
+
+    if (error) return Response.json({ error: error.message }, { status: 400 })
+    return Response.json({ success: true })
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 500 })
+  }
+}
+
 // DELETE /api/students?id=<students.id>  — soft delete (never hard-deletes)
 export async function DELETE(req) {
   try {

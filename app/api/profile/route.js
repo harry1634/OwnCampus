@@ -12,8 +12,9 @@ const FACULTY_ROLES = [
 const VALID_BLOOD_GROUPS = ['A+','A-','B+','B-','O+','O-','AB+','AB-']
 const VALID_GENDERS      = ['male','female','other','prefer_not_to_say']
 
-// Use * so partial-migration deployments still work; joins appended explicitly.
-const UP_SELECT = '*, branches(id,name), institutions(id,name)'
+// Omit institutions(id,name) — PostgREST schema cache may not expose that FK join.
+// Institution name is rarely needed on profile pages; fetch separately if required.
+const UP_SELECT = '*, branches(id,name)'
 
 function buildProfileShape(up, meta) {
   return {
@@ -26,7 +27,7 @@ function buildProfileShape(up, meta) {
     avatar_url:     up.avatar_url,
     role:           up.role,
     institution_id: up.institution_id,
-    institution:    up.institutions?.name || null,
+    institution:    null,
     branch_id:      up.branch_id,
     branch:         up.branches?.name    || null,
     // Personal fields — proper columns, fall back to metadata for data not yet migrated
@@ -55,12 +56,70 @@ export async function GET() {
       .eq('id', user.id)
       .single()
 
-    if (upErr || !up) return Response.json({ error: 'Profile not found' }, { status: 404 })
+    let resolvedUp = up
 
-    const meta    = up.metadata || {}
-    const profile = buildProfileShape(up, meta)
+    // No user_profiles row — auth user exists but profile was never created.
+    // Auto-create a minimal row so the page loads and data persists.
+    if (upErr || !up) {
+      try {
+        // user object already has email + user_metadata — no need for admin.auth API
+        const email     = user.email || ''
+        const aMeta     = user.user_metadata || {}
+        const nameParts = (aMeta.full_name || aMeta.name || email.split('@')[0] || 'Student').split(' ')
 
-    if (up.role === 'student') {
+        if (!email) return Response.json({ error: 'Profile not found' }, { status: 404 })
+
+        // Try to inherit institution from an approved access_request for this email
+        const { data: accessReq } = await admin
+          .from('access_requests')
+          .select('institution_id, role')
+          .eq('email', email)
+          .eq('status', 'approved')
+          .limit(1)
+          .maybeSingle()
+
+        const insertData = {
+          id:             user.id,
+          email:          email,
+          first_name:     nameParts[0] || 'Student',
+          last_name:      nameParts.slice(1).join(' ') || null,
+          role:           aMeta.role || accessReq?.role || 'student',
+          institution_id: aMeta.institution_id || accessReq?.institution_id || null,
+          metadata:       {},
+        }
+
+        // upsert handles race conditions gracefully
+        const { data: created, error: createErr } = await admin
+          .from('user_profiles')
+          .upsert(insertData, { onConflict: 'id' })
+          .select(UP_SELECT)
+          .single()
+
+        if (createErr) {
+          // Unique email violation — another row already owns this email; find it
+          if (createErr.code === '23505') {
+            const { data: existing } = await admin
+              .from('user_profiles')
+              .select(UP_SELECT)
+              .eq('email', email)
+              .maybeSingle()
+            if (existing) { resolvedUp = existing }
+            else return Response.json({ error: createErr.message }, { status: 400 })
+          } else {
+            return Response.json({ error: createErr.message }, { status: 400 })
+          }
+        } else {
+          resolvedUp = created
+        }
+      } catch (autoErr) {
+        return Response.json({ error: autoErr?.message || 'Profile not found' }, { status: 500 })
+      }
+    }
+
+    const meta    = resolvedUp.metadata || {}
+    const profile = buildProfileShape(resolvedUp, meta)
+
+    if (resolvedUp.role === 'student') {
       const { data: stu } = await admin
         .from('students')
         .select(`
@@ -103,7 +162,7 @@ export async function GET() {
           fee_status:         stu.fee_status,
         }
       }
-    } else if (FACULTY_ROLES.includes(up.role)) {
+    } else if (FACULTY_ROLES.includes(resolvedUp.role)) {
       const { data: fac } = await admin
         .from('faculty')
         // employee_id added in migration 007; classes_assigned does NOT exist in schema
@@ -153,53 +212,58 @@ export async function PATCH(req) {
     const body  = await req.json()
 
     // Caller's role and institution are needed to route sub-table writes
-    const { data: callerData } = await admin
+    let { data: callerData } = await admin
       .from('user_profiles')
       .select('role, institution_id, metadata')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
+
+    // Auto-create if missing (same logic as GET)
+    if (!callerData) {
+      const email     = user.email || ''
+      const aMeta     = user.user_metadata || {}
+      const nameParts = (aMeta.full_name || aMeta.name || email.split('@')[0] || 'Student').split(' ')
+      if (email) {
+        const { data: accessReq } = await admin
+          .from('access_requests')
+          .select('institution_id, role')
+          .eq('email', email).eq('status', 'approved')
+          .limit(1).maybeSingle()
+        await admin.from('user_profiles').upsert({
+          id:             user.id,
+          email:          email,
+          first_name:     nameParts[0] || 'Student',
+          last_name:      nameParts.slice(1).join(' ') || null,
+          role:           aMeta.role || accessReq?.role || 'student',
+          institution_id: aMeta.institution_id || accessReq?.institution_id || null,
+          metadata:       {},
+        }, { onConflict: 'id' })
+        const { data: refetched } = await admin
+          .from('user_profiles').select('role, institution_id, metadata').eq('id', user.id).maybeSingle()
+        callerData = refetched
+      }
+    }
+
     if (!callerData) return Response.json({ error: 'Profile not found' }, { status: 404 })
 
     const role          = callerData.role           || ''
     const institutionId = callerData.institution_id || null
     const existingMeta  = callerData.metadata        || {}
-    const bodyMeta      = (body.metadata && typeof body.metadata === 'object') ? body.metadata : {}
+    const bodyMeta = (body.metadata && typeof body.metadata === 'object') ? { ...body.metadata } : {}
 
     // ── 1. user_profiles — shared identity + personal fields ────────────
     const upUpdate = {}
 
-    // String fields: empty string → null
+    // Columns that exist in user_profiles (confirmed by migration 017)
     for (const key of ['first_name', 'last_name', 'phone', 'avatar_url', 'address', 'city', 'state', 'pincode']) {
       if (key in body) upUpdate[key] = body[key] || null
     }
+    // Personal fields added by migration 017 (VARCHAR, not enum)
+    if ('gender'        in body) upUpdate.gender        = body.gender        || null
+    if ('blood_group'   in body) upUpdate.blood_group   = body.blood_group   || null
+    if ('date_of_birth' in body) upUpdate.date_of_birth = body.date_of_birth || null
 
-    // Enum fields — validate; invalid value → null (Postgres rejects unknown enum literals)
-    if ('gender' in body) {
-      upUpdate.gender = VALID_GENDERS.includes(body.gender) ? body.gender : null
-    }
-    if ('blood_group' in body) {
-      upUpdate.blood_group = VALID_BLOOD_GROUPS.includes(body.blood_group) ? body.blood_group : null
-    }
-    // Date field — empty string → null
-    if ('date_of_birth' in body) {
-      upUpdate.date_of_birth = body.date_of_birth || null
-    }
-
-    // Backward-compat: student page historically sends these inside metadata
-    if ('dob'         in bodyMeta && !('date_of_birth' in upUpdate)) {
-      upUpdate.date_of_birth = bodyMeta.dob || null
-    }
-    if ('blood_group' in bodyMeta && !('blood_group' in upUpdate)) {
-      upUpdate.blood_group = VALID_BLOOD_GROUPS.includes(bodyMeta.blood_group) ? bodyMeta.blood_group : null
-    }
-    if ('gender'  in bodyMeta && !('gender'  in upUpdate)) {
-      upUpdate.gender  = VALID_GENDERS.includes(bodyMeta.gender) ? bodyMeta.gender : null
-    }
-    if ('address' in bodyMeta && !('address' in upUpdate)) {
-      upUpdate.address = bodyMeta.address || null
-    }
-
-    // Only persist truly orphaned metadata fields (no proper DB column)
+    // Truly orphaned fields (no DB column) — persist in metadata JSONB
     const ORPHANED_META_KEYS = ['house', 'classes_assigned', 'temp_password', 'notif_prefs']
     const orphanedMeta = {}
     for (const key of ORPHANED_META_KEYS) {

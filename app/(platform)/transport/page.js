@@ -313,7 +313,7 @@ function RouteViewModal({ route, onClose, onRemoveStudent, onSaveStudent, onUpda
           onClick={e => e.stopPropagation()}>
 
           {/* Blue header */}
-          <div style={{ background: 'linear-gradient(135deg,#1E3A8A,#2563EB)', padding: '22px 26px', position: 'sticky', top: 0, zIndex: 10 }}>
+          <div style={{ background: '#2563EB', padding: '22px 26px', position: 'sticky', top: 0, zIndex: 10 }}>
             <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 16, width: 28, height: 28, borderRadius: 7, border: 'none', background: 'rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}>
               <X size={14} />
             </button>

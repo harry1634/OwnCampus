@@ -66,10 +66,7 @@ function PendingContent() {
   const roleColor = roleKey === 'faculty' ? '#059669' : '#7C3AED'
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(155deg,#0F172A 0%,#1E1B4B 55%,#2D2A7A 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative', overflow: 'hidden' }}>
-
-      <div style={{ position: 'absolute', top: -120, right: -80, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle,rgba(99,102,241,0.2) 0%,transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -80, left: -60, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle,rgba(79,70,229,0.15) 0%,transparent 70%)', pointerEvents: 'none' }} />
+    <div style={{ minHeight: '100vh', background: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative', overflow: 'hidden' }}>
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -95,7 +92,7 @@ function PendingContent() {
               transition={{ duration: 0.35 }}
             >
               <div style={{ background: '#FFFFFF', borderRadius: 24, boxShadow: '0 32px 80px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
-                <div style={{ background: 'linear-gradient(135deg,#065F46,#059669)', padding: '28px 32px 36px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ background: '#16A34A', padding: '28px 32px 36px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
                   <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <PartyPopper size={28} color="white" />
@@ -139,7 +136,7 @@ function PendingContent() {
                     onClick={() => router.push('/auth/login')}
                     whileHover={{ scale: 1.015 }}
                     whileTap={{ scale: 0.985 }}
-                    style={{ width: '100%', height: 48, borderRadius: 13, border: 'none', background: 'linear-gradient(135deg,#065F46,#059669)', color: '#FFFFFF', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(5,150,105,0.40)', marginBottom: 10 }}>
+                    style={{ width: '100%', height: 48, borderRadius: 13, border: 'none', background: '#16A34A', color: '#FFFFFF', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(22,163,74,0.30)', marginBottom: 10 }}>
                     Go to Login <ArrowRight size={16} />
                   </motion.button>
 
@@ -156,7 +153,7 @@ function PendingContent() {
           {status === 'rejected' && (
             <motion.div key="rejected" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
               <div style={{ background: '#FFFFFF', borderRadius: 24, boxShadow: '0 32px 80px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
-                <div style={{ background: 'linear-gradient(135deg,#7F1D1D,#DC2626)', padding: '28px 32px 36px', textAlign: 'center' }}>
+                <div style={{ background: '#DC2626', padding: '28px 32px 36px', textAlign: 'center' }}>
                   <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <ShieldCheck size={28} color="white" />
                   </div>
@@ -181,7 +178,7 @@ function PendingContent() {
             <motion.div key="pending" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div style={{ background: '#FFFFFF', borderRadius: 24, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 32px 80px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
 
-                <div style={{ background: 'linear-gradient(135deg,#1E1B4B,#312E81)', padding: '28px 32px 36px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ background: '#1E40AF', padding: '28px 32px 36px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
                   <motion.div
                     animate={{ rotate: 360 }}
@@ -196,7 +193,7 @@ function PendingContent() {
                 <div style={{ padding: '24px 28px 28px' }}>
                   {email && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 14, background: '#F8FAFC', border: '1px solid #E2E8F0', marginBottom: 20 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg,#4338CA,#6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 800, fontSize: 15, color: '#FFFFFF' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 800, fontSize: 15, color: '#FFFFFF' }}>
                         {email[0]?.toUpperCase()}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -250,7 +247,7 @@ function PendingContent() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <motion.button onClick={checkNow} disabled={checking}
                       whileHover={{ scale: checking ? 1 : 1.015 }} whileTap={{ scale: checking ? 1 : 0.985 }}
-                      style={{ width: '100%', height: 46, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#4338CA,#6366F1)', color: '#FFFFFF', fontSize: 14, fontWeight: 700, cursor: checking ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }}>
+                      style={{ width: '100%', height: 46, borderRadius: 12, border: 'none', background: '#2563EB', color: '#FFFFFF', fontSize: 14, fontWeight: 700, cursor: checking ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(37,99,235,0.30)' }}>
                       {checking
                         ? <><div style={{ width: 17, height: 17, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%' }} className="animate-spin" /> Checking…</>
                         : <><RefreshCw size={14} /> Check Now</>}

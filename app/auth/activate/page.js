@@ -227,7 +227,7 @@ function ActivateForm() {
         disabled={loading}
         whileHover={loading ? {} : { y: -1 }}
         whileTap={loading ? {} : { scale: 0.99 }}
-        style={{ width: '100%', height: 50, borderRadius: 12, border: 'none', background: loading ? '#94A3B8' : 'linear-gradient(135deg,#1E40AF,#2563EB)', color: '#FFFFFF', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
+        style={{ width: '100%', height: 50, borderRadius: 12, border: 'none', background: loading ? '#94A3B8' : '#2563EB', color: '#FFFFFF', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
         {loading
           ? <><Loader2 size={18} className="animate-spin" /> Activating…</>
           : <><CheckCircle size={16} /> Activate Institution <ArrowRight size={14} /></>}
@@ -242,7 +242,7 @@ export default function ActivatePage() {
       <div style={{ width: '100%', maxWidth: 460 }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,#1E40AF,#2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(37,99,235,0.3)' }}>
+          <div style={{ width: 52, height: 52, borderRadius: 16, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 4px 12px rgba(37,99,235,0.25)' }}>
             <Building2 size={24} color="white" />
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: T.text, margin: '0 0 8px', letterSpacing: '-0.03em' }}>

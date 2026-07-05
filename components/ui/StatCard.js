@@ -59,7 +59,7 @@ export default function StatCard({
       {/* Top accent bar */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-        background: `linear-gradient(90deg, ${color}, ${color}55)`,
+        background: color,
         borderRadius: '16px 16px 0 0',
       }} />
 
@@ -123,7 +123,7 @@ export default function StatCard({
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }}
             transition={{ delay: 0.4 + index * 0.08, duration: 0.9, ease: 'easeOut' }}
-            style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${color}, ${color}88)` }}
+            style={{ height: '100%', borderRadius: 99, background: color }}
           />
         </div>
       )}
