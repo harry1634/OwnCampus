@@ -10,6 +10,7 @@ import Link from 'next/link'
 import Pagination from '@/components/ui/Pagination'
 import { downloadCSV } from '@/lib/exportUtils'
 import { TableSkeleton } from '@/components/ui/SkeletonLoader'
+import { toast } from 'sonner'
 
 const CATEGORIES = ['Fiction','Science','Mathematics','History','Computer','Commerce','Language','Art','Sports','Reference','Other']
 const categoryColors = { Fiction: '#2563EB', Science: '#10B981', Mathematics: '#0891B2', History: '#D97706', Computer: '#7C3AED', Commerce: '#DB2777', Language: '#0F766E', Art: '#EA580C', Sports: '#059669', Reference: '#64748B', Other: '#94A3B8' }
@@ -471,7 +472,6 @@ export default function LibraryPage() {
   const [catalogPage,   setCatalogPage  ] = useState(1)
   const [issuedPage,    setIssuedPage   ] = useState(1)
   const [showImport,    setShowImport   ] = useState(false)
-  const [importToast,   setImportToast  ] = useState(null)
   const [deleteTarget,  setDeleteTarget ] = useState(null)
   const [issueTarget,   setIssueTarget  ] = useState(null)
   const [editTarget,    setEditTarget   ] = useState(null)
@@ -525,8 +525,7 @@ export default function LibraryPage() {
       } catch {}
     }
     setShowImport(false)
-    setImportToast(`${count} book${count !== 1 ? 's' : ''} imported`)
-    setTimeout(() => setImportToast(null), 3500)
+    toast.success(`${count} book${count !== 1 ? 's' : ''} imported`)
     loadBooks()
   }
 
@@ -549,10 +548,12 @@ export default function LibraryPage() {
         body: JSON.stringify({ action: 'return', issue_id: issueId }),
       })
       const json = await res.json()
-      if (json.error) { setImportToast(`Error: ${json.error}`); setTimeout(() => setImportToast(null), 4000); return }
-    } catch {}
-    setImportToast('Book returned successfully')
-    setTimeout(() => setImportToast(null), 3000)
+      if (json.error) { toast.error(json.error); return }
+    } catch (err) {
+      toast.error(err.message || 'Network error')
+      return
+    }
+    toast.success('Book returned successfully')
     loadBooks()
   }
 
@@ -569,17 +570,14 @@ export default function LibraryPage() {
       })
       const json = await res.json()
       if (!res.ok || json.error) {
-        setImportToast(`Error: ${json.error || 'Issue failed'}`)
-        setTimeout(() => setImportToast(null), 4000)
+        toast.error(json.error || 'Issue failed')
         return
       }
-    } catch {
-      setImportToast('Network error — book not issued')
-      setTimeout(() => setImportToast(null), 4000)
+    } catch (err) {
+      toast.error(err.message || 'Network error — book not issued')
       return
     }
-    setImportToast(`"${bookTitle}" issued to ${studentName}`)
-    setTimeout(() => setImportToast(null), 3500)
+    toast.success(`"${bookTitle}" issued to ${studentName}`)
     await loadBooks()
     setActiveTab('issued')
   }
@@ -798,16 +796,6 @@ export default function LibraryPage() {
         {editTarget   && <EditBookModal key="edit" book={editTarget} onClose={() => setEditTarget(null)} onSaved={handleEditSaved} />}
       </AnimatePresence>
 
-      {/* Import toast */}
-      <AnimatePresence>
-        {importToast && (
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-            style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9998, background: '#0F172A', color: '#FFF', borderRadius: 12, padding: '12px 20px', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 32px rgba(15,23,42,0.22)', whiteSpace: 'nowrap' }}>
-            <CheckCircle size={15} style={{ color: '#4ADE80' }} />
-            {importToast}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }

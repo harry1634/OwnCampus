@@ -78,12 +78,13 @@ export async function GET(req) {
     if (type === 'issued' || type === 'overdue' || type === 'all') {
       const myOwn = searchParams.get('my') === 'true'
 
+      // Step 1: fetch book_issues + books join only (avoid FK ambiguity on user_profiles
+      // because book_issues has two FKs to user_profiles: user_id and issued_by)
       let q = admin
         .from('book_issues')
         .select(`
-          id, issued_date, due_date, returned_date, fine_amount, fine_paid, status, created_at,
-          books ( id, title, author, isbn, category, rack_number ),
-          user_profiles!book_issues_user_id_fkey ( first_name, last_name, email, role )
+          id, issued_date, due_date, returned_date, fine_amount, fine_paid, status, created_at, user_id,
+          books ( id, title, author, isbn, category, rack_number )
         `)
         .order('created_at', { ascending: false })
         .limit(limit)
@@ -97,14 +98,25 @@ export async function GET(req) {
       }
 
       if (institutionId) q = q.eq('institution_id', institutionId)
-      if (search) q = q.or(`books.title.ilike.%${search}%,user_profiles.first_name.ilike.%${search}%`)
+      if (search) q = q.ilike('books.title', `%${search}%`)
 
       const { data, error } = await q
       if (error) return Response.json({ error: error.message }, { status: 400 })
 
+      // Step 2: batch-fetch user profiles for all borrower IDs
+      const userIds = [...new Set((data || []).map(i => i.user_id).filter(Boolean))]
+      let userMap = {}
+      if (userIds.length > 0) {
+        const { data: users } = await admin
+          .from('user_profiles')
+          .select('id, first_name, last_name, email, role')
+          .in('id', userIds)
+        ;(users || []).forEach(u => { userMap[u.id] = u })
+      }
+
       const issues = (data || []).map(i => {
-        const up   = i.user_profiles || {}
-        const bk   = i.books         || {}
+        const up   = userMap[i.user_id] || {}
+        const bk   = i.books            || {}
         const fine = i.fine_amount > 0 ? Number(i.fine_amount) : calcFine(i.due_date)
 
         return {

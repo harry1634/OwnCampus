@@ -43,14 +43,22 @@ export default function StudentLibrary() {
   const [loading, setLoading] = useState(true)
   const [issues,  setIssues ] = useState([])
 
-  useEffect(() => {
-    if (!cu.mounted) return
+  const fetchIssues = () => {
     setLoading(true)
     fetch('/api/library?type=issued&my=true')
       .then(r => r.json())
       .then(data => setIssues(Array.isArray(data.issues) ? data.issues : []))
       .catch(() => setIssues([]))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    if (!cu.mounted) return
+    fetchIssues()
+
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchIssues() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [cu.mounted])
 
   if (!cu.mounted) return null
