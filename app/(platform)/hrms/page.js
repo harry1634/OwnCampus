@@ -13,10 +13,24 @@ const leaveStatusConfig = {
   rejected: { label: 'Rejected', color: '#DC2626', bg: '#FEF2F2', icon: XCircle      },
 }
 
-const typeColors = {
-  'Casual Leave': { color: '#2563EB', bg: '#EFF6FF' },
-  'Sick Leave':   { color: '#0891B2', bg: '#ECFEFF' },
-  'Earned Leave': { color: '#D97706', bg: '#FFFBEB' },
+const LEAVE_TYPE_MAP = {
+  sick: { label: 'Sick Leave',       color: '#0891B2', bg: '#ECFEFF' },
+  casual: { label: 'Casual Leave',   color: '#2563EB', bg: '#EFF6FF' },
+  earned: { label: 'Earned Leave',   color: '#D97706', bg: '#FFFBEB' },
+  personal: { label: 'Personal',     color: '#7C3AED', bg: '#F5F3FF' },
+  emergency: { label: 'Emergency',   color: '#DC2626', bg: '#FEF2F2' },
+  maternity: { label: 'Maternity',   color: '#059669', bg: '#ECFDF5' },
+  family: { label: 'Family',         color: '#0891B2', bg: '#ECFEFF' },
+  other: { label: 'Other',           color: '#64748B', bg: '#F8FAFC' },
+}
+const getTypeConf = (t) => LEAVE_TYPE_MAP[t] || LEAVE_TYPE_MAP[(t||'').toLowerCase()] || { label: t || 'Leave', color: '#64748B', bg: '#F8FAFC' }
+
+const ROLE_BADGE = {
+  faculty:  { label: 'Faculty',  color: '#059669', bg: '#ECFDF5' },
+  teacher:  { label: 'Faculty',  color: '#059669', bg: '#ECFDF5' },
+  hod:      { label: 'HOD',      color: '#7C3AED', bg: '#F5F3FF' },
+  student:  { label: 'Student',  color: '#2563EB', bg: '#EFF6FF' },
+  principal: { label: 'Principal', color: '#1E40AF', bg: '#DBEAFE' },
 }
 
 const payrollStatusStyle = {
@@ -28,117 +42,6 @@ const AVATAR_COLORS = ['#2563EB','#7C3AED','#0891B2','#16A34A','#D97706','#DB277
 const getInits = (name) => (name || '').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 const pickClr  = (i) => AVATAR_COLORS[i % AVATAR_COLORS.length]
 
-// ── Apply Leave Modal ─────────────────────────────────────────────────────────
-function ApplyLeaveModal({ onClose, onAdd, employees }) {
-  const [form, setForm] = useState({ name: '', type: 'Casual Leave', from: '', to: '', reason: '' })
-  const [submitting, setSubmitting] = useState(false)
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
-
-  const handleSubmit = async () => {
-    if (!form.name || !form.from || !form.to || submitting) return
-    const fromD = new Date(form.from), toD = new Date(form.to)
-    const days = Math.max(1, Math.round((toD - fromD) / 86400000) + 1)
-    const idx = employees.findIndex(e => e.name === form.name)
-
-    setSubmitting(true)
-    try {
-      const emp = employees[idx] || {}
-      const res = await fetch('/api/hrms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type:        'leave',
-          leave_type:  form.type,
-          start_date:  form.from,
-          end_date:    form.to,
-          days_count:  days,
-          reason:      form.reason,
-          user_id:     emp.supabaseId || emp.userId || null,
-        }),
-      })
-      const json = await res.json()
-      if (res.ok && json.success) {
-        onAdd({
-          id:       json.leave?.id || Date.now(),
-          initials: getInits(form.name),
-          color:    pickClr(idx >= 0 ? idx : Math.random() * 6 | 0),
-          name:     form.name,
-          type:     form.type,
-          from:     fromD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
-          to:       toD.toLocaleDateString('en-IN',   { day: 'numeric', month: 'short' }),
-          rawFrom:  form.from,
-          rawTo:    form.to,
-          days,
-          reason:   form.reason,
-          status:   'pending',
-          fromApi:  true,
-        })
-        toast.success('Leave request submitted!')
-        onClose()
-      } else {
-        toast.error(json.error || 'Failed to submit leave request')
-      }
-    } catch (err) {
-      toast.error(err.message || 'Failed to submit leave request')
-    } finally { setSubmitting(false) }
-  }
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', padding: 'calc(var(--header-height) + 24px) 24px 40px' }}
-      onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        onClick={e => e.stopPropagation()}
-        style={{ background: '#FFFFFF', borderRadius: 18, width: '100%', maxWidth: 460, boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflowX: 'hidden', overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 64px)' }}>
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #F1F5F9' }}>
-          <p style={{ fontSize: 15, fontWeight: 700, color: '#0F172A' }}>Apply Leave</p>
-          <p style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>Submit a leave request</p>
-        </div>
-        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>Employee *</label>
-            {employees.length > 0 ? (
-              <select className="input-premium" style={{ width: '100%' }} value={form.name} onChange={set('name')}>
-                <option value="">Select employee…</option>
-                {employees.map(e => <option key={e.id || e.name} value={e.name}>{e.name}</option>)}
-              </select>
-            ) : (
-              <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="Employee name" value={form.name} onChange={set('name')} />
-            )}
-          </div>
-          <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>Leave Type</label>
-            <select className="input-premium" style={{ width: '100%' }} value={form.type} onChange={set('type')}>
-              {Object.keys(typeColors).map(t => <option key={t}>{t}</option>)}
-            </select>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>From *</label>
-              <input type="date" className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} value={form.from} onChange={set('from')} />
-            </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>To *</label>
-              <input type="date" className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} value={form.to} onChange={set('to')} />
-            </div>
-          </div>
-          <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 5 }}>Reason</label>
-            <input className="input-premium" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="Brief reason…" value={form.reason} onChange={set('reason')} />
-          </div>
-        </div>
-        <div style={{ padding: '14px 20px', borderTop: '1px solid #F1F5F9', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 9, border: '1px solid #E2E8F0', background: '#FFFFFF', fontSize: 13, color: '#475569', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleSubmit}
-            style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: '#2563EB', color: '#FFFFFF', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-            Submit Request
-          </motion.button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function HRMSPage() {
   const [employees,    setEmployees   ] = useState([])
@@ -146,9 +49,9 @@ export default function HRMSPage() {
 
   const [activeTab,    setActiveTab   ] = useState('leave')
   const [leaves,       setLeaves      ] = useState([])
+  const [leaveFilter,  setLeaveFilter ] = useState('all')
   const [mounted,      setMounted     ] = useState(false)
-  const [showLeaveModal, setShowLeaveModal] = useState(false)
-  const [viewReason,    setViewReason    ] = useState(null)
+  const [viewReason,   setViewReason  ] = useState(null)
 
   const cycle = new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 
@@ -202,9 +105,7 @@ export default function HRMSPage() {
 
   const pendingCount  = leaves.filter(l => l.status === 'pending').length
   const approvedToday = leaves.filter(l => l.status === 'approved').length
-
-  // For leave modal — use employees list directly
-  const allPeople = employees.map(e => ({ id: e.id, supabaseId: e.supabaseId, name: e.name }))
+  const filteredLeaves = leaveFilter === 'all' ? leaves : leaves.filter(l => l.status === leaveFilter)
 
   if (!mounted) return null
 
@@ -301,47 +202,73 @@ export default function HRMSPage() {
 
           {/* Leave Requests Card */}
           <div className="lg:col-span-2" style={{ background: '#FFFFFF', border: '1px solid #E8ECF0', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>Leave Requests</p>
-              <motion.button whileHover={{ scale: 1.02 }} onClick={() => setShowLeaveModal(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                <Plus size={12} /> Apply Leave
-              </motion.button>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Leave Requests</p>
+                  <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{pendingCount} pending approval</p>
+                </div>
+                {pendingCount > 0 && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: '#FFFBEB', color: '#D97706', border: '1px solid #FDE68A' }}>
+                    <Clock size={10} /> {pendingCount} Pending
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 4, background: '#F8FAFC', borderRadius: 9, padding: 3 }}>
+                {[
+                  { key: 'all',      label: `All (${leaves.length})` },
+                  { key: 'pending',  label: `Pending (${leaves.filter(l=>l.status==='pending').length})` },
+                  { key: 'approved', label: `Approved (${leaves.filter(l=>l.status==='approved').length})` },
+                  { key: 'rejected', label: `Rejected (${leaves.filter(l=>l.status==='rejected').length})` },
+                ].map(f => (
+                  <button key={f.key} onClick={() => setLeaveFilter(f.key)}
+                    style={{ flex: 1, padding: '5px 8px', borderRadius: 7, border: 'none', fontSize: 11, fontWeight: leaveFilter === f.key ? 700 : 500, cursor: 'pointer', background: leaveFilter === f.key ? '#FFFFFF' : 'transparent', color: leaveFilter === f.key ? '#0F172A' : '#64748B', boxShadow: leaveFilter === f.key ? '0 1px 3px rgba(0,0,0,0.10)' : 'none', transition: 'all 0.15s', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {leaves.length === 0 ? (
+            {filteredLeaves.length === 0 ? (
               <div style={{ padding: '48px 20px', textAlign: 'center' }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#64748B', margin: 0 }}>No leave requests yet</p>
-                <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 6 }}>Click "Apply Leave" to submit a leave request.</p>
+                <Calendar size={32} style={{ color: '#E2E8F0', margin: '0 auto 10px', display: 'block' }} />
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#64748B', margin: 0 }}>
+                  {leaveFilter === 'all' ? 'No leave requests yet' : `No ${leaveFilter} requests`}
+                </p>
+                <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Faculty and students submit requests from their portals.</p>
               </div>
             ) : (
               <div>
-                {leaves.map((req, i) => {
-                  const status = leaveStatusConfig[req.status]
+                {filteredLeaves.map((req, i) => {
+                  const status  = leaveStatusConfig[req.status] || leaveStatusConfig.pending
                   const StatusIcon = status.icon
-                  const tc = typeColors[req.type] || { color: '#64748B', bg: '#F8FAFC' }
+                  const tc      = getTypeConf(req.type)
+                  const roleBadge = ROLE_BADGE[req.role] || { label: req.role || 'Staff', color: '#64748B', bg: '#F8FAFC' }
                   return (
-                    <motion.div key={req.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}
-                      style={{ padding: '14px 20px', borderBottom: i < leaves.length - 1 ? '1px solid #F8FAFC' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}
+                    <motion.div key={req.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
+                      style={{ padding: '14px 20px', borderBottom: i < filteredLeaves.length - 1 ? '1px solid #F8FAFC' : 'none', display: 'flex', alignItems: 'flex-start', gap: 12 }}
                       onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
                       onMouseLeave={e => e.currentTarget.style.background = ''}>
-                      <div style={{ width: 38, height: 38, borderRadius: '50%', background: req.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#FFFFFF', flexShrink: 0 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: '50%', background: req.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#FFFFFF', flexShrink: 0, marginTop: 1 }}>
                         {req.initials}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 3 }}>{req.name}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 4 }}>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', margin: 0 }}>{req.name}</p>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 99, background: roleBadge.bg, color: roleBadge.color }}>{roleBadge.label}</span>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 99, background: tc.bg, color: tc.color }}>{tc.label}</span>
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: tc.bg, color: tc.color }}>{req.type}</span>
-                          <span style={{ fontSize: 11, color: '#94A3B8' }}>{req.from} – {req.to} ({req.days}d)</span>
+                          <span style={{ fontSize: 11, color: '#64748B' }}>{req.from} – {req.to} · {req.days}d</span>
                           {req.reason && (
                             <>
                               <span style={{ fontSize: 11, color: '#CBD5E1' }}>·</span>
-                              <span style={{ fontSize: 11, color: '#94A3B8', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {req.reason.length > 32 ? req.reason.slice(0, 32) + '…' : req.reason}
+                              <span style={{ fontSize: 11, color: '#94A3B8', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {req.reason.length > 40 ? req.reason.slice(0, 40) + '…' : req.reason}
                               </span>
-                              {req.reason.length > 32 && (
+                              {req.reason.length > 40 && (
                                 <button onClick={() => setViewReason(req)}
-                                  style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 6, background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', cursor: 'pointer', flexShrink: 0 }}>
+                                  style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', cursor: 'pointer', flexShrink: 0 }}>
                                   View
                                 </button>
                               )}
@@ -353,20 +280,18 @@ export default function HRMSPage() {
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: status.bg, color: status.color }}>
                           <StatusIcon size={10} /> {status.label}
                         </span>
-                        <div style={{ display: 'flex', gap: 5 }}>
-                          {req.status !== 'approved' && (
+                        {req.status === 'pending' && (
+                          <div style={{ display: 'flex', gap: 5 }}>
                             <button onClick={() => setLeaveStatus(req.id, 'approved')}
-                              style={{ fontSize: 11, padding: '3px 10px', borderRadius: 7, background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', cursor: 'pointer', fontWeight: 600 }}>
+                              style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', cursor: 'pointer', fontWeight: 600 }}>
                               Approve
                             </button>
-                          )}
-                          {req.status !== 'rejected' && (
                             <button onClick={() => setLeaveStatus(req.id, 'rejected')}
-                              style={{ fontSize: 11, padding: '3px 10px', borderRadius: 7, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', cursor: 'pointer', fontWeight: 600 }}>
+                              style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', cursor: 'pointer', fontWeight: 600 }}>
                               Reject
                             </button>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )
@@ -401,14 +326,15 @@ export default function HRMSPage() {
             {/* Leave type breakdown */}
             <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 1px 4px rgba(15,23,42,0.05)', padding: '18px 20px' }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 16 }}>By Leave Type</p>
-              {Object.keys(typeColors).map(type => {
-                const count = leaves.filter(l => l.type === type).length
+              {Object.keys(LEAVE_TYPE_MAP).map(typeKey => {
+                const count = leaves.filter(l => (l.type||'').toLowerCase() === typeKey).length
+                if (count === 0) return null
                 const total = Math.max(leaves.length, 1)
-                const tc = typeColors[type]
+                const tc = LEAVE_TYPE_MAP[typeKey]
                 return (
-                  <div key={type} style={{ marginBottom: 12 }}>
+                  <div key={typeKey} style={{ marginBottom: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <span style={{ fontSize: 12, color: '#475569', fontWeight: 500 }}>{type}</span>
+                      <span style={{ fontSize: 12, color: '#475569', fontWeight: 500 }}>{tc.label}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: '#0F172A' }}>{count}</span>
                     </div>
                     <div style={{ height: 6, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
@@ -572,13 +498,6 @@ export default function HRMSPage() {
         </motion.div>
       )}
 
-      {showLeaveModal && (
-        <ApplyLeaveModal
-          onClose={() => setShowLeaveModal(false)}
-          onAdd={(req) => setLeaves(prev => [req, ...prev])}
-          employees={allPeople}
-        />
-      )}
     </div>
   )
 }

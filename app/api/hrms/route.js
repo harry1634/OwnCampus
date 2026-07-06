@@ -122,36 +122,47 @@ export async function GET(req) {
     }
 
     if (type === 'leaves') {
+      // Step 1: fetch leaves without FK joins (two FKs to user_profiles causes ambiguity)
       let q = admin
         .from('leaves')
-        .select(`
-          id, leave_type, start_date, end_date, days_count, reason, status,
-          approved_at, rejection_reason, created_at,
-          user:user_id ( id, first_name, last_name, email, role, phone )
-        `)
+        .select('id, leave_type, start_date, end_date, days_count, reason, status, approved_at, rejection_reason, created_at, user_id')
         .order('created_at', { ascending: false })
       if (institutionId) q = q.eq('institution_id', institutionId)
 
-      const { data, error } = await q
+      const { data: leavesRaw, error } = await q
       if (error) return Response.json({ error: error.message }, { status: 400 })
 
-      const leaves = (data || []).map(l => ({
-        id:               l.id,
-        name:             l.user ? [l.user.first_name, l.user.last_name].filter(Boolean).join(' ') : '—',
-        email:            l.user?.email || '',
-        role:             l.user?.role  || '',
-        type:             l.leave_type,
-        from:             l.start_date ? new Date(l.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '',
-        to:               l.end_date   ? new Date(l.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '',
-        rawFrom:          l.start_date || '',
-        rawTo:            l.end_date   || '',
-        days:             l.days_count || 1,
-        reason:           l.reason || '',
-        status:           l.status || 'pending',
-        rejectionReason:  l.rejection_reason || '',
-        createdAt:        l.created_at,
-        userId:           l.user?.id || null,
-      }))
+      // Step 2: fetch user profiles for all user_ids in one query
+      const userIds = [...new Set((leavesRaw || []).map(l => l.user_id).filter(Boolean))]
+      let userMap = {}
+      if (userIds.length > 0) {
+        const { data: users } = await admin
+          .from('user_profiles')
+          .select('id, first_name, last_name, email, role, phone')
+          .in('id', userIds)
+        ;(users || []).forEach(u => { userMap[u.id] = u })
+      }
+
+      const leaves = (leavesRaw || []).map(l => {
+        const u = userMap[l.user_id] || {}
+        return {
+          id:              l.id,
+          name:            [u.first_name, u.last_name].filter(Boolean).join(' ') || '—',
+          email:           u.email || '',
+          role:            u.role  || '',
+          type:            l.leave_type,
+          from:            l.start_date ? new Date(l.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '',
+          to:              l.end_date   ? new Date(l.end_date).toLocaleDateString('en-IN',   { day: 'numeric', month: 'short' }) : '',
+          rawFrom:         l.start_date || '',
+          rawTo:           l.end_date   || '',
+          days:            l.days_count || 1,
+          reason:          l.reason || '',
+          status:          l.status || 'pending',
+          rejectionReason: l.rejection_reason || '',
+          createdAt:       l.created_at,
+          userId:          l.user_id || null,
+        }
+      })
 
       return Response.json({ leaves })
     }
