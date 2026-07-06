@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2, Shield, User, Trash2,
   Save, Check, Upload, ChevronRight, Lock,
-  Globe, Phone, Mail, MapPin, Hash, Calendar, Copy, X, Layers,
+  Globe, Phone, Mail, MapPin, Hash, Calendar, Copy, X, Layers, Bell,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -189,7 +189,7 @@ export default function SettingsPage() {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const uploadRes = await fetch('/api/upload/photo', { method: 'POST', body: fd })
+      const uploadRes = await fetch('/api/upload/logo', { method: 'POST', body: fd })
       const uploadJson = await uploadRes.json()
       if (!uploadRes.ok) throw new Error(uploadJson.error || 'Upload failed')
       // Save via API so it bypasses client-side RLS

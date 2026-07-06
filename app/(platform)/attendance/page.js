@@ -144,6 +144,7 @@ function AttendanceRow({ person, index, status, onToggle, subLabel }) {
 export default function AttendancePage() {
   const [allStudents, setAllStudents] = useState([])
   const [allFaculty,  setAllFaculty ] = useState([])
+  const [dbClasses,   setDbClasses  ] = useState([])
   // Per-date attendance maps — survive tab navigation within this session
   const [studentAttByDate, setStudentAttByDate] = useState({})
   const [facultyAttByDate, setFacultyAttByDate] = useState({})
@@ -159,10 +160,10 @@ export default function AttendancePage() {
 
   /* ── Student state ── */
   const classes = useMemo(() => {
-    const from = [...new Set(allStudents.map(s => s.class).filter(Boolean))].sort()
-    return from.length ? from : ['10-A','10-B','9-A','9-B','11-A','12-A']
-  }, [allStudents])
-  const [selectedClass,      setSelectedClass     ] = useState(() => classes[0] || '10-A')
+    const fromStudents = allStudents.map(s => s.class).filter(Boolean)
+    return [...new Set([...dbClasses, ...fromStudents])].sort()
+  }, [allStudents, dbClasses])
+  const [selectedClass,      setSelectedClass     ] = useState('')
   const currentClass = classes.includes(selectedClass) ? selectedClass : (classes[0] || '')
 
   /* ── Faculty state ── */
@@ -186,10 +187,11 @@ export default function AttendancePage() {
     if (Array.isArray(faculty)) setAllFaculty(faculty)
   }, [])
 
-  // Load students and faculty from API on mount.
+  // Load students, faculty, and classes from API on mount.
   useEffect(() => {
     fetch('/api/students').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setAllStudents(d) }).catch(() => {})
     fetch('/api/faculty').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setAllFaculty(d) }).catch(() => {})
+    fetch('/api/classes').then(r => r.ok ? r.json() : {}).then(d => setDbClasses((d.classes || []).map(c => c.name))).catch(() => {})
   }, [])
 
   // Load saved attendance from DB whenever date or tab changes

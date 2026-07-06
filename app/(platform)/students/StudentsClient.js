@@ -465,6 +465,7 @@ export default function StudentsClient() {
   const [page,             setPage            ] = useState(1)
   const [importResult,     setImportResult    ] = useState(null)
   const [branches,         setBranches        ] = useState([])
+  const [classList,        setClassList       ] = useState([])
   const [transferStudent,  setTransferStudent ] = useState(null)
   const [transferBranchId, setTransferBranchId] = useState('')
   const [transferring,     setTransferring    ] = useState(false)
@@ -488,6 +489,7 @@ export default function StudentsClient() {
       .finally(() => setLoading(false))
 
     fetch('/api/branches').then(r => r.json()).then(d => setBranches(d.branches || [])).catch(() => {})
+    fetch('/api/classes').then(r => r.json()).then(d => setClassList((d.classes || []).map(c => c.name))).catch(() => {})
   }, [])
 
   async function handleTransfer(e) {
@@ -846,7 +848,7 @@ export default function StudentsClient() {
             <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)}
               className="input-premium" style={{ width: 'auto', minWidth: 120, fontSize: 12, padding: '6px 10px' }}>
               <option value="all">All Classes</option>
-              {['9-A','9-B','10-A','10-B','11-A','11-B','12-A','12-B'].map(c => <option key={c} value={c}>{c}</option>)}
+              {[...new Set([...classList, ...students.map(s => s.class).filter(Boolean)])].sort().map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <select value={selectedFee} onChange={e => setSelectedFee(e.target.value)}
               className="input-premium" style={{ width: 'auto', minWidth: 140, fontSize: 12, padding: '6px 10px' }}>
