@@ -112,7 +112,7 @@ function RoleCard({ role, index, onClick }) {
         border: `1.5px solid ${hovered ? role.color + '35' : '#E8EDF4'}`,
         cursor: 'pointer', textAlign: 'left', width: '100%',
         boxShadow: hovered
-          ? `inset 3px 0 0 ${role.color}, 0 12px 36px ${role.color}18, 0 2px 8px rgba(15,23,42,0.06)`
+          ? `0 12px 36px ${role.color}18, 0 2px 8px rgba(15,23,42,0.06)`
           : '0 1px 4px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.03)',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         transition: 'all 0.22s cubic-bezier(0.22,1,0.36,1)',
@@ -510,13 +510,13 @@ export default function LoginPage() {
       {/* ════════════════ RIGHT PANEL ════════════════ */}
       <div className="lp-right" style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: isDesktop ? 'flex-start' : 'center',
+        justifyContent: 'flex-start',
         background: '#FFFFFF',
         padding: isDesktop ? '48px 24px 40px' : '0 24px 40px', boxSizing: 'border-box',
       }}>
 
         {/* ── Mobile / tablet hero (hidden on desktop) ── */}
-        {!isDesktop && <div style={{
+        {!isDesktop && <div className="lg:hidden" style={{
           padding: '48px 24px 44px', display: 'flex', flexDirection: 'column',
           alignItems: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0,
           background: '#1E3A8A',

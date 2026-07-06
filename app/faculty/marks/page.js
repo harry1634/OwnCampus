@@ -48,29 +48,14 @@ export default function FacultyMarks() {
   useEffect(() => {
     if (!cu.mounted) return
 
-    // Load timetable snapshot from DB to determine which classes/subjects this faculty teaches
-    fetch('/api/timetable/snapshot')
+    // Load classes directly from timetable_slots by faculty user ID (no name-matching)
+    fetch('/api/faculty/classes')
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        const tt = d?.snapshot || {}
-        const grades = tt.grades || []
-        const classes = []
+        const rows = d?.classes || []
+        const classes = rows.map(r => r.name)
         const subjectMap = {}
-        const myNameLower = myName.toLowerCase().trim()
-        grades.forEach(g => {
-          const rows = tt.cellTeachers?.[g] || []
-          const mySubjects = new Set()
-          rows.forEach((row, ti) => {
-            row.forEach((t, di) => {
-              if ((t||'').toLowerCase().trim() === myNameLower) {
-                const subj = tt.schedules?.[g]?.[ti]?.[di] || ''
-                if (subj) mySubjects.add(subj)
-              }
-            })
-          })
-          const assignedHere = rows.some(row => row.some(t => (t||'').toLowerCase().trim() === myNameLower))
-          if (assignedHere) { classes.push(g); subjectMap[g] = mySubjects }
-        })
+        rows.forEach(r => { subjectMap[r.name] = new Set(r.subjects) })
         setMyClasses(classes)
         setMySubjectMap(subjectMap)
         if (classes.length > 0) {
@@ -90,7 +75,7 @@ export default function FacultyMarks() {
       })
       .catch(() => {})
       .finally(() => { setLoading(false); setMounted(true) })
-  }, [cu.mounted, myName])
+  }, [cu.mounted])
 
   // Load saved marks from DB whenever class/exam/subject changes (DB is the only source of truth)
   useEffect(() => {

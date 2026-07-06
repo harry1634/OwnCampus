@@ -62,7 +62,7 @@ export async function GET(req) {
       // Find submitted ids for this student
       const { data: subs } = await admin
         .from('homework_submissions')
-        .select('homework_id, status, submitted_at')
+        .select('homework_id, status, submitted_at, file_url, file_name')
         .eq('student_id', stu.id)
       const submittedMap = Object.fromEntries((subs || []).map(s => [s.homework_id, s]))
 
@@ -80,9 +80,11 @@ export async function GET(req) {
         class_name:   h.classes ? `${h.classes.name}${h.classes.section ? '-' + h.classes.section : ''}` : null,
         faculty_name: h.faculty ? [h.faculty.first_name, h.faculty.last_name].filter(Boolean).join(' ') : null,
         created_at:   h.created_at,
-        submitted:    !!submittedMap[h.id],
-        submission_status: submittedMap[h.id]?.status || null,
-        submitted_at: submittedMap[h.id]?.submitted_at || null,
+        submitted:         !!submittedMap[h.id],
+        submission_status: submittedMap[h.id]?.status     || null,
+        submitted_at:      submittedMap[h.id]?.submitted_at || null,
+        file_url:          submittedMap[h.id]?.file_url   || null,
+        file_name:         submittedMap[h.id]?.file_name  || null,
         is_overdue:   h.due_date && new Date(h.due_date) < new Date(),
       }))
 
@@ -217,7 +219,9 @@ export async function PATCH(req) {
           student_id:     stu.id,
           institution_id: hw?.institution_id || caller.institution_id,
           status:         isLate ? 'late' : 'submitted',
-          notes:          body.notes || null,
+          notes:          body.notes    || null,
+          file_url:       body.file_url || null,
+          file_name:      body.file_name || null,
           submitted_at:   new Date().toISOString(),
         }, { onConflict: 'homework_id,student_id' })
 
