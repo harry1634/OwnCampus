@@ -22,6 +22,7 @@ export async function GET(req) {
       .eq('id', user.id)
       .single()
     const institutionId = callerProfile?.institution_id || null
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
 
     // ── PRIMARY: students table (no PostgREST join for user_profiles — FK goes through auth.users) ──
     const page     = Math.max(1, parseInt(searchParams.get('page')  || '1'))

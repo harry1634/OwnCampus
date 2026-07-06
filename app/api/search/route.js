@@ -269,24 +269,31 @@ export async function GET(req) {
     }
 
     // ── 2g. hostel rooms ──────────────────────────────────────────────────────
-    if (type === 'all') {
-      const { data: hrRows } = await admin
-        .from('hostel_rooms')
-        .select('id, room_number, floor, capacity, hostel_buildings(name, institution_id)')
-        .ilike('room_number', `%${q}%`)
-        .limit(3)
+    if (type === 'all' && institutionId) {
+      // Two-step: get building IDs for this institution, then filter rooms
+      const { data: bldgs } = await admin
+        .from('hostel_buildings').select('id, name').eq('institution_id', institutionId)
+      const bldgMap = Object.fromEntries((bldgs || []).map(b => [b.id, b.name]))
+      const bldgIds = Object.keys(bldgMap)
 
-      ;(hrRows || [])
-        .filter(r => !institutionId || r.hostel_buildings?.institution_id === institutionId)
-        .forEach(r => results.push({
+      if (bldgIds.length > 0) {
+        const { data: hrRows } = await admin
+          .from('hostel_rooms')
+          .select('id, room_number, floor, capacity, building_id')
+          .in('building_id', bldgIds)
+          .ilike('room_number', `%${q}%`)
+          .limit(3)
+
+        ;(hrRows || []).forEach(r => results.push({
           type:     'hostel_room',
           id:       r.id,
-          title:    `${r.hostel_buildings?.name || 'Hostel'} – ${r.room_number}`,
+          title:    `${bldgMap[r.building_id] || 'Hostel'} – ${r.room_number}`,
           subtitle: `Floor ${r.floor || 0} · Capacity ${r.capacity || '?'}`,
           meta:     '',
           href:     '/hostel',
           icon:     'hostel_room',
         }))
+      }
     }
 
     // ── 2h. announcements ─────────────────────────────────────────────────────

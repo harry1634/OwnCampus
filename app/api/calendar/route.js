@@ -140,12 +140,20 @@ export async function PATCH(req) {
     if (!id) return Response.json({ error: 'id is required' }, { status: 400 })
 
     const admin = createAdminClient()
+    const { data: profile } = await admin
+      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    const institutionId = profile?.institution_id || null
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
+
     const allowed = ['title','description','event_type','start_date','end_date','start_time','end_time','all_day','color','target_roles','room_id']
     const patch   = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)))
 
     const { data, error } = await admin
-      .from('calendar_events').update(patch).eq('id', id).select().single()
+      .from('calendar_events').update(patch)
+      .eq('id', id).eq('institution_id', institutionId)
+      .select().single()
     if (error) return Response.json({ error: error.message }, { status: 400 })
+    if (!data) return Response.json({ error: 'Event not found or not in your institution.' }, { status: 404 })
     return Response.json({ success: true, event: data })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
@@ -163,10 +171,16 @@ export async function DELETE(req) {
     if (!id) return Response.json({ error: 'id is required' }, { status: 400 })
 
     const admin = createAdminClient()
+    const { data: profile } = await admin
+      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    const institutionId = profile?.institution_id || null
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
+
     const { error } = await admin
       .from('calendar_events')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
+      .eq('institution_id', institutionId)
 
     if (error) return Response.json({ error: error.message }, { status: 400 })
     return Response.json({ success: true })

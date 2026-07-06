@@ -1,6 +1,6 @@
 import { createAdminClient }                                    from '@/lib/supabase/admin'
 import { createClient }                                        from '@/lib/supabase/server'
-import { checkLibraryBookLimit, limitExceededResponse }        from '@/lib/licenseEngine'
+import { checkLibraryBookLimit, limitExceededResponse, isModuleEnabled } from '@/lib/licenseEngine'
 
 // GET  /api/library?type=catalog|issued|overdue&q=...&category=...
 // POST /api/library  { action: 'add_book'|'issue'|'return' }
@@ -156,6 +156,11 @@ export async function POST(req) {
 
     const admin         = createAdminClient()
     const institutionId = await getInstitutionId(admin, user.id)
+
+    if (institutionId && !(await isModuleEnabled(institutionId, 'library'))) {
+      return Response.json({ error: 'Library module is not enabled for your institution.' }, { status: 403 })
+    }
+
     const body          = await req.json()
     const { action }    = body
 

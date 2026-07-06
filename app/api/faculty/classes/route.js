@@ -14,11 +14,17 @@ export async function GET() {
 
     const admin = createAdminClient()
 
+    const { data: profile } = await admin
+      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    const institutionId = profile?.institution_id || null
+
     // Fetch all timetable slots assigned to this faculty user
-    const { data: slots, error } = await admin
+    let slotsQuery = admin
       .from('timetable_slots')
       .select('class_id, subjects(name), classes(id, name, section)')
       .eq('faculty_user_id', user.id)
+    if (institutionId) slotsQuery = slotsQuery.eq('institution_id', institutionId)
+    const { data: slots, error } = await slotsQuery
 
     if (error) return Response.json({ error: error.message }, { status: 400 })
 

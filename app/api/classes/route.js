@@ -14,9 +14,10 @@ export async function GET() {
     const { data: profile } = await admin
       .from('user_profiles').select('institution_id').eq('id', user.id).single()
     const institutionId = profile?.institution_id || null
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
 
-    let q = admin.from('classes').select('id, name, section').order('name').order('section')
-    if (institutionId) q = q.eq('institution_id', institutionId)
+    const q = admin.from('classes').select('id, name, section')
+      .eq('institution_id', institutionId).order('name').order('section')
 
     const { data, error } = await q
     if (error) return Response.json({ error: error.message }, { status: 400 })

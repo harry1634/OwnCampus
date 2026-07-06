@@ -1,6 +1,6 @@
 import { createAdminClient }                                    from '@/lib/supabase/admin'
 import { createClient }                                        from '@/lib/supabase/server'
-import { checkHostelRoomLimit, limitExceededResponse }         from '@/lib/licenseEngine'
+import { checkHostelRoomLimit, limitExceededResponse, isModuleEnabled } from '@/lib/licenseEngine'
 
 export const dynamic = 'force-dynamic'
 
@@ -115,6 +115,10 @@ export async function POST(req) {
     const admin = createAdminClient()
     const institutionId = await getInstitutionId(admin, user.id)
 
+    if (institutionId && !(await isModuleEnabled(institutionId, 'hostel'))) {
+      return Response.json({ error: 'Hostel module is not enabled for your institution.' }, { status: 403 })
+    }
+
     const numFloors   = Math.max(1, parseInt(floors)     || 1)
     const numRooms    = Math.max(0, parseInt(totalRooms) || 0)
     const numBeds     = Math.max(0, parseInt(totalBeds)  || 0)
@@ -220,12 +224,18 @@ export async function PATCH(req) {
     if (!id) return Response.json({ error: 'id is required' }, { status: 400 })
 
     const admin = createAdminClient()
+    const institutionId = await getInstitutionId(admin, user.id)
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
+
     const allowed = ['name', 'type', 'address', 'total_rooms', 'warden_id']
     const patch   = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)))
     if (patch.type) patch.type = patch.type.toLowerCase()
 
-    const { data, error } = await admin.from('hostel_buildings').update(patch).eq('id', id).select().single()
+    const { data, error } = await admin.from('hostel_buildings').update(patch)
+      .eq('id', id).eq('institution_id', institutionId)
+      .select().single()
     if (error) return Response.json({ error: error.message }, { status: 400 })
+    if (!data) return Response.json({ error: 'Building not found or not in your institution.' }, { status: 404 })
     return Response.json({ success: true, building: data })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })

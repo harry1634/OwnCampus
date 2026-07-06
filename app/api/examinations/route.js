@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient }      from '@/lib/supabase/server'
+import { isModuleEnabled }   from '@/lib/licenseEngine'
 
 // GET  /api/examinations?class_id=...&status=upcoming|ongoing|completed
 // POST /api/examinations        → create exam
@@ -97,6 +98,10 @@ export async function POST(req) {
     const { data: profile } = await admin
       .from('user_profiles').select('institution_id').eq('id', user.id).single()
     const institutionId = profile?.institution_id || null
+
+    if (institutionId && !(await isModuleEnabled(institutionId, 'examinations'))) {
+      return Response.json({ error: 'Examinations module is not enabled for your institution.' }, { status: 403 })
+    }
 
     // ── Resolve class_id ──────────────────────────────────────────────────────
     let resolvedClassId = rawClassId || null

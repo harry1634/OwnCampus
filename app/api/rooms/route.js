@@ -169,13 +169,19 @@ export async function PATCH(req) {
     const { id, booking_id, ...updates } = body
 
     const admin = createAdminClient()
+    const { data: profile } = await admin
+      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    const institutionId = profile?.institution_id || null
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
 
     // Patch a booking
     if (booking_id) {
       const bookingAllowed = ['status', 'title', 'notes', 'start_time', 'end_time']
       const patch = Object.fromEntries(Object.entries(updates).filter(([k]) => bookingAllowed.includes(k)))
       const { data, error } = await admin
-        .from('room_bookings').update(patch).eq('id', booking_id).select().single()
+        .from('room_bookings').update(patch)
+        .eq('id', booking_id).eq('institution_id', institutionId)
+        .select().single()
       if (error) return Response.json({ error: error.message }, { status: 400 })
       return Response.json({ success: true, booking: data })
     }
@@ -184,7 +190,9 @@ export async function PATCH(req) {
     const allowed = ['name', 'code', 'type', 'capacity', 'floor', 'building', 'facilities', 'is_active']
     const patch   = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)))
 
-    const { data, error } = await admin.from('rooms').update(patch).eq('id', id).select().single()
+    const { data, error } = await admin.from('rooms').update(patch)
+      .eq('id', id).eq('institution_id', institutionId)
+      .select().single()
     if (error) return Response.json({ error: error.message }, { status: 400 })
     return Response.json({ success: true, room: data })
   } catch (err) {
@@ -201,13 +209,18 @@ export async function DELETE(req) {
     const { searchParams } = new URL(req.url)
     const id        = searchParams.get('id')
     const bookingId = searchParams.get('booking_id')
+
     const admin = createAdminClient()
+    const { data: profile } = await admin
+      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    const institutionId = profile?.institution_id || null
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
 
     if (bookingId) {
       const { error } = await admin
         .from('room_bookings')
         .update({ status: 'cancelled', deleted_at: new Date().toISOString() })
-        .eq('id', bookingId)
+        .eq('id', bookingId).eq('institution_id', institutionId)
       if (error) return Response.json({ error: error.message }, { status: 400 })
       return Response.json({ success: true })
     }
@@ -216,7 +229,7 @@ export async function DELETE(req) {
     const { error } = await admin
       .from('rooms')
       .update({ deleted_at: new Date().toISOString(), is_active: false })
-      .eq('id', id)
+      .eq('id', id).eq('institution_id', institutionId)
 
     if (error) return Response.json({ error: error.message }, { status: 400 })
     return Response.json({ success: true })

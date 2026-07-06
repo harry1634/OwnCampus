@@ -180,36 +180,15 @@ export async function GET(req) {
     if (institutionId) upQuery = upQuery.eq('institution_id', institutionId)
     let { data, error } = await upQuery
 
-    // Layer 2: known faculty roles, no institution filter
-    if (!error && (!data || data.length === 0)) {
+    // Layer 2: any non-student user with institution filter (keep institution scope)
+    if (!error && (!data || data.length === 0) && institutionId) {
       const r2 = await admin
         .from('user_profiles')
         .select(UP_SELECT)
-        .in('role', FACULTY_ROLES)
+        .neq('role', 'student').neq('role', 'super_admin')
+        .eq('institution_id', institutionId)
         .order('created_at', { ascending: false })
       if (!r2.error && r2.data?.length > 0) { data = r2.data; error = null }
-    }
-
-    // Layer 3: any non-student user with institution filter
-    if (!error && (!data || data.length === 0)) {
-      let r3q = admin
-        .from('user_profiles')
-        .select(UP_SELECT)
-        .neq('role', 'student').neq('role', 'super_admin')
-        .order('created_at', { ascending: false })
-      if (institutionId) r3q = r3q.eq('institution_id', institutionId)
-      const r3 = await r3q
-      if (!r3.error && r3.data?.length > 0) { data = r3.data; error = null }
-    }
-
-    // Layer 4: all non-students regardless of institution (absolute last resort)
-    if (!error && (!data || data.length === 0)) {
-      const r4res = await admin
-        .from('user_profiles')
-        .select(UP_SELECT)
-        .neq('role', 'student').neq('role', 'super_admin')
-        .order('created_at', { ascending: false })
-      if (!r4res.error && r4res.data?.length > 0) { data = r4res.data; error = null }
     }
 
     if (error) return Response.json({ error: error.message }, { status: 400 })
@@ -366,13 +345,22 @@ export async function PATCH(req) {
     }
     const institutionId = callerProfile?.institution_id || null
 
+    // Verify target user belongs to the same institution as the caller
+    const { data: targetUser } = await admin
+      .from('user_profiles').select('institution_id').eq('id', supabaseId).single()
+    if (!targetUser) return Response.json({ error: 'Faculty user not found.' }, { status: 404 })
+    if (institutionId && targetUser.institution_id !== institutionId) {
+      return Response.json({ error: 'Forbidden: faculty does not belong to your institution.' }, { status: 403 })
+    }
+
     // Update user_profiles
     const nameParts = (name || '').trim().split(/\s+/)
     const profilePatch = {}
     if (name)  { profilePatch.first_name = nameParts[0]; profilePatch.last_name = nameParts.slice(1).join(' ') || null }
     if (phone) profilePatch.phone = phone
     if (Object.keys(profilePatch).length > 0) {
-      await admin.from('user_profiles').update(profilePatch).eq('id', supabaseId)
+      await admin.from('user_profiles').update(profilePatch)
+        .eq('id', supabaseId).eq('institution_id', institutionId)
     }
 
     // Update faculty row (match by user_id)

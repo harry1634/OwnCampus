@@ -54,10 +54,13 @@ export async function GET(req) {
     }
 
     // ── 2. Fallback: audit_logs table ───────────────────────────────────────────
+    if (!institutionId) return Response.json({ timeline: [], total: 0, source: 'audit_logs' })
+
     const { data: auditData } = await admin
       .from('audit_logs')
       .select('id, action, old_value, new_value, created_at, actor_id')
       .eq('entity_id', entityId)
+      .eq('institution_id', institutionId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 

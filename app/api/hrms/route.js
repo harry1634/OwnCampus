@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient }      from '@/lib/supabase/server'
+import { isModuleEnabled }   from '@/lib/licenseEngine'
 
 // GET  /api/hrms?type=leaves|employees
 // POST /api/hrms  { type: 'leave', leave_type, start_date, end_date, days_count, reason, user_id? }
@@ -183,6 +184,10 @@ export async function POST(req) {
     const caller = await getCallerProfile(admin, user.id)
     const institutionId = caller.institution_id || null
 
+    if (!(await isModuleEnabled(institutionId, 'hrms'))) {
+      return Response.json({ error: 'HRMS module is not enabled for your institution.' }, { status: 403 })
+    }
+
     const body = await req.json()
     const { type, leave_type, start_date, end_date, days_count, reason, user_id } = body
 
@@ -192,6 +197,16 @@ export async function POST(req) {
     }
 
     const targetUserId = user_id || user.id
+
+    // If targeting another user, verify they belong to the same institution
+    if (user_id && user_id !== user.id) {
+      const { data: targetProfile } = await admin
+        .from('user_profiles').select('institution_id').eq('id', user_id).single()
+      if (!targetProfile) return Response.json({ error: 'Target user not found.' }, { status: 404 })
+      if (institutionId && targetProfile.institution_id !== institutionId) {
+        return Response.json({ error: 'Forbidden: target user does not belong to your institution.' }, { status: 403 })
+      }
+    }
 
     const { data, error } = await admin.from('leaves').insert({
       institution_id: institutionId,

@@ -1,5 +1,6 @@
 import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isModuleEnabled }   from '@/lib/licenseEngine'
 
 const ADMIN_ROLES = new Set([
   'owner','super_admin','principal','vice_principal','academic_coordinator',
@@ -46,6 +47,10 @@ export async function POST(req) {
 
     if (!ADMIN_ROLES.has(profile.role)) {
       return Response.json({ error: 'Only admin/faculty can create courses.' }, { status: 403 })
+    }
+
+    if (!(await isModuleEnabled(institutionId, 'lms'))) {
+      return Response.json({ error: 'LMS module is not enabled for your institution.' }, { status: 403 })
     }
 
     const { title, subject, description, status, modules, metadata } = await req.json()

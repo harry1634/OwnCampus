@@ -287,6 +287,11 @@ export async function PATCH(req) {
 
     const admin = createAdminClient()
 
+    const { data: callerProf } = await admin
+      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    const institutionId = callerProf?.institution_id || null
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
+
     let resolvedStudentId = student_id
     if (!resolvedStudentId && user_id) {
       const { data: stu } = await admin
@@ -298,7 +303,13 @@ export async function PATCH(req) {
     }
 
     const { data: stu } = await admin
-      .from('students').select('paid_amount').eq('id', resolvedStudentId).single()
+      .from('students').select('paid_amount, institution_id').eq('id', resolvedStudentId).single()
+
+    // Verify the student belongs to the caller's institution
+    if (stu?.institution_id && stu.institution_id !== institutionId) {
+      return Response.json({ error: 'Forbidden: student does not belong to your institution.' }, { status: 403 })
+    }
+
     const paid   = Number(stu?.paid_amount || 0)
     const newTot = Number(total_fee)
     const status = computeFeeStatus(newTot, paid)
@@ -307,6 +318,7 @@ export async function PATCH(req) {
       .from('students')
       .update({ total_fee: newTot, fee_status: status })
       .eq('id', resolvedStudentId)
+      .eq('institution_id', institutionId)
 
     if (error) return Response.json({ error: error.message }, { status: 400 })
 

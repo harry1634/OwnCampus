@@ -45,6 +45,8 @@ export async function GET(req) {
       }
     }
 
+    if (!callerInstitution) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
+
     let query = admin
       .from('exam_marks')
       .select(`
@@ -59,6 +61,7 @@ export async function GET(req) {
         )
       `)
       .order('created_at', { ascending: false })
+      .eq('institution_id', callerInstitution)
 
     if (examId)              query = query.eq('exam_id', examId)
     if (resolvedStudentId)   query = query.eq('student_id', resolvedStudentId)

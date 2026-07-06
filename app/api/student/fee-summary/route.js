@@ -41,23 +41,9 @@ export async function GET() {
         return Response.json({ totalFee: mTotal, paidAmount: mPaid, feeStatus: mStatus, source: 'metadata' })
       }
 
-      // Try finding an unlinked student record in same institution and link it
-      if (myProfile?.institution_id) {
-        const { data: unlinked } = await admin
-          .from('students')
-          .select('id, total_fee, paid_amount, fee_status')
-          .eq('institution_id', myProfile.institution_id)
-          .is('user_id', null)
-          .is('deleted_at', null)
-          .limit(1)
-          .maybeSingle()
-
-        if (unlinked) {
-          // Link this student row to the auth user so future queries work
-          await admin.from('students').update({ user_id: user.id }).eq('id', unlinked.id)
-          resolvedStudent = unlinked
-        }
-      }
+      // Do NOT auto-link arbitrary unlinked student rows — that silently hijacks
+      // another student's fee history. If a student row needs to be linked,
+      // require an explicit admin action matched on roll number or admission number.
     }
 
     if (!resolvedStudent) {

@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient }      from '@/lib/supabase/server'
+import { isModuleEnabled }   from '@/lib/licenseEngine'
 
 // GET  /api/timetable?class_id=...&day=monday
 // POST /api/timetable  { class_id, day_of_week, slots: [...] }
@@ -93,11 +94,18 @@ export async function POST(req) {
       .from('user_profiles').select('institution_id').eq('id', user.id).single()
     const institutionId = profile?.institution_id || null
 
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
+
+    if (!(await isModuleEnabled(institutionId, 'timetable'))) {
+      return Response.json({ error: 'Timetable module is not enabled for your institution.' }, { status: 403 })
+    }
+
     if (replace_day) {
       await admin.from('timetable_slots')
         .delete()
         .eq('class_id', class_id)
         .eq('day_of_week', day_of_week)
+        .eq('institution_id', institutionId)
     }
 
     const rows = slots.map((s, i) => ({
@@ -137,13 +145,18 @@ export async function DELETE(req) {
     const day     = searchParams.get('day')
 
     const admin = createAdminClient()
+    const { data: profile } = await admin
+      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    const institutionId = profile?.institution_id || null
+    if (!institutionId) return Response.json({ error: 'Institution not resolved.' }, { status: 400 })
 
     if (slotId) {
-      const { error } = await admin.from('timetable_slots').delete().eq('id', slotId)
+      const { error } = await admin.from('timetable_slots')
+        .delete().eq('id', slotId).eq('institution_id', institutionId)
       if (error) return Response.json({ error: error.message }, { status: 400 })
     } else if (classId && day) {
       const { error } = await admin.from('timetable_slots')
-        .delete().eq('class_id', classId).eq('day_of_week', day)
+        .delete().eq('class_id', classId).eq('day_of_week', day).eq('institution_id', institutionId)
       if (error) return Response.json({ error: error.message }, { status: 400 })
     } else {
       return Response.json({ error: 'slot_id or class_id+day required.' }, { status: 400 })

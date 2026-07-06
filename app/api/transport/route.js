@@ -1,6 +1,6 @@
 import { createAdminClient }                                          from '@/lib/supabase/admin'
 import { createClient }                                              from '@/lib/supabase/server'
-import { checkTransportRouteLimit, checkVehicleLimit, limitExceededResponse } from '@/lib/licenseEngine'
+import { checkTransportRouteLimit, checkVehicleLimit, limitExceededResponse, isModuleEnabled } from '@/lib/licenseEngine'
 
 export const dynamic = 'force-dynamic'
 
@@ -240,6 +240,11 @@ export async function POST(req) {
 
     const admin         = createAdminClient()
     const institutionId = await getInstitutionId(admin, user.id)
+
+    if (institutionId && !(await isModuleEnabled(institutionId, 'transport'))) {
+      return Response.json({ error: 'Transport module is not enabled for your institution.' }, { status: 403 })
+    }
+
     const body          = await req.json()
     const { action }    = body
 
