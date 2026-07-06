@@ -24,20 +24,19 @@ export async function GET(req) {
     const institutionId = profile?.institution_id || null
     const isAdmin = ['owner','super_admin','principal','vice_principal','academic_coordinator','hod','hr'].includes(profile?.role || '')
 
+    const isFaculty = ['faculty', 'teacher', 'hod'].includes(profile?.role || '')
+
+    // When fetching own leaves only, skip FK joins to avoid ambiguity errors
+    const selectCols = (myOnly || (!isAdmin && !isFaculty))
+      ? `id, leave_type, start_date, end_date, days_count, reason, status, created_at, approved_at, user_id`
+      : `id, leave_type, start_date, end_date, days_count, reason, status, created_at, approved_at, user_id, user_profiles!user_id ( id, first_name, last_name, role )`
+
     let query = admin
       .from('leaves')
-      .select(`
-        id, leave_type, start_date, end_date, days_count, reason, status, created_at,
-        approved_at,
-        user_id,
-        user_profiles!user_id ( id, first_name, last_name, role ),
-        approved_by_profile:user_profiles!approved_by ( first_name, last_name )
-      `)
+      .select(selectCols)
       .order('created_at', { ascending: false })
 
     if (institutionId) query = query.eq('institution_id', institutionId)
-    // Non-admins see only their own leaves; faculty can also see student leaves for approval
-    const isFaculty = ['faculty', 'teacher', 'hod'].includes(profile?.role || '')
     if (myOnly) query = query.eq('user_id', user.id)
     else if (!isAdmin && !isFaculty) query = query.eq('user_id', user.id)
     if (statusFilter) query = query.eq('status', statusFilter)
