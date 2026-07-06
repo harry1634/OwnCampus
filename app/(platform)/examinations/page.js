@@ -114,9 +114,16 @@ function ScheduleModal({ onClose, onAdd, classes, currentExam, schedule }) {
           invigilator_id: form.invigilatorId || null,
           total_marks:    100,
           passing_marks:  35,
+          class_name:     form.class   || null,
+          subject_name:   form.subject || null,
         }),
       })
       const json = await res.json()
+      if (!res.ok) {
+        setSaved(false)
+        alert(json.error || 'Failed to schedule exam')
+        return
+      }
       const dbId = json.exam?.id || null
       const dateLabel = fmtDate(form.date)
       const timeLabel = form.startTime
@@ -137,8 +144,9 @@ function ScheduleModal({ onClose, onAdd, classes, currentExam, schedule }) {
         fromApi:       !!dbId,
       })
       onClose()
-    } catch {
+    } catch (err) {
       setSaved(false)
+      alert(err.message || 'Network error — exam not saved')
     }
   }
 

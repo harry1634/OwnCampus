@@ -30,13 +30,16 @@ export async function GET(req) {
         id, leave_type, start_date, end_date, days_count, reason, status, created_at,
         approved_at,
         user_id,
-        user_profiles ( id, first_name, last_name, role ),
-        approved_by_profile:approved_by ( first_name, last_name )
+        user_profiles!user_id ( id, first_name, last_name, role ),
+        approved_by_profile:user_profiles!approved_by ( first_name, last_name )
       `)
       .order('created_at', { ascending: false })
 
     if (institutionId) query = query.eq('institution_id', institutionId)
-    if (myOnly || !isAdmin) query = query.eq('user_id', user.id)
+    // Non-admins see only their own leaves; faculty can also see student leaves for approval
+    const isFaculty = ['faculty', 'teacher', 'hod'].includes(profile?.role || '')
+    if (myOnly) query = query.eq('user_id', user.id)
+    else if (!isAdmin && !isFaculty) query = query.eq('user_id', user.id)
     if (statusFilter) query = query.eq('status', statusFilter)
     query = query.range((page - 1) * pageSize, page * pageSize - 1)
 
@@ -72,9 +75,12 @@ export async function POST(req) {
     const admin = createAdminClient()
     const { data: profile } = await admin
       .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    if (!profile?.institution_id) {
+      return Response.json({ error: 'Your account is not linked to an institution. Please contact your administrator.' }, { status: 400 })
+    }
 
     const { data, error } = await admin.from('leaves').insert({
-      institution_id: profile?.institution_id || null,
+      institution_id: profile.institution_id,
       user_id:    user.id,
       leave_type,
       start_date: resolvedStart,
@@ -85,6 +91,30 @@ export async function POST(req) {
     }).select().single()
 
     if (error) return Response.json({ error: error.message }, { status: 400 })
+
+    // Notify admins in the institution that a new leave request was submitted
+    try {
+      const { data: adminProfiles } = await admin
+        .from('user_profiles')
+        .select('id')
+        .eq('institution_id', profile?.institution_id)
+        .in('role', ['owner','super_admin','principal','vice_principal','academic_coordinator','hr'])
+      const { data: submitter } = await admin
+        .from('user_profiles').select('first_name, last_name, role').eq('id', user.id).single()
+      const submitterName = [submitter?.first_name, submitter?.last_name].filter(Boolean).join(' ') || 'Someone'
+      const notifs = (adminProfiles || []).map(a => ({
+        institution_id: profile?.institution_id,
+        user_id:        a.id,
+        type:           'leave',
+        title:          'New Leave Request',
+        body:           `📋 ${submitterName} has applied for ${leave_type} leave (${resolvedStart} – ${resolvedEnd}).`,
+        is_broadcast:   false,
+        is_read:        false,
+        metadata:       { leave_id: data.id },
+      }))
+      if (notifs.length) await admin.from('notifications').insert(notifs)
+    } catch {}
+
     return Response.json({ success: true, leave: data })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })

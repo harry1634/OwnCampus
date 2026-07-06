@@ -76,17 +76,15 @@ export async function POST(req) {
     const body = await req.json()
     const {
       name, type, exam_date, start_time, end_time, hall_number,
-      total_marks, passing_marks, class_id, subject_id, invigilator_id,
+      total_marks, passing_marks, invigilator_id,
+      class_id:    rawClassId,
+      subject_id:  rawSubjectId,
+      class_name:  className,
+      subject_name: subjectName,
     } = body
 
     if (!name || !type || !exam_date) {
       return Response.json({ error: 'name, type and exam_date are required.' }, { status: 400 })
-    }
-    if (!class_id) {
-      return Response.json({ error: 'class_id is required.' }, { status: 400 })
-    }
-    if (!subject_id) {
-      return Response.json({ error: 'subject_id is required.' }, { status: 400 })
     }
     if (total_marks !== undefined && Number(total_marks) <= 0) {
       return Response.json({ error: 'total_marks must be a positive number.' }, { status: 400 })
@@ -98,6 +96,52 @@ export async function POST(req) {
     const admin = createAdminClient()
     const { data: profile } = await admin
       .from('user_profiles').select('institution_id').eq('id', user.id).single()
+    const institutionId = profile?.institution_id || null
+
+    // ── Resolve class_id ──────────────────────────────────────────────────────
+    let resolvedClassId = rawClassId || null
+    if (!resolvedClassId && className) {
+      // Strip " - " or "-" separator for section matching
+      const namePart    = className.split(/\s*[-–]\s*/)[0].trim()
+      const sectionPart = className.split(/\s*[-–]\s*/)[1]?.trim() || null
+      let q = admin.from('classes').select('id').ilike('name', namePart)
+      if (institutionId) q = q.eq('institution_id', institutionId)
+      if (sectionPart)   q = q.ilike('section', sectionPart)
+      const { data: classRows } = await q.limit(1)
+      resolvedClassId = classRows?.[0]?.id || null
+
+      // If still not found, try a broader search (class stored without section)
+      if (!resolvedClassId) {
+        let q2 = admin.from('classes').select('id').ilike('name', `%${namePart}%`)
+        if (institutionId) q2 = q2.eq('institution_id', institutionId)
+        const { data: classRows2 } = await q2.limit(1)
+        resolvedClassId = classRows2?.[0]?.id || null
+      }
+    }
+    if (!resolvedClassId) {
+      return Response.json({ error: 'Class not found. Please ensure the class exists in Admin → Classes.' }, { status: 400 })
+    }
+
+    // ── Resolve subject_id (create if missing) ────────────────────────────────
+    let resolvedSubjectId = rawSubjectId || null
+    const subName = (subjectName || name || '').trim()
+    if (!resolvedSubjectId && subName) {
+      let sq = admin.from('subjects').select('id').ilike('name', subName)
+      if (institutionId) sq = sq.eq('institution_id', institutionId)
+      const { data: subRows } = await sq.limit(1)
+      if (subRows?.[0]?.id) {
+        resolvedSubjectId = subRows[0].id
+      } else {
+        // Create the subject on the fly
+        const { data: newSub } = await admin.from('subjects')
+          .insert({ name: subName, institution_id: institutionId })
+          .select('id').single()
+        resolvedSubjectId = newSub?.id || null
+      }
+    }
+    if (!resolvedSubjectId) {
+      return Response.json({ error: 'subject_id or subject_name is required.' }, { status: 400 })
+    }
 
     const { data, error } = await admin
       .from('exams')
@@ -110,24 +154,61 @@ export async function POST(req) {
         hall_number:    hall_number    || null,
         total_marks:    total_marks    || 100,
         passing_marks:  passing_marks  || 35,
-        class_id:       class_id       || null,
-        subject_id:     subject_id     || null,
+        class_id:       resolvedClassId,
+        subject_id:     resolvedSubjectId,
         invigilator_id: invigilator_id || null,
-        institution_id: profile?.institution_id || null,
+        institution_id: institutionId,
       })
       .select()
       .single()
 
     if (error) return Response.json({ error: error.message }, { status: 400 })
 
+    // ── Audit log ─────────────────────────────────────────────────────────────
     await admin.from('audit_logs').insert({
-      institution_id: profile?.institution_id || null,
+      institution_id: institutionId,
       actor_id:       user.id,
       action:         'create',
       entity_type:    'exam',
       entity_id:      data.id,
-      new_value:      { name, type, exam_date, class_id, subject_id },
+      new_value:      { name, type, exam_date, class_id: resolvedClassId, subject_id: resolvedSubjectId },
     }).then(null, () => {})
+
+    // ── Notify invigilator ────────────────────────────────────────────────────
+    if (invigilator_id) {
+      await admin.from('notifications').insert({
+        institution_id: institutionId,
+        user_id:        invigilator_id,
+        type:           'exam',
+        title:          'Invigilation Assigned',
+        body:           `📋 You have been assigned to invigilate ${name} — ${subName} on ${exam_date}.`,
+        is_broadcast:   false,
+        is_read:        false,
+        metadata:       { exam_id: data.id },
+      }).then(null, () => {})
+    }
+
+    // ── Notify students in the class ──────────────────────────────────────────
+    try {
+      const { data: stuRows } = await admin
+        .from('students')
+        .select('user_id')
+        .eq('class_id', resolvedClassId)
+        .eq('status', 'active')
+        .not('user_id', 'is', null)
+
+      const stuNotifs = (stuRows || []).map(s => ({
+        institution_id: institutionId,
+        user_id:        s.user_id,
+        type:           'exam',
+        title:          'Exam Scheduled',
+        body:           `📅 ${name} — ${subName} scheduled on ${exam_date}${hall_number ? ' at ' + hall_number : ''}.`,
+        is_broadcast:   false,
+        is_read:        false,
+        metadata:       { exam_id: data.id },
+      }))
+      if (stuNotifs.length > 0) await admin.from('notifications').insert(stuNotifs)
+    } catch {}
 
     return Response.json({ success: true, exam: data })
   } catch (err) {
@@ -170,6 +251,20 @@ export async function PATCH(req) {
       entity_id:      id,
       new_value:      patch,
     }).then(null, () => {})
+
+    // Notify invigilator when newly assigned via update
+    if (patch.invigilator_id && patch.invigilator_id !== (prevExam?.invigilator_id || null)) {
+      await admin.from('notifications').insert({
+        institution_id: institutionId,
+        user_id:        patch.invigilator_id,
+        type:           'exam',
+        title:          'Invigilation Assigned',
+        body:           `📋 You have been assigned to invigilate an exam. Check your schedule.`,
+        is_broadcast:   false,
+        is_read:        false,
+        metadata:       { exam_id: id },
+      }).then(null, () => {})
+    }
 
     // Notify students in the class when exam is published for the first time
     if (patch.is_published === true && prevExam && !prevExam.is_published && prevExam.class_id) {

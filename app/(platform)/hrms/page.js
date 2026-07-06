@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Briefcase, Users, Clock, CheckCircle, XCircle, AlertCircle, Plus, Download, Calendar, CreditCard, ChevronDown, CalendarClock, DollarSign, UserPlus } from 'lucide-react'
 import Link from 'next/link'
 import { downloadCSV, openPrintWindow } from '@/lib/exportUtils'
+import { toast } from 'sonner'
 
 const leaveStatusConfig = {
   pending:  { label: 'Pending',  color: '#D97706', bg: '#FFFBEB', icon: Clock        },
@@ -72,10 +73,14 @@ function ApplyLeaveModal({ onClose, onAdd, employees }) {
           status:   'pending',
           fromApi:  true,
         })
+        toast.success('Leave request submitted!')
         onClose()
+      } else {
+        toast.error(json.error || 'Failed to submit leave request')
       }
-    } catch {}
-    finally { setSubmitting(false) }
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit leave request')
+    } finally { setSubmitting(false) }
   }
 
   return (
@@ -178,13 +183,21 @@ export default function HRMSPage() {
 
   const setLeaveStatus = async (id, newStatus) => {
     try {
-      const res = await fetch('/api/hrms', {
+      const res  = await fetch('/api/hrms', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: newStatus }),
       })
-      if (res.ok) setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l))
-    } catch {}
+      const json = await res.json()
+      if (res.ok && json.success) {
+        setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l))
+        toast.success(`Leave ${newStatus === 'approved' ? 'approved' : 'rejected'}`)
+      } else {
+        toast.error(json.error || 'Failed to update leave status')
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to update leave status')
+    }
   }
 
   const pendingCount  = leaves.filter(l => l.status === 'pending').length

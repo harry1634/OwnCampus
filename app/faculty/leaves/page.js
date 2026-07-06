@@ -60,6 +60,8 @@ function ApplyModal({ onClose, onSubmit, myName }) {
     try {
       await onSubmit({ type: selType, from, to, reason: reason.trim() })
       onClose()
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit leave request')
     } finally {
       setBusy(false)
     }
