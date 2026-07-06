@@ -399,7 +399,7 @@ export default function InstitutionDetail({ params }) {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#F8FAFC', padding: 4, borderRadius: 10, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#F8FAFC', padding: 4, borderRadius: 10, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {['overview', 'license', 'modules', 'payments', 'emails', 'support'].map(t => (
           <TabBtn key={t} active={tab === t} onClick={() => setTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</TabBtn>
         ))}
@@ -407,53 +407,79 @@ export default function InstitutionDetail({ params }) {
 
       {/* ── Overview ── */}
       {tab === 'overview' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-          <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: '0 0 16px' }}>Institution Info</h3>
-            {[
-              ['Name',        inst.name],
-              ['Email',       inst.email],
-              ['Code',        inst.code],
-              ['Type',        (inst.type || '').replace(/_/g, ' ')],
-              ['Status',      inst.control_status],
-              ['Approved At', inst.approved_at ? new Date(inst.approved_at).toLocaleDateString('en-IN') : '—'],
-              ['Created',     new Date(inst.created_at).toLocaleDateString('en-IN')],
-            ].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F8FAFC' }}>
-                <span style={{ fontSize: 13, color: '#64748B', fontWeight: 500 }}>{k}</span>
-                <span style={{ fontSize: 13, color: '#0F172A', fontWeight: 600, textTransform: 'capitalize' }}>{v}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Admin Credentials — only when provisioned */}
-          {inst.provisioned_at && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Top row: Info + Credentials side by side on wide screens */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+            {/* Institution Info */}
             <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: '0 0 16px' }}>Institution Info</h3>
+              {[
+                ['Name',        inst.name],
+                ['Email',       inst.email],
+                ['Code',        inst.code],
+                ['Type',        (inst.type || '').replace(/_/g, ' ')],
+                ['Status',      inst.control_status],
+                ['Approved At', inst.approved_at ? new Date(inst.approved_at).toLocaleDateString('en-IN') : '—'],
+                ['Created',     inst.created_at ? new Date(inst.created_at).toLocaleDateString('en-IN') : '—'],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #F8FAFC', gap: 12 }}>
+                  <span style={{ fontSize: 13, color: '#64748B', fontWeight: 500, flexShrink: 0 }}>{k}</span>
+                  <span style={{ fontSize: 13, color: '#0F172A', fontWeight: 600, textTransform: 'capitalize', textAlign: 'right', wordBreak: 'break-all' }}>{v || '—'}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Admin Credentials — always shown; state changes based on provisioning */}
+            <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 8, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <KeyRound size={14} color="#1D4ED8" />
                   </div>
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Admin Credentials</h3>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button
-                    onClick={handleResetPassword}
-                    disabled={resetPwdLoading}
-                    title="Generate a new temporary password"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 7, border: '1.5px solid #D9770625', background: '#FFFBEB', color: '#B45309', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: resetPwdLoading ? 0.6 : 1 }}>
-                    <RefreshCw size={11} className={resetPwdLoading ? 'animate-spin' : ''} />
-                    {resetPwdLoading ? 'Resetting…' : 'Reset Pwd'}
-                  </button>
-                  <button
-                    onClick={() => setResendModal({ open: true, toEmail: '', sending: false })}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 7, border: '1.5px solid #2563EB25', background: '#EFF6FF', color: '#1D4ED8', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    <Send size={11} /> Send Email
-                  </button>
-                </div>
+                {inst.provisioned_at && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button
+                      onClick={handleResetPassword}
+                      disabled={resetPwdLoading}
+                      title="Generate a new temporary password"
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 7, border: '1.5px solid #D9770625', background: '#FFFBEB', color: '#B45309', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: resetPwdLoading ? 0.6 : 1 }}>
+                      <RefreshCw size={11} className={resetPwdLoading ? 'animate-spin' : ''} />
+                      {resetPwdLoading ? 'Resetting…' : 'Reset Pwd'}
+                    </button>
+                    <button
+                      onClick={() => setResendModal({ open: true, toEmail: '', sending: false })}
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 7, border: '1.5px solid #2563EB25', background: '#EFF6FF', color: '#1D4ED8', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <Send size={11} /> Send Email
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {credLoading ? (
+              {!inst.provisioned_at ? (
+                /* Not yet provisioned — show CTA */
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 20px', textAlign: 'center', background: '#F8FAFC', borderRadius: 12, border: '1.5px dashed #CBD5E1' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                    <Zap size={18} color="#1D4ED8" />
+                  </div>
+                  <p style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', margin: '0 0 6px' }}>Not Provisioned Yet</p>
+                  <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 16px', lineHeight: 1.5 }}>
+                    This institution has no admin account. Click Provision to create one and send credentials.
+                  </p>
+                  {(inst.control_status === 'trial' || inst.control_status === 'active') ? (
+                    <button
+                      onClick={() => setProvisionModal({ open: true, adminEmail: inst.temp_admin_email || '', adminName: '', loading: false })}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 20px', borderRadius: 9, border: '1.5px solid #16A34A25', background: '#F0FDF4', color: '#15803D', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <Zap size={13} /> Provision Institution
+                    </button>
+                  ) : (
+                    <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>
+                      Set status to <strong>Trial</strong> or <strong>Active</strong> before provisioning.
+                    </p>
+                  )}
+                </div>
+              ) : credLoading ? (
                 <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>Loading credentials…</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -507,54 +533,57 @@ export default function InstitutionDetail({ params }) {
                   </div>
 
                   {/* Login URL */}
-                  <div style={{ background: '#F8FAFC', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
+                  <div style={{ background: '#F8FAFC', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ minWidth: 0 }}>
                       <p style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 2px' }}>Login URL</p>
-                      <span style={{ fontSize: 12.5, color: '#2563EB', fontWeight: 600 }}>
+                      <span style={{ fontSize: 12.5, color: '#2563EB', fontWeight: 600, wordBreak: 'break-all' }}>
                         {(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/auth/login'}
                       </span>
                     </div>
                     <button
                       onClick={() => { navigator.clipboard.writeText((process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/auth/login'); toast.success('URL copied') }}
-                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#FFF', color: '#64748B', cursor: 'pointer' }}>
+                      style={{ flexShrink: 0, padding: '4px 8px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#FFF', color: '#64748B', cursor: 'pointer' }}>
                       <Copy size={12} />
                     </button>
                   </div>
                 </div>
               )}
             </div>
-          )}
+          </div>
 
+          {/* Usage — full-width row below */}
           <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: '0 0 16px' }}>Usage</h3>
-            {[
-              ['Students',         data?.usage?.students        ?? 0, lic.max_students],
-              ['Faculty & Staff',  data?.usage?.faculty         ?? 0, lic.max_faculty],
-              ['Admins',           data?.usage?.admins          ?? 0, lic.max_admins],
-              ['Branches',         data?.usage?.branches        ?? 0, lic.max_branches],
-              ['Library Books',    data?.usage?.libraryBooks    ?? 0, lic.max_library_books],
-              ['Hostel Rooms',     data?.usage?.hostelRooms     ?? 0, lic.max_hostel_rooms],
-              ['Transport Routes', data?.usage?.transportRoutes ?? 0, lic.max_transport_routes],
-              ['Vehicles',         data?.usage?.vehicles        ?? 0, lic.max_vehicles],
-            ].map(([label, used, max]) => {
-              const pct    = max && max !== Infinity ? Math.min(100, Math.round((used / max) * 100)) : 0
-              const barClr = pct >= 90 ? '#EF4444' : pct >= 70 ? '#F59E0B' : '#3B82F6'
-              return (
-                <div key={label} style={{ marginBottom: 13 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <span style={{ fontSize: 12.5, color: '#64748B' }}>{label}</span>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: pct >= 90 ? '#EF4444' : '#0F172A', fontVariantNumeric: 'tabular-nums' }}>
-                      {used.toLocaleString('en-IN')} / {max && max !== Infinity ? max.toLocaleString('en-IN') : '∞'}
-                    </span>
-                  </div>
-                  {max && max !== Infinity && (
-                    <div style={{ height: 5, background: '#F1F5F9', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: barClr, borderRadius: 99, transition: 'width 0.3s' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '4px 32px' }}>
+              {[
+                ['Students',         data?.usage?.students        ?? 0, lic.max_students],
+                ['Faculty & Staff',  data?.usage?.faculty         ?? 0, lic.max_faculty],
+                ['Admins',           data?.usage?.admins          ?? 0, lic.max_admins],
+                ['Branches',         data?.usage?.branches        ?? 0, lic.max_branches],
+                ['Library Books',    data?.usage?.libraryBooks    ?? 0, lic.max_library_books],
+                ['Hostel Rooms',     data?.usage?.hostelRooms     ?? 0, lic.max_hostel_rooms],
+                ['Transport Routes', data?.usage?.transportRoutes ?? 0, lic.max_transport_routes],
+                ['Vehicles',         data?.usage?.vehicles        ?? 0, lic.max_vehicles],
+              ].map(([label, used, max]) => {
+                const pct    = max && max !== Infinity ? Math.min(100, Math.round((used / max) * 100)) : 0
+                const barClr = pct >= 90 ? '#EF4444' : pct >= 70 ? '#F59E0B' : '#3B82F6'
+                return (
+                  <div key={label} style={{ paddingBottom: 13 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <span style={{ fontSize: 12.5, color: '#64748B' }}>{label}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: pct >= 90 ? '#EF4444' : '#0F172A', fontVariantNumeric: 'tabular-nums' }}>
+                        {used.toLocaleString('en-IN')} / {max && max !== Infinity ? max.toLocaleString('en-IN') : '∞'}
+                      </span>
                     </div>
-                  )}
-                </div>
-              )
-            })}
+                    {max && max !== Infinity && (
+                      <div style={{ height: 5, background: '#F1F5F9', borderRadius: 99, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: barClr, borderRadius: 99, transition: 'width 0.3s' }} />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
       )}
