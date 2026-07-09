@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useDashboardRealtime } from '@/lib/hooks/useRealtime'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -31,6 +31,21 @@ const AUDIENCE_OPTIONS = [
   { value: 'student', label: 'Students only' },
   { value: 'faculty', label: 'Faculty only' },
 ]
+
+const QUICK_LINKS = [
+  { label: 'Manage Timetable', href: '/timetable',    icon: Clock,     color: '#2563EB', bg: '#EFF6FF' },
+  { label: 'Examinations',     href: '/examinations', icon: BookOpen,  color: '#7C3AED', bg: '#F5F3FF' },
+  { label: 'Students List',    href: '/students',     icon: GraduationCap, color: '#059669', bg: '#ECFDF5' },
+  { label: 'Faculty List',     href: '/faculty',      icon: Users,     color: '#D97706', bg: '#FFFBEB' },
+]
+
+function fmtFee(n) {
+  if (!n || n === 0) return '₹0'
+  if (n >= 10000000) return `₹${(n/10000000).toFixed(1)}Cr`
+  if (n >= 100000)   return `₹${(n/100000).toFixed(1)}L`
+  if (n >= 1000)     return `₹${(n/1000).toFixed(0)}K`
+  return `₹${n}`
+}
 
 /* ────────────────────────────────── CredentialsModal ──── */
 function CredentialsModal({ creds, onClose }) {
@@ -150,6 +165,42 @@ function AccessQueue({ pending, loading, onApprove, onReject, actionId }) {
   )
 }
 
+/* ────────────────────────────────── KPICard ──── */
+function KPICard({ label, value, sub, icon: Icon, color, bg, href, badge, i }) {
+  const inner = (
+    <motion.div {...fade(0.05 + i * 0.06)} style={{
+      background: '#FFFFFF',
+      border: '1px solid #E9EFF6',
+      borderRadius: 18,
+      padding: '22px 22px 16px',
+      boxShadow: '0 2px 12px rgba(15,23,42,0.06)',
+      display: 'flex', flexDirection: 'column', gap: 14,
+      height: '100%',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div style={{ width: 46, height: 46, borderRadius: 13, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon size={20} style={{ color }} strokeWidth={1.8} />
+        </div>
+        {badge != null && (
+          <span style={{ fontSize: 11.5, fontWeight: 700, padding: '4px 11px', borderRadius: 99, background: bg, color, border: `1px solid ${color}28` }}>
+            {badge}
+          </span>
+        )}
+      </div>
+      <div style={{ flex: 1 }}>
+        <p style={{ fontSize: 32, fontWeight: 800, color: '#0F172A', margin: '0 0 5px', letterSpacing: '-0.04em', lineHeight: 1, fontFamily: 'Inter, system-ui, sans-serif' }}>
+          {value}
+        </p>
+        <p style={{ fontSize: 13.5, fontWeight: 600, color: '#374151', margin: '0 0 3px' }}>{label}</p>
+        <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>{sub}</p>
+      </div>
+      <div style={{ height: 3, borderRadius: 99, background: `linear-gradient(to right, ${color}, ${color}30)` }} />
+    </motion.div>
+  )
+  if (href) return <Link href={href} style={{ textDecoration: 'none', display: 'block' }}>{inner}</Link>
+  return inner
+}
+
 /* ────────────────────────────────── Main ──── */
 export default function DashboardClient({ user, profile, initialStats, initialRequests, initialAnnouncements }) {
   const [greeting,        setGreeting        ] = useState('Welcome back')
@@ -199,7 +250,11 @@ export default function DashboardClient({ user, profile, initialStats, initialRe
     }).catch(() => {})
   }, [])
 
-  useEffect(() => { refreshStats() }, [])
+  useEffect(() => {
+    refreshStats()
+    const h = new Date().getHours()
+    setGreeting(h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening')
+  }, [])
 
   // Realtime: auto-refresh KPIs when students, fees, or access-requests change
   useDashboardRealtime(institutionId, refreshStats)
@@ -215,11 +270,6 @@ export default function DashboardClient({ user, profile, initialStats, initialRe
     setLoadingRequests(false)
   }
 
-  useEffect(() => {
-    const h = new Date().getHours()
-    setGreeting(h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening')
-
-  }, [])
 
   async function handleApprove(id) {
     setActionId(id + '-approve')
@@ -307,27 +357,36 @@ export default function DashboardClient({ user, profile, initialStats, initialRe
   const totalStudents = stats.students || 0
   const totalFaculty  = stats.faculty  || 0
 
-  const fmtFee = (n) => {
-    if (!n || n === 0) return '₹0'
-    if (n >= 10000000) return `₹${(n/10000000).toFixed(1)}Cr`
-    if (n >= 100000)   return `₹${(n/100000).toFixed(1)}L`
-    if (n >= 1000)     return `₹${(n/1000).toFixed(0)}K`
-    return `₹${n}`
-  }
+  const feePercent = stats.totalFee > 0
+    ? Math.round(((stats.feeCollected || 0) / stats.totalFee) * 100)
+    : null
 
-  const KPIS = [
-    { label: 'Total Students',   value: totalStudents,                            sub: 'Enrolled in campus',     icon: GraduationCap, iconBg: '#F5F3FF', iconColor: '#7C3AED', href: null },
-    { label: 'Total Faculty',    value: totalFaculty,                             sub: 'Active staff members',   icon: Users,         iconBg: '#ECFDF5', iconColor: '#059669', href: null },
-    { label: 'Fee Collected',    value: fmtFee(stats.feeCollected || 0),          sub: 'Paid this term',         icon: CreditCard,    iconBg: '#EFF6FF', iconColor: '#2563EB', href: '/finance' },
-    { label: 'Pending Requests', value: stats.pending,                            sub: 'Awaiting your approval', icon: AlertCircle,   iconBg: '#FEF2F2', iconColor: '#DC2626', href: null },
-  ]
-
-  const QUICK_LINKS = [
-    { label: 'Manage Timetable', href: '/timetable',    icon: Clock,     color: '#2563EB', bg: '#EFF6FF' },
-    { label: 'Examinations',     href: '/examinations', icon: BookOpen,  color: '#7C3AED', bg: '#F5F3FF' },
-    { label: 'Students List',    href: '/students',     icon: GraduationCap, color: '#059669', bg: '#ECFDF5' },
-    { label: 'Faculty List',     href: '/faculty',      icon: Users,     color: '#D97706', bg: '#FFFBEB' },
-  ]
+  const KPIS = useMemo(() => [
+    {
+      label: 'Fee Collected',    value: fmtFee(stats.feeCollected || 0),
+      sub: 'of total fees billed',
+      icon: CreditCard,    color: '#2563EB', bg: '#EFF6FF',
+      href: '/finance',    badge: feePercent != null ? `${feePercent}%` : null,
+    },
+    {
+      label: 'Total Students',   value: totalStudents,
+      sub: `${totalFaculty} faculty member${totalFaculty !== 1 ? 's' : ''}`,
+      icon: GraduationCap, color: '#7C3AED', bg: '#F5F3FF',
+      href: '/students',   badge: 'Active',
+    },
+    {
+      label: 'Total Faculty',    value: totalFaculty,
+      sub: 'active staff members',
+      icon: Users,         color: '#059669', bg: '#ECFDF5',
+      href: '/faculty',    badge: 'Staff',
+    },
+    {
+      label: 'Fee Outstanding',  value: fmtFee(stats.feeOutstanding || 0),
+      sub: `${stats.pending || 0} pending approval${(stats.pending || 0) !== 1 ? 's' : ''}`,
+      icon: AlertCircle,   color: '#DC2626', bg: '#FEF2F2',
+      href: '/finance',    badge: `${stats.pending || 0} due`,
+    },
+  ], [stats, totalStudents, totalFaculty, feePercent])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
@@ -374,28 +433,16 @@ export default function DashboardClient({ user, profile, initialStats, initialRe
         )}
       </AnimatePresence>
 
-      {/* Real KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-        {KPIS.map((k, i) => (
-          <motion.div key={k.label} {...fade(0.05 + i * 0.06)}
-            style={{ ...card, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 11, background: k.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <k.icon size={18} style={{ color: k.iconColor }} />
-            </div>
-            <div>
-              <p style={{ fontSize: 30, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.03em', fontFamily: 'Inter, sans-serif' }}>{k.value}</p>
-              <p style={{ fontSize: 12.5, fontWeight: 600, color: C.text, margin: '2px 0 2px' }}>{k.label}</p>
-              <p style={{ fontSize: 11.5, color: C.muted, margin: 0 }}>{k.sub}</p>
-            </div>
-          </motion.div>
-        ))}
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+        {KPIS.map((k, i) => <KPICard key={k.label} {...k} i={i} />)}
       </div>
 
       {/* Main Grid: Announcements + Access Queue */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr)', gap: 20 }} className="dashboard-main-grid">
 
         {/* Announcements */}
-        <motion.div className="lg:col-span-2" {...fade(0.14)} style={{ ...card }}>
+        <motion.div {...fade(0.14)} style={{ ...card }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div>
               <h2 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: 0 }}>Announcements</h2>
@@ -497,17 +544,25 @@ export default function DashboardClient({ user, profile, initialStats, initialRe
       {/* Quick Links */}
       <motion.div {...fade(0.22)} style={card}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 16px' }}>Quick Actions</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
           {QUICK_LINKS.map(l => (
             <Link key={l.label} href={l.href}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 11, background: l.bg, textDecoration: 'none', border: '1px solid transparent' }}>
-              <l.icon size={16} color={l.color} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: l.color }}>{l.label}</span>
-              <ChevronRight size={13} color={l.color} style={{ marginLeft: 'auto' }} />
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', borderRadius: 12, background: l.bg, textDecoration: 'none', border: `1px solid ${l.color}18`, transition: 'box-shadow 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = `0 4px 12px ${l.color}22`}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
+              <l.icon size={15} color={l.color} strokeWidth={2} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: l.color, flex: 1 }}>{l.label}</span>
+              <ChevronRight size={12} color={l.color} style={{ opacity: 0.5 }} />
             </Link>
           ))}
         </div>
       </motion.div>
+
+      <style>{`
+        @media (max-width: 767px) {
+          .dashboard-main-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   )
 }

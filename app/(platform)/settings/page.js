@@ -154,10 +154,8 @@ export default function SettingsPage() {
       fetch('/api/license').then(r => r.ok ? r.json() : {}),
     ]).then(([reqData, licData]) => {
       setModReqs(reqData.requests || [])
-      if (licData.modules) {
-        const map = {}
-        ;(licData.modules || []).forEach(m => { map[m.module_key] = m.is_enabled })
-        setEnabledMods(map)
+      if (licData.modules && typeof licData.modules === 'object' && !Array.isArray(licData.modules)) {
+        setEnabledMods(licData.modules)
       }
     }).catch(() => {})
   }, [])

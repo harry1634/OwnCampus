@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { Settings, Save, Eye, EyeOff, Check } from 'lucide-react'
@@ -73,13 +73,13 @@ export default function SettingsPage() {
 
   const inputStyle = {
     width: '100%', height: 42, boxSizing: 'border-box', padding: '0 12px',
-    border: '1px solid #E2E8F0', borderRadius: 9, fontSize: 13.5, color: '#0F172A',
+    border: '1px solid #C0D5E9', borderRadius: 9, fontSize: 13.5, color: '#0F172A',
     fontFamily: 'inherit', outline: 'none', background: '#FAFCFF',
   }
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
-      <div style={{ width: 26, height: 26, border: '2.5px solid #E2E8F0', borderTop: '2.5px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
+      <div style={{ width: 26, height: 26, border: '2.5px solid #C0D5E9', borderTop: '2.5px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
     </div>
   )
 
@@ -108,8 +108,8 @@ export default function SettingsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {SECTIONS.map(section => (
           <div key={section.title} style={{
-            background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 28,
-            boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+            background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, padding: 28,
+            boxShadow: '0 1px 4px rgba(26,58,96,0.08)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

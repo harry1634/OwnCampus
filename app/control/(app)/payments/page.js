@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { CreditCard, Check, Clock, AlertTriangle, X, Plus } from 'lucide-react'
@@ -8,7 +8,7 @@ const STATUS_CONFIG = {
   paid:     { bg: '#F0FDF4', color: '#15803D', label: 'Paid'     },
   pending:  { bg: '#FFF7ED', color: '#C2410C', label: 'Pending'  },
   overdue:  { bg: '#FEF2F2', color: '#B91C1C', label: 'Overdue'  },
-  waived:   { bg: '#F8FAFC', color: '#475569', label: 'Waived'   },
+  waived:   { bg: '#EEF4FA', color: '#475569', label: 'Waived'   },
 }
 
 function Badge({ status }) {
@@ -84,7 +84,7 @@ export default function PaymentsPage() {
 
   const inputStyle = {
     width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px',
-    border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 13.5, color: '#0F172A',
+    border: '1px solid #C0D5E9', borderRadius: 8, fontSize: 13.5, color: '#0F172A',
     fontFamily: 'inherit', outline: 'none', background: '#FAFCFF',
   }
 
@@ -106,20 +106,20 @@ export default function PaymentsPage() {
       {/* Filters */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
         <select value={filter.month} onChange={e => changeFilter('month', e.target.value)}
-          style={{ height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid #E2E8F0', background: 'white', fontSize: 13.5, color: '#0F172A', fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
+          style={{ height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid #C0D5E9', background: 'white', fontSize: 13.5, color: '#0F172A', fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
           <option value="">All Months</option>
           {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
         <select value={filter.status} onChange={e => changeFilter('status', e.target.value)}
-          style={{ height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid #E2E8F0', background: 'white', fontSize: 13.5, color: '#0F172A', fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
+          style={{ height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid #C0D5E9', background: 'white', fontSize: 13.5, color: '#0F172A', fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
           <option value="">All Statuses</option>
           {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
       </div>
 
       {/* Table */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', gap: 12, padding: '12px 20px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC' }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(26,58,96,0.08)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', gap: 12, padding: '12px 20px', borderBottom: '1px solid #DDE9F5', background: '#EEF4FA' }}>
           {['Institution', 'Month', 'Amount', 'GST', 'Total', 'Status'].map(h => (
             <span key={h} style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
           ))}
@@ -127,7 +127,7 @@ export default function PaymentsPage() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <div style={{ width: 24, height: 24, border: '2.5px solid #E2E8F0', borderTop: '2.5px solid #3B82F6', borderRadius: '50%', margin: '0 auto' }} className="animate-spin" />
+            <div style={{ width: 24, height: 24, border: '2.5px solid #C0D5E9', borderTop: '2.5px solid #3B82F6', borderRadius: '50%', margin: '0 auto' }} className="animate-spin" />
           </div>
         ) : payments.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8' }}>

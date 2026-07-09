@@ -15,8 +15,8 @@ const STATUS_CONFIG = {
   active:       { bg: '#F0FDF4', color: '#15803D', label: 'Active'       },
   grace_period: { bg: '#FFFBEB', color: '#D97706', label: 'Grace Period' },
   suspended:    { bg: '#FEF2F2', color: '#B91C1C', label: 'Suspended'    },
-  expired:      { bg: '#F8FAFC', color: '#64748B', label: 'Expired'      },
-  cancelled:    { bg: '#F8FAFC', color: '#475569', label: 'Cancelled'    },
+  expired:      { bg: '#EEF4FA', color: '#64748B', label: 'Expired'      },
+  cancelled:    { bg: '#EEF4FA', color: '#475569', label: 'Cancelled'    },
 }
 
 const MODULES = [
@@ -332,7 +332,7 @@ export default function InstitutionDetail({ params }) {
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
-      <div style={{ width: 26, height: 26, border: '2.5px solid #E2E8F0', borderTop: '2.5px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
+      <div style={{ width: 26, height: 26, border: '2.5px solid #C0D5E9', borderTop: '2.5px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
     </div>
   )
 
@@ -342,7 +342,7 @@ export default function InstitutionDetail({ params }) {
 
   const inputStyle = {
     width: '100%', height: 42, boxSizing: 'border-box', padding: '0 12px',
-    border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 13.5,
+    border: '1px solid #C0D5E9', borderRadius: 8, fontSize: 13.5,
     color: '#0F172A', fontFamily: 'inherit', outline: 'none', background: '#FAFCFF',
   }
   const L = (label) => <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748B', marginBottom: 6 }}>{label}</label>
@@ -377,9 +377,10 @@ export default function InstitutionDetail({ params }) {
             <button
               onClick={() => setProvisionModal({ open: true, adminEmail: inst.temp_admin_email || '', adminName: '', loading: false })}
               style={{
-                padding: '8px 16px', borderRadius: 9, border: '1.5px solid #16A34A25',
-                background: '#16A34A0f', color: '#16A34A', fontSize: 12.5, fontWeight: 700,
+                padding: '8px 16px', borderRadius: 9, border: '1.5px solid #16A34A',
+                background: '#FFFFFF', color: '#16A34A', fontSize: 12.5, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5,
+                boxShadow: '0 1px 3px rgba(26,58,96,0.12)',
               }}>
               <Zap size={12} /> Provision
             </button>
@@ -390,16 +391,18 @@ export default function InstitutionDetail({ params }) {
               onClick={() => changeStatus(t.value)}
               disabled={saving}
               style={{
-                padding: '8px 16px', borderRadius: 9, border: `1.5px solid ${t.color}25`,
-                background: t.color + '0f', color: t.color, fontSize: 12.5, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit',
+                padding: '8px 16px', borderRadius: 9, border: `1.5px solid ${t.color}`,
+                background: '#FFFFFF', color: t.color, fontSize: 12.5, fontWeight: 700,
+                cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                opacity: saving ? 0.55 : 1,
+                boxShadow: '0 1px 3px rgba(26,58,96,0.12)',
               }}>{t.label}</button>
           ))}
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#F8FAFC', padding: 4, borderRadius: 10, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#EEF4FA', padding: 4, borderRadius: 10, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {['overview', 'license', 'modules', 'payments', 'emails', 'support'].map(t => (
           <TabBtn key={t} active={tab === t} onClick={() => setTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</TabBtn>
         ))}
@@ -411,7 +414,7 @@ export default function InstitutionDetail({ params }) {
           {/* Top row: Info + Credentials side by side on wide screens */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
             {/* Institution Info */}
-            <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22 }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, padding: 22 }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: '0 0 16px' }}>Institution Info</h3>
               {[
                 ['Name',        inst.name],
@@ -430,7 +433,7 @@ export default function InstitutionDetail({ params }) {
             </div>
 
             {/* Admin Credentials — always shown; state changes based on provisioning */}
-            <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22 }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, padding: 22 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 8, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 30, height: 30, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -459,7 +462,7 @@ export default function InstitutionDetail({ params }) {
 
               {!inst.provisioned_at ? (
                 /* Not yet provisioned — show CTA */
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 20px', textAlign: 'center', background: '#F8FAFC', borderRadius: 12, border: '1.5px dashed #CBD5E1' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 20px', textAlign: 'center', background: '#EEF4FA', borderRadius: 12, border: '1.5px dashed #CBD5E1' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
                     <Zap size={18} color="#1D4ED8" />
                   </div>
@@ -484,7 +487,7 @@ export default function InstitutionDetail({ params }) {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {/* Admin Email */}
-                  <div style={{ background: '#F8FAFC', borderRadius: 10, padding: '12px 14px' }}>
+                  <div style={{ background: '#EEF4FA', borderRadius: 10, padding: '12px 14px' }}>
                     <p style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>Admin Email</p>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                       <span style={{ fontSize: 13.5, fontWeight: 600, color: '#0F172A', wordBreak: 'break-all' }}>
@@ -493,7 +496,7 @@ export default function InstitutionDetail({ params }) {
                       {(credentials?.admin_email || inst.temp_admin_email) && (
                         <button
                           onClick={() => { navigator.clipboard.writeText(credentials?.admin_email || inst.temp_admin_email); toast.success('Email copied') }}
-                          style={{ flexShrink: 0, padding: '4px 8px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#FFF', color: '#64748B', cursor: 'pointer' }}>
+                          style={{ flexShrink: 0, padding: '4px 8px', borderRadius: 6, border: '1px solid #C0D5E9', background: '#FFF', color: '#64748B', cursor: 'pointer' }}>
                           <Copy size={12} />
                         </button>
                       )}
@@ -533,7 +536,7 @@ export default function InstitutionDetail({ params }) {
                   </div>
 
                   {/* Login URL */}
-                  <div style={{ background: '#F8FAFC', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <div style={{ background: '#EEF4FA', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <div style={{ minWidth: 0 }}>
                       <p style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 2px' }}>Login URL</p>
                       <span style={{ fontSize: 12.5, color: '#2563EB', fontWeight: 600, wordBreak: 'break-all' }}>
@@ -542,7 +545,7 @@ export default function InstitutionDetail({ params }) {
                     </div>
                     <button
                       onClick={() => { navigator.clipboard.writeText((process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/auth/login'); toast.success('URL copied') }}
-                      style={{ flexShrink: 0, padding: '4px 8px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#FFF', color: '#64748B', cursor: 'pointer' }}>
+                      style={{ flexShrink: 0, padding: '4px 8px', borderRadius: 6, border: '1px solid #C0D5E9', background: '#FFF', color: '#64748B', cursor: 'pointer' }}>
                       <Copy size={12} />
                     </button>
                   </div>
@@ -552,7 +555,7 @@ export default function InstitutionDetail({ params }) {
           </div>
 
           {/* Usage — full-width row below */}
-          <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22 }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, padding: 22 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: '0 0 16px' }}>Usage</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '4px 32px' }}>
               {[
@@ -576,7 +579,7 @@ export default function InstitutionDetail({ params }) {
                       </span>
                     </div>
                     {max && max !== Infinity && (
-                      <div style={{ height: 5, background: '#F1F5F9', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: 5, background: '#DDE9F5', borderRadius: 99, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${pct}%`, background: barClr, borderRadius: 99, transition: 'width 0.3s' }} />
                       </div>
                     )}
@@ -590,7 +593,7 @@ export default function InstitutionDetail({ params }) {
 
       {/* ── License ── */}
       {tab === 'license' && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 28 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, padding: 28 }}>
           <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: '0 0 24px' }}>License Configuration</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18 }}>
             <div>
@@ -694,7 +697,7 @@ export default function InstitutionDetail({ params }) {
 
       {/* ── Modules ── */}
       {tab === 'modules' && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 28 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, padding: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Module Access</h3>
             <button onClick={saveModules} disabled={saving} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -709,8 +712,8 @@ export default function InstitutionDetail({ params }) {
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '12px 16px', borderRadius: 10, cursor: 'pointer',
-                    background: enabled ? '#F0FDF4' : '#F8FAFC',
-                    border: `1.5px solid ${enabled ? '#A7F3D0' : '#E2E8F0'}`,
+                    background: enabled ? '#F0FDF4' : '#EEF4FA',
+                    border: `1.5px solid ${enabled ? '#A7F3D0' : '#C0D5E9'}`,
                     transition: 'all 0.15s',
                   }}>
                   <span style={{ fontSize: 13.5, fontWeight: 600, color: enabled ? '#065F46' : '#94A3B8' }}>{m.label}</span>
@@ -741,8 +744,8 @@ export default function InstitutionDetail({ params }) {
                   return (
                     <div key={r.id} style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '12px 16px', borderRadius: 10, background: '#F8FAFC',
-                      border: '1.5px solid #E2E8F0',
+                      padding: '12px 16px', borderRadius: 10, background: '#EEF4FA',
+                      border: '1.5px solid #C0D5E9',
                     }}>
                       <div>
                         <span style={{ fontSize: 13.5, fontWeight: 600, color: '#0F172A' }}>{moduleLabel}</span>
@@ -784,8 +787,8 @@ export default function InstitutionDetail({ params }) {
 
       {/* ── Payments ── */}
       {tab === 'payments' && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, overflow: 'hidden' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #DDE9F5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Payment History</h3>
             <button onClick={() => setPaymentModal({ open: true, billing_month: '', amount: '', note: '' })}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: '1.5px solid #2563EB25', background: '#2563EB0f', color: '#2563EB', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -845,7 +848,7 @@ export default function InstitutionDetail({ params }) {
               autoFocus
               style={{
                 width: '100%', boxSizing: 'border-box', padding: '10px 12px',
-                border: '1.5px solid #E2E8F0', borderRadius: 10, fontSize: 13.5,
+                border: '1.5px solid #C0D5E9', borderRadius: 10, fontSize: 13.5,
                 fontFamily: 'inherit', color: '#0F172A', outline: 'none',
                 resize: 'vertical', background: '#FAFCFF',
               }}
@@ -854,7 +857,7 @@ export default function InstitutionDetail({ params }) {
               <button
                 onClick={() => setStatusModal(m => ({ ...m, open: false }))}
                 style={{
-                  padding: '9px 18px', borderRadius: 9, border: '1.5px solid #E2E8F0',
+                  padding: '9px 18px', borderRadius: 9, border: '1.5px solid #C0D5E9',
                   background: '#FFFFFF', color: '#64748B', fontSize: 13.5, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Cancel</button>
@@ -882,17 +885,17 @@ export default function InstitutionDetail({ params }) {
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Admin Email *</label>
                 <input type="email" value={provisionModal.adminEmail} onChange={e => setProvisionModal(m => ({ ...m, adminEmail: e.target.value }))}
-                  placeholder="admin@institution.edu" style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
+                  placeholder="admin@institution.edu" style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #C0D5E9', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Admin Full Name *</label>
                 <input type="text" value={provisionModal.adminName} onChange={e => setProvisionModal(m => ({ ...m, adminName: e.target.value }))}
-                  placeholder="e.g. Dr. Sanjay Kumar" style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
+                  placeholder="e.g. Dr. Sanjay Kumar" style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #C0D5E9', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setProvisionModal(m => ({ ...m, open: false }))} disabled={provisionModal.loading}
-                style={{ padding: '9px 18px', borderRadius: 9, border: '1.5px solid #E2E8F0', background: '#FFF', color: '#64748B', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                style={{ padding: '9px 18px', borderRadius: 9, border: '1.5px solid #C0D5E9', background: '#FFF', color: '#64748B', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
               <button onClick={confirmProvision} disabled={provisionModal.loading}
                 style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: '#16A34A', color: '#FFF', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Zap size={13} /> {provisionModal.loading ? 'Provisioning…' : 'Provision Now'}
@@ -912,22 +915,22 @@ export default function InstitutionDetail({ params }) {
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Billing Month *</label>
                 <input type="month" value={paymentModal.billing_month} onChange={e => setPaymentModal(m => ({ ...m, billing_month: e.target.value }))}
-                  style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
+                  style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #C0D5E9', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Amount (₹) *</label>
                 <input type="number" min="0" value={paymentModal.amount} onChange={e => setPaymentModal(m => ({ ...m, amount: e.target.value }))}
-                  placeholder="e.g. 4999" style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
+                  placeholder="e.g. 4999" style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #C0D5E9', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Note</label>
                 <input type="text" value={paymentModal.note} onChange={e => setPaymentModal(m => ({ ...m, note: e.target.value }))}
-                  placeholder="e.g. Manual bank transfer" style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
+                  placeholder="e.g. Manual bank transfer" style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #C0D5E9', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setPaymentModal(m => ({ ...m, open: false }))}
-                style={{ padding: '9px 18px', borderRadius: 9, border: '1.5px solid #E2E8F0', background: '#FFF', color: '#64748B', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                style={{ padding: '9px 18px', borderRadius: 9, border: '1.5px solid #C0D5E9', background: '#FFF', color: '#64748B', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
               <button onClick={addPaymentEntry} disabled={saving}
                 style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: '#2563EB', color: '#FFF', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {saving ? 'Saving…' : 'Add Payment'}
@@ -950,11 +953,11 @@ export default function InstitutionDetail({ params }) {
               placeholder="e.g. Module not included in your current plan."
               rows={3}
               autoFocus
-              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1.5px solid #E2E8F0', borderRadius: 10, fontSize: 13.5, fontFamily: 'inherit', color: '#0F172A', outline: 'none', resize: 'vertical' }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1.5px solid #C0D5E9', borderRadius: 10, fontSize: 13.5, fontFamily: 'inherit', color: '#0F172A', outline: 'none', resize: 'vertical' }}
             />
             <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
               <button onClick={() => setRejectModal(m => ({ ...m, open: false }))}
-                style={{ padding: '9px 18px', borderRadius: 9, border: '1.5px solid #E2E8F0', background: '#FFF', color: '#64748B', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                style={{ padding: '9px 18px', borderRadius: 9, border: '1.5px solid #C0D5E9', background: '#FFF', color: '#64748B', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
               <button onClick={async () => {
                 const { requestId, reason } = rejectModal
                 setRejectModal(m => ({ ...m, open: false }))
@@ -986,12 +989,12 @@ export default function InstitutionDetail({ params }) {
                 onChange={e => setResendModal(m => ({ ...m, toEmail: e.target.value }))}
                 placeholder={credentials?.admin_email || 'admin@institution.edu'}
                 autoFocus
-                style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }}
+                style={{ width: '100%', height: 40, boxSizing: 'border-box', padding: '0 12px', border: '1px solid #C0D5E9', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', outline: 'none' }}
               />
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setResendModal(m => ({ ...m, open: false }))} disabled={resendModal.sending}
-                style={{ padding: '9px 18px', borderRadius: 9, border: '1.5px solid #E2E8F0', background: '#FFF', color: '#64748B', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ padding: '9px 18px', borderRadius: 9, border: '1.5px solid #C0D5E9', background: '#FFF', color: '#64748B', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancel
               </button>
               <button onClick={handleResendEmail} disabled={resendModal.sending}
@@ -1005,18 +1008,18 @@ export default function InstitutionDetail({ params }) {
 
       {/* ── Emails ── */}
       {tab === 'emails' && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, overflow: 'hidden' }}>
-          <div style={{ padding: '18px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ padding: '18px 24px', borderBottom: '1px solid #DDE9F5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Email Queue</h3>
             <button onClick={refreshEmails} disabled={emailsLoading}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 7, border: '1.5px solid #E2E8F0', background: '#F8FAFC', color: '#64748B', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 7, border: '1.5px solid #C0D5E9', background: '#EEF4FA', color: '#64748B', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               <RefreshCw size={12} className={emailsLoading ? 'animate-spin' : ''} /> Refresh
             </button>
           </div>
 
           {emailsLoading ? (
             <div style={{ padding: '32px 24px', display: 'flex', justifyContent: 'center' }}>
-              <div style={{ width: 22, height: 22, border: '2.5px solid #E2E8F0', borderTop: '2.5px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
+              <div style={{ width: 22, height: 22, border: '2.5px solid #C0D5E9', borderTop: '2.5px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
             </div>
           ) : !emails || emails.length === 0 ? (
             <div style={{ padding: '40px 24px', textAlign: 'center' }}>
@@ -1030,7 +1033,7 @@ export default function InstitutionDetail({ params }) {
                   pending: { bg: '#FFFBEB', color: '#B45309', label: 'Pending' },
                   sent:    { bg: '#F0FDF4', color: '#15803D', label: 'Sent'    },
                   failed:  { bg: '#FEF2F2', color: '#B91C1C', label: 'Failed'  },
-                }[em.status] || { bg: '#F8FAFC', color: '#64748B', label: em.status }
+                }[em.status] || { bg: '#EEF4FA', color: '#64748B', label: em.status }
 
                 return (
                   <div key={em.id}>
@@ -1061,18 +1064,18 @@ export default function InstitutionDetail({ params }) {
 
                     {/* Expanded email body */}
                     {viewEmail?.id === em.id && (
-                      <div style={{ borderBottom: '1px solid #F1F5F9', background: '#FAFCFF', padding: '0 24px 20px' }}>
+                      <div style={{ borderBottom: '1px solid #DDE9F5', background: '#FAFCFF', padding: '0 24px 20px' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 12, marginBottom: 10 }}>
                           <button
                             onClick={() => { navigator.clipboard.writeText(em.body_html || ''); toast.success('HTML copied') }}
-                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#FFF', color: '#64748B', fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 6, border: '1px solid #C0D5E9', background: '#FFF', color: '#64748B', fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit' }}>
                             <Copy size={11} /> Copy HTML
                           </button>
                         </div>
                         {em.body_html ? (
                           <iframe
                             srcDoc={em.body_html}
-                            style={{ width: '100%', minHeight: 420, border: '1px solid #E2E8F0', borderRadius: 10, background: '#FFF' }}
+                            style={{ width: '100%', minHeight: 420, border: '1px solid #C0D5E9', borderRadius: 10, background: '#FFF' }}
                             sandbox="allow-same-origin"
                             title={`Email: ${em.subject}`}
                           />
@@ -1091,8 +1094,8 @@ export default function InstitutionDetail({ params }) {
 
       {/* ── Support ── */}
       {tab === 'support' && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, overflow: 'hidden' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #DDE9F5' }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Support Tickets</h3>
           </div>
           {(data?.tickets || []).length === 0 ? (

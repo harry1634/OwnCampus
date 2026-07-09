@@ -1,5 +1,13 @@
+import { randomBytes }        from 'crypto'
 import { requireControlUser } from '@/lib/control/auth'
 import { createAdminClient }  from '@/lib/supabase/admin'
+
+function secureRandIndex(max) {
+  const limit = Math.floor(256 / max) * max
+  let r
+  do { r = randomBytes(1)[0] } while (r >= limit)
+  return r % max
+}
 
 function generateTempPassword() {
   const upper  = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
@@ -7,11 +15,11 @@ function generateTempPassword() {
   const digits = '23456789'
   const syms   = '!@#$'
   const all    = upper + lower + digits + syms
-  const pick   = (set) => set[Math.floor(Math.random() * set.length)]
+  const pick   = (set) => set[secureRandIndex(set.length)]
   const chars  = [pick(upper), pick(lower), pick(digits), pick(syms)]
   for (let i = 4; i < 16; i++) chars.push(pick(all))
   for (let i = chars.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = secureRandIndex(i + 1);
     [chars[i], chars[j]] = [chars[j], chars[i]]
   }
   return chars.join('')
@@ -48,11 +56,6 @@ export async function POST(req, { params }) {
     // Update the Supabase auth password
     const { error: authErr } = await admin.auth.admin.updateUserById(profile.id, { password: newPassword })
     if (authErr) return Response.json({ error: `Could not reset password: ${authErr.message}` }, { status: 500 })
-
-    // Persist new temp_password in metadata so the CC can always read it back
-    await admin.from('user_profiles').update({
-      metadata: { ...(profile.metadata || {}), temp_password: newPassword },
-    }).eq('id', profile.id)
 
     return Response.json({ ok: true, temp_password: newPassword })
   } catch (err) {

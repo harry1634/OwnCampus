@@ -100,12 +100,22 @@ export async function POST(req) {
 
     const admin = createAdminClient()
 
+    // Verify role — only faculty and admins can enter marks
+    const { data: callerProfile } = await admin.from('user_profiles').select('institution_id, role').eq('id', user.id).single()
+    const MARKS_WRITE_ROLES = new Set([
+      'owner','super_admin','principal','vice_principal','academic_coordinator',
+      'chairman','director','administrator',
+      'teacher','faculty','trainer','hod','coordinator','tutor','instructor','professor','dean',
+    ])
+    if (!MARKS_WRITE_ROLES.has(callerProfile?.role || '')) {
+      return Response.json({ error: 'Insufficient permissions to enter exam marks.' }, { status: 403 })
+    }
+
     // Fetch exam for validation
     const { data: exam } = await admin.from('exams').select('total_marks, institution_id').eq('id', exam_id).single()
     if (!exam) return Response.json({ error: 'Exam not found.' }, { status: 404 })
 
     // Security: verify exam belongs to caller's institution
-    const { data: callerProfile } = await admin.from('user_profiles').select('institution_id').eq('id', user.id).single()
     if (callerProfile?.institution_id && exam.institution_id && callerProfile.institution_id !== exam.institution_id) {
       return Response.json({ error: 'Exam does not belong to your institution.' }, { status: 403 })
     }

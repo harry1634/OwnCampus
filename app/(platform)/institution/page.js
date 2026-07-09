@@ -7,7 +7,6 @@ import {
   Edit2, X, Check, Calendar, Award, User, BookOpen, Layers,
   Landmark, FileText, Save,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 const BOARD_OPTIONS   = ['CBSE','ICSE','IB','State Board','NIOS','Cambridge','Other']
 const TYPE_OPTIONS    = ['School','College','University','Institute','Academy','Other']
@@ -193,28 +192,28 @@ export default function InstitutionPage() {
   const [editOpen, setEditOpen] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
-      supabase.from('user_profiles').select('institution_id').eq('id', user.id).single()
-        .then(({ data: up }) => {
-          if (!up?.institution_id) return
-          supabase.from('institutions').select('*').eq('id', up.institution_id).single()
-            .then(({ data: inst }) => {
-              if (!inst) return
-              setProfile({
-                name: inst.name || '', type: inst.type || 'School',
-                established: inst.established || '', email: inst.email || '',
-                phone: inst.phone || '', website: inst.website || '',
-                address: inst.address || '', city: inst.city || '',
-                state: inst.state || '', pincode: inst.pincode || '',
-                board: inst.board || 'CBSE', affiliation: inst.affiliation || '',
-                accreditation: inst.accreditation || 'None',
-                description: inst.description || '', shortName: inst.short_name || '',
-              })
-            })
+    fetch('/api/institutions/my-code')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d || d.error) return
+        setProfile({
+          name:          d.name          || '',
+          type:          d.type          || 'School',
+          established:   d.established_year ? String(d.established_year) : '',
+          email:         d.email         || '',
+          phone:         d.phone         || '',
+          website:       d.website       || '',
+          address:       d.address       || '',
+          city:          d.city          || '',
+          state:         d.state         || '',
+          pincode:       d.pincode       || '',
+          board:         d.affiliation   || '',
+          affiliation:   d.affiliation   || '',
+          accreditation: d.accreditation || 'None',
+          logoUrl:       d.logo_url      || null,
         })
-    })
+      })
+      .catch(() => {})
     fetch('/api/branches').then(r => r.ok ? r.json() : {}).then(d => setBranches(d.branches || [])).catch(() => {})
     fetch('/api/students').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setStudents(d) }).catch(() => {})
     fetch('/api/faculty').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setFaculty(d) }).catch(() => {})
@@ -252,30 +251,45 @@ export default function InstitutionPage() {
         style={{ background: '#FFF', border: '1px solid #E2E8F0', borderRadius: 20, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.06)' }}>
 
         {/* Banner */}
-        <div style={{ background: '#2563EB', height: 110, position: 'relative' }}>
-          <div style={{ position: 'absolute', bottom: -36, left: 28, width: 72, height: 72, borderRadius: 18, background: '#FFFFFF', border: '4px solid #FFF', boxShadow: '0 4px 16px rgba(15,23,42,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#2563EB', fontFamily: 'Inter, sans-serif' }}>
-            {initials}
+        <div style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #2563EB 55%, #4F46E5 100%)', height: 130, position: 'relative' }}>
+          {/* Decorative circles */}
+          <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+          <div style={{ position: 'absolute', bottom: -50, right: 120, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+          <div style={{ position: 'absolute', top: 10, right: 60, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
+
+          {/* Institution name inside banner */}
+          <div style={{ position: 'absolute', top: 0, left: 112, right: 20, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
+            <p style={{ fontSize: 20, fontWeight: 800, color: '#FFFFFF', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+              {p.name || 'Your Institution'}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {p.type && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.12)', padding: '2px 10px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.18)' }}>{p.type}</span>
+              )}
+              {p.board && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.12)', padding: '2px 10px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.18)' }}>{p.board}</span>
+              )}
+              {p.accreditation && p.accreditation !== 'None' && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.12)', padding: '2px 10px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Award size={9} />{p.accreditation}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Logo / initials */}
+          <div style={{ position: 'absolute', bottom: -36, left: 28, width: 72, height: 72, borderRadius: 18, background: '#FFFFFF', border: '4px solid #FFF', boxShadow: '0 4px 16px rgba(15,23,42,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#2563EB', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
+            {p.logoUrl
+              ? <img src={p.logoUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : initials
+            }
           </div>
         </div>
 
         <div style={{ padding: '48px 28px 28px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
             <div>
-              <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: 22, fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>{p.name}</h2>
               {p.tagline && <p style={{ fontSize: 13, color: '#64748B', marginTop: 4, fontStyle: 'italic' }}>"{p.tagline}"</p>}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                {p.type && (
-                  <span style={{ padding: '3px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE' }}>{p.type}</span>
-                )}
-                {p.board && (
-                  <span style={{ padding: '3px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE' }}>{p.board}</span>
-                )}
-                {p.accreditation && p.accreditation !== 'None' && (
-                  <span style={{ padding: '3px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Award size={10} />{p.accreditation}
-                  </span>
-                )}
-              </div>
             </div>
           </div>
 
@@ -300,7 +314,7 @@ export default function InstitutionPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>Contact & Location</p>
-              <InfoRow icon={MapPin}    label="Address"    value={[p.address, p.city, p.state, p.pin].filter(Boolean).join(', ')} />
+              <InfoRow icon={MapPin}    label="Address"    value={[p.address, p.city, p.state, p.pincode].filter(Boolean).join(', ')} />
               <InfoRow icon={Phone}     label="Phone"      value={p.phone} />
               <InfoRow icon={Mail}      label="Email"      value={p.email} />
               <InfoRow icon={Globe}     label="Website"    value={p.website} />

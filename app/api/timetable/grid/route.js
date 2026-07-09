@@ -119,11 +119,19 @@ export async function POST(req) {
 
     const admin = createAdminClient()
     const { data: profile } = await admin
-      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+      .from('user_profiles').select('institution_id, role').eq('id', user.id).single()
     const institutionId = profile?.institution_id || null
 
     if (!institutionId) {
       return Response.json({ error: 'Your account is not linked to an institution.' }, { status: 400 })
+    }
+
+    const TIMETABLE_ADMIN_ROLES = new Set([
+      'owner','super_admin','principal','vice_principal','academic_coordinator',
+      'chairman','director','administrator',
+    ])
+    if (!TIMETABLE_ADMIN_ROLES.has(profile?.role || '')) {
+      return Response.json({ error: 'Only admins can modify the timetable.' }, { status: 403 })
     }
 
     const body = await req.json()

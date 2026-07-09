@@ -134,8 +134,9 @@ export async function PATCH(req) {
     const admin = createAdminClient()
 
     // Verify the leave belongs to this admin's institution before approving/rejecting
+    // Also fetch name here so we don't need a second round-trip for the notification
     const { data: callerProfile } = await admin
-      .from('user_profiles').select('institution_id, role').eq('id', user.id).single()
+      .from('user_profiles').select('institution_id, role, first_name, last_name').eq('id', user.id).single()
     const adminRoles = ['owner','super_admin','principal','vice_principal','academic_coordinator','hod','hr']
     if (!adminRoles.includes(callerProfile?.role || '')) {
       return Response.json({ error: 'Insufficient permissions' }, { status: 403 })
@@ -160,10 +161,9 @@ export async function PATCH(req) {
     // Push notification to the leave applicant
     if ((status === 'approved' || status === 'rejected') && data?.user_id) {
       try {
-        const { data: approverProfile } = await admin
-          .from('user_profiles').select('first_name, last_name, institution_id').eq('id', user.id).single()
-        const approverName = [approverProfile?.first_name, approverProfile?.last_name].filter(Boolean).join(' ') || 'Admin'
-        const institutionId = approverProfile?.institution_id || null
+        // Re-use callerProfile already fetched above — no extra round-trip
+        const approverName = [callerProfile?.first_name, callerProfile?.last_name].filter(Boolean).join(' ') || 'Admin'
+        const institutionId = callerProfile?.institution_id || null
         const emoji = status === 'approved' ? '✅' : '❌'
         await admin.from('notifications').insert({
           institution_id: institutionId,

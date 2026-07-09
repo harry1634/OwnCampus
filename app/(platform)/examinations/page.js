@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Download, CheckCircle, Clock, AlertTriangle, X, Check } from 'lucide-react'
 import Dropdown from '@/components/ui/Dropdown'
@@ -462,24 +462,17 @@ export default function ExaminationsPage() {
   const [showModal,  setShowModal ] = useState(false)
   const [schedule,   setSchedule  ] = useState([])
 
-  // Load grades from live timetable DB (authoritative source)
+  // Load grades + exams in parallel on mount
   const [ttGrades, setTtGrades] = useState([])
   useEffect(() => {
-    fetch('/api/timetable/grid')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d?.grid?.grades?.length)  setTtGrades(d.grid.grades)
-        else if (d?.classes?.length)  setTtGrades(d.classes.map(c => c.displayName || c.name))
-      })
-      .catch(() => {})
-  }, [])
+    Promise.all([
+      fetch('/api/timetable/grid').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/examinations').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([gridData, rows]) => {
+      if (gridData?.grid?.grades?.length)  setTtGrades(gridData.grid.grades)
+      else if (gridData?.classes?.length)  setTtGrades(gridData.classes.map(c => c.displayName || c.name))
 
-  // Load exams from API on mount
-  useEffect(() => {
-    fetch('/api/examinations')
-      .then(r => r.ok ? r.json() : null)
-      .then(rows => {
-        if (!Array.isArray(rows) || rows.length === 0) return
+      if (Array.isArray(rows) && rows.length > 0) {
         const apiSchedule = rows.map(e => ({
           id:            e.id,
           exam:          e.name,
@@ -505,25 +498,30 @@ export default function ExaminationsPage() {
           setExamNames(prev => [...new Set([...prev, ...apiNames])])
           setExam(prev => apiNames.includes(prev) ? prev : apiNames[0])
         }
-      })
-      .catch(() => {})
-      .finally(() => setMounted(true))
+      }
+      setMounted(true)
+    })
   }, [])
 
-  const filtered = schedule.filter(row =>
-    row.exam === exam &&
-    (cls === 'All' || row.class === cls)
-  )
-
-  // Derive class filter options from what's in the schedule for this exam
-  const classesInExam = ['All', ...new Set(schedule.filter(r => r.exam === exam).map(r => r.class))]
-
-  const kpis = [
-    { label: 'Exams Scheduled',     value: filtered.length,                                                          valueColor: '#0F172A' },
-    { label: 'Hall Tickets Issued', value: filtered.filter(r => r.status === 'Hall Tickets Sent').length,            valueColor: '#0891B2' },
-    { label: 'Marks Entry Pending', value: `${filtered.filter(r => r.status === 'Marks Pending').length} subjects`,  valueColor: '#D97706' },
-    { label: 'Total Exams (All)',   value: schedule.length,                                                          valueColor: '#0F172A' },
-  ]
+  const { filtered, classesInExam, kpis } = useMemo(() => {
+    const filtered = schedule.filter(row =>
+      row.exam === exam &&
+      (cls === 'All' || row.class === cls)
+    )
+    const classesInExam = ['All', ...new Set(schedule.filter(r => r.exam === exam).map(r => r.class))]
+    let hallTickets = 0, marksPending = 0
+    for (const r of filtered) {
+      if (r.status === 'Hall Tickets Sent') hallTickets++
+      else if (r.status === 'Marks Pending') marksPending++
+    }
+    const kpis = [
+      { label: 'Exams Scheduled',     value: filtered.length,             valueColor: '#0F172A' },
+      { label: 'Hall Tickets Issued', value: hallTickets,                  valueColor: '#0891B2' },
+      { label: 'Marks Entry Pending', value: `${marksPending} subjects`,   valueColor: '#D97706' },
+      { label: 'Total Exams (All)',   value: schedule.length,              valueColor: '#0F172A' },
+    ]
+    return { filtered, classesInExam, kpis }
+  }, [schedule, exam, cls])
 
   const updateStatus = async (id, newStatus) => {
     const row = schedule.find(r => r.id === id)

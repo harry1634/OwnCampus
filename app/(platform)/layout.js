@@ -130,7 +130,7 @@ export default async function PlatformLayout({ children }) {
           style={{ marginTop: 'var(--header-height)' }}
         >
           <PlatformErrorShell>
-            <div className="platform-content max-w-screen-2xl mx-auto w-full animate-fade-in">
+            <div className="platform-content w-full animate-fade-in">
               {children}
             </div>
           </PlatformErrorShell>

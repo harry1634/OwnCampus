@@ -303,8 +303,11 @@ export default function FinancePage() {
 
   if (!mounted) return null
 
+  const rateColor = collRate >= 75 ? '#16A34A' : collRate >= 50 ? '#D97706' : '#EF4444'
+  const rateBg    = collRate >= 75 ? '#F0FDF4' : collRate >= 50 ? '#FFFBEB' : '#FEF2F2'
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
       {/* Page Header */}
       <div className="page-header">
@@ -323,39 +326,90 @@ export default function FinancePage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="rg-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
         {kpis.map((kpi, i) => {
           const KpiIcon = kpi.icon
           return (
             <motion.div key={kpi.label}
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-              whileHover={{ translateY: -3, boxShadow: '0 12px 32px rgba(15,23,42,0.10)' }}
-              style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '22px 24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 11, background: kpi.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <KpiIcon size={19} style={{ color: kpi.iconColor }} />
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07, ease: 'easeOut' }}
+              whileHover={{ y: -4, boxShadow: `0 16px 40px ${kpi.iconColor}14` }}
+              style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, padding: '20px', boxShadow: '0 1px 4px rgba(15,23,42,0.06)', display: 'flex', flexDirection: 'column', gap: 14, position: 'relative' }}>
+
+              {/* Left accent stripe */}
+              <div style={{ position: 'absolute', top: 16, left: 0, width: 3, height: 32, borderRadius: '0 4px 4px 0', background: kpi.iconColor }} />
+
+              {/* Icon + badge */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 11, background: kpi.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <KpiIcon size={18} style={{ color: kpi.iconColor }} />
                 </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '3px 9px', borderRadius: 99, background: kpi.positive ? '#F0FDF4' : '#FEF2F2', border: `1px solid ${kpi.positive ? '#BBF7D0' : '#FECACA'}` }}>
-                  {kpi.positive
-                    ? <ArrowUpRight size={11} style={{ color: '#16A34A' }} />
-                    : <ArrowDownRight size={11} style={{ color: '#EF4444' }} />}
-                  <span style={{ fontSize: 11, fontWeight: 700, color: kpi.positive ? '#16A34A' : '#EF4444' }}>{kpi.change}</span>
-                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: kpi.positive ? '#16A34A' : '#EF4444', background: kpi.positive ? '#F0FDF4' : '#FEF2F2', padding: '3px 9px', borderRadius: 99, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {kpi.change}
+                </span>
               </div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 32, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 8 }}>{kpi.value}</p>
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 3 }}>{kpi.label}</p>
-              <p style={{ fontSize: 12, color: '#94A3B8' }}>{kpi.sub}</p>
+
+              {/* Value + label + sub */}
+              <div>
+                <p style={{ fontSize: 28, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 4 }}>{kpi.value}</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 2 }}>{kpi.label}</p>
+                <p style={{ fontSize: 11, color: '#94A3B8', lineHeight: 1.4 }}>{kpi.sub}</p>
+              </div>
             </motion.div>
           )
         })}
       </div>
 
+      {/* Collection Progress Summary */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
+        style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 14, padding: '18px 22px', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#64748B' }}>Collection Rate</span>
+            <span style={{ fontSize: 22, fontWeight: 800, color: rateColor, letterSpacing: '-0.02em' }}>{collRate}%</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: rateColor, background: rateBg, padding: '2px 8px', borderRadius: 6 }}>
+              {collRate >= 75 ? 'On Track' : collRate >= 50 ? 'Moderate' : 'Needs Attention'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 99, background: '#16A34A', flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: '#64748B' }}>Collected: <strong style={{ color: '#0F172A' }}>{collectedAmt > 0 ? fmtL(collectedAmt) : '₹0'}</strong></span>
+            </div>
+            {pendingAmt > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 99, background: '#EF4444', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: '#64748B' }}>Pending: <strong style={{ color: '#EF4444' }}>{fmtL(pendingAmt)}</strong></span>
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 99, background: '#94A3B8', flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: '#64748B' }}>{transactions.length} transactions</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ height: 8, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
+          <motion.div
+            initial={{ width: 0 }} animate={{ width: `${collRate}%` }} transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
+            style={{ height: '100%', borderRadius: 99, background: `linear-gradient(to right, ${rateColor}, ${rateColor}cc)` }} />
+        </div>
+      </motion.div>
+
+      {/* Section divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>Charts</span>
+        <div style={{ flex: 1, height: 1, background: '#F1F5F9' }} />
+      </div>
+
       {/* Chart + Overdue Breakdown */}
       <div className="rg-32">
-        <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Collection vs Target</h3>
-            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Jan – Jun 2026 · in Lakhs (₹)</p>
+        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, padding: '22px 24px', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 8 }}>
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Collection vs Target</h3>
+              <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>Monthly in Lakhs (₹)</p>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#16A34A', background: '#F0FDF4', padding: '3px 9px', borderRadius: 6, whiteSpace: 'nowrap', flexShrink: 0 }}>{term}</span>
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
@@ -375,57 +429,79 @@ export default function FinancePage() {
                 strokeDasharray="5 4" dot={false} activeDot={{ r: 3, fill: '#CBD5E1', strokeWidth: 0 }} />
             </AreaChart>
           </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 20, marginTop: 14 }}>
             {[{ color: '#16A34A', label: 'Collected', dashed: false }, { color: '#CBD5E1', label: 'Target', dashed: true }].map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 20, height: 2, background: l.dashed ? 'transparent' : l.color, borderRadius: 1, borderTop: l.dashed ? '2px dashed #CBD5E1' : undefined }} />
-                <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 500 }}>{l.label}</span>
+                <div style={{ width: 18, height: 2, background: l.dashed ? 'transparent' : l.color, borderRadius: 1, borderTop: l.dashed ? '2px dashed #CBD5E1' : undefined, flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: '#64748B', fontWeight: 500 }}>{l.label}</span>
               </div>
             ))}
+            <span style={{ marginLeft: 'auto', fontSize: 11, color: '#94A3B8' }}>₹{(9000000/100000).toFixed(0)}L / month target</span>
           </div>
         </div>
 
-        <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Overdue Breakdown</h3>
-            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Classes with highest dues</p>
+        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, padding: '22px 24px', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 8 }}>
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Overdue Breakdown</h3>
+              <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>Classes with highest dues</p>
+            </div>
+            {overdueBreakdown.length > 0 && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', background: '#FEF2F2', padding: '3px 9px', borderRadius: 6, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {overdueBreakdown.reduce((s, d) => s + d.students, 0)} students
+              </span>
+            )}
           </div>
           {overdueBreakdown.length === 0 ? (
-            <div style={{ padding: '24px 0', textAlign: 'center' }}>
-              <AlertCircle size={28} style={{ color: '#CBD5E1', margin: '0 auto 10px', display: 'block' }} />
-              <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>No pending dues recorded yet</p>
+            <div style={{ padding: '28px 0', textAlign: 'center' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                <AlertCircle size={20} style={{ color: '#CBD5E1' }} />
+              </div>
+              <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>No pending dues</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              {overdueBreakdown.map((item, i) => (
-                <motion.div key={item.grade}
-                  initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', lineHeight: 1.3 }}>Class {item.grade}</p>
-                      <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{item.students} student{item.students !== 1 ? 's' : ''} · {item.outstanding}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {overdueBreakdown.map((item, i) => {
+                const barColor = item.pct >= 60 ? '#EF4444' : item.pct >= 30 ? '#D97706' : '#F59E0B'
+                return (
+                  <motion.div key={item.grade}
+                    initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: 99, background: barColor, flexShrink: 0 }} />
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>Class {item.grade}</p>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 11, color: '#94A3B8' }}>{item.students} student{item.students !== 1 ? 's' : ''}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: barColor }}>{item.outstanding}</span>
+                      </div>
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#EF4444' }}>{item.outstanding}</span>
-                  </div>
-                  <div style={{ height: 5, borderRadius: 99, background: '#F1F5F9' }}>
-                    <motion.div
-                      initial={{ width: 0 }} animate={{ width: `${item.pct}%` }} transition={{ delay: i * 0.1 + 0.2, duration: 0.5 }}
-                      style={{ height: '100%', borderRadius: 99, background: '#EF4444', opacity: 0.75 }} />
-                  </div>
-                </motion.div>
-              ))}
+                    <div style={{ height: 6, borderRadius: 99, background: '#F1F5F9' }}>
+                      <motion.div
+                        initial={{ width: 0 }} animate={{ width: `${item.pct}%` }} transition={{ delay: i * 0.1 + 0.2, duration: 0.6, ease: 'easeOut' }}
+                        style={{ height: '100%', borderRadius: 99, background: barColor }} />
+                    </div>
+                  </motion.div>
+                )
+              })}
             </div>
           )}
         </div>
       </div>
 
+      {/* Section divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>Ledger</span>
+        <div style={{ flex: 1, height: 1, background: '#F1F5F9' }} />
+      </div>
+
       {/* Recent Transactions */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 2px 6px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, boxShadow: '0 1px 4px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Recent Transactions</h3>
-            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
-              {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}{status !== 'All' ? ` · ${status}` : ''}
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Transaction Ledger</h3>
+            <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+              {filtered.length} record{filtered.length !== 1 ? 's' : ''}{status !== 'All' ? <span style={{ marginLeft: 6, padding: '1px 7px', borderRadius: 5, background: '#EFF6FF', color: '#2563EB', fontSize: 10, fontWeight: 700 }}>{status}</span> : ''}
             </p>
           </div>
           <button className="btn-secondary" style={{ fontSize: 12 }} onClick={() => setShowAll(v => !v)}>
@@ -436,36 +512,44 @@ export default function FinancePage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#F8FAFC' }}>
-                {['STUDENT', 'CLASS', 'AMOUNT', 'MODE', 'DATE', 'STATUS'].map(col => (
-                  <th key={col} style={{ padding: '11px 20px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.07em', borderBottom: '1px solid #E2E8F0' }}>{col}</th>
+                {['Student', 'Class', 'Amount', 'Mode', 'Date', 'Status'].map(col => (
+                  <th key={col} style={{ padding: '10px 20px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', borderBottom: '1px solid #F1F5F9' }}>{col.toUpperCase()}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {paginatedTx.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: '28px 20px', textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>No {status !== 'All' ? status.toLowerCase() : ''} transactions</td></tr>
+                <tr><td colSpan={6}>
+                  <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                      <BookOpen size={18} style={{ color: '#CBD5E1' }} />
+                    </div>
+                    <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>No {status !== 'All' ? status.toLowerCase() + ' ' : ''}transactions yet</p>
+                  </div>
+                </td></tr>
               ) : paginatedTx.map((tx, i) => {
                 const s = statusStyle[tx.status] || statusStyle.Pending
+                const initials = tx.initials || tx.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'
                 return (
                   <motion.tr key={i}
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
-                    style={{ borderBottom: i < paginatedTx.length - 1 ? '1px solid #F8FAFC' : 'none', transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                    style={{ borderBottom: i < paginatedTx.length - 1 ? '1px solid #F8FAFC' : 'none', transition: 'background 0.1s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#FAFBFC'}
                     onMouseLeave={e => e.currentTarget.style.background = ''}>
-                    <td style={{ padding: '14px 20px' }}>
+                    <td style={{ padding: '13px 20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 10, background: tx.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#FFFFFF', flexShrink: 0 }}>{tx.initials}</div>
+                        <div style={{ width: 32, height: 32, borderRadius: 9, background: tx.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#FFFFFF', flexShrink: 0 }}>{initials}</div>
                         <span style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>{tx.name}</span>
                       </div>
                     </td>
-                    <td style={{ padding: '14px 20px' }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 9px', borderRadius: 6, background: '#EFF6FF', color: '#2563EB' }}>{tx.cls}</span>
+                    <td style={{ padding: '13px 20px' }}>
+                      {tx.cls ? <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: '#F1F5F9', color: '#475569' }}>{tx.cls}</span> : <span style={{ color: '#CBD5E1' }}>—</span>}
                     </td>
-                    <td style={{ padding: '14px 20px' }}><span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{tx.amount}</span></td>
-                    <td style={{ padding: '14px 20px' }}><span style={{ fontSize: 12, color: '#64748B' }}>{tx.mode}</span></td>
-                    <td style={{ padding: '14px 20px' }}><span style={{ fontSize: 12, color: '#94A3B8' }}>{tx.date}</span></td>
-                    <td style={{ padding: '14px 20px' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 11px', borderRadius: 20, background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>{tx.status}</span>
+                    <td style={{ padding: '13px 20px' }}><span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>{tx.amount}</span></td>
+                    <td style={{ padding: '13px 20px' }}><span style={{ fontSize: 12, color: '#64748B' }}>{tx.mode}</span></td>
+                    <td style={{ padding: '13px 20px' }}><span style={{ fontSize: 12, color: '#94A3B8', fontVariantNumeric: 'tabular-nums' }}>{tx.date}</span></td>
+                    <td style={{ padding: '13px 20px' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: s.bg, color: s.color, border: `1px solid ${s.border}`, whiteSpace: 'nowrap' }}>{tx.status}</span>
                     </td>
                   </motion.tr>
                 )

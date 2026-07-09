@@ -70,10 +70,10 @@ export default function AlumniPage() {
       {/* KPI Strip */}
       <div className="rg-4">
         {[
-          { label: 'Total Alumni',  value: '3,840', icon: Users,         iconColor: '#2563EB', iconBg: '#EFF6FF' },
-          { label: 'Countries',     value: '24',    icon: Globe,         iconColor: '#10B981', iconBg: '#F0FDF4' },
-          { label: 'Top Companies', value: '180+',  icon: Building2,     iconColor: '#F59E0B', iconBg: '#FFFBEB' },
-          { label: 'Mentors',       value: '142',   icon: GraduationCap, iconColor: '#0891B2', iconBg: '#ECFEFF' },
+          { label: 'Total Alumni',  value: alumniList.length,                                                             icon: Users,         iconColor: '#2563EB', iconBg: '#EFF6FF' },
+          { label: 'Countries',     value: new Set(alumniList.map(a => a.location).filter(Boolean)).size,                 icon: Globe,         iconColor: '#10B981', iconBg: '#F0FDF4' },
+          { label: 'Top Companies', value: new Set(alumniList.map(a => a.company).filter(Boolean)).size,                  icon: Building2,     iconColor: '#F59E0B', iconBg: '#FFFBEB' },
+          { label: 'Mentors',       value: alumniList.filter(a => a.isMentor).length,                                     icon: GraduationCap, iconColor: '#0891B2', iconBg: '#ECFEFF' },
         ].map((stat, i) => {
           const StatIcon = stat.icon
           return (

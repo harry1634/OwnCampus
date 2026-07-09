@@ -1,11 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { LifeBuoy, MessageCircle, ChevronRight, X, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 const PRIORITY_CFG = {
-  low:      { bg: '#F8FAFC', color: '#64748B' },
+  low:      { bg: '#EEF4FA', color: '#64748B' },
   medium:   { bg: '#FFF7ED', color: '#C2410C' },
   high:     { bg: '#FEF2F2', color: '#B91C1C' },
   critical: { bg: '#4C0519', color: '#FCA5A5' },
@@ -15,11 +15,11 @@ const STATUS_CFG = {
   in_progress: { bg: '#FFF7ED', color: '#C2410C' },
   waiting:     { bg: '#FDF4FF', color: '#7E22CE' },
   resolved:    { bg: '#F0FDF4', color: '#15803D' },
-  closed:      { bg: '#F8FAFC', color: '#475569' },
+  closed:      { bg: '#EEF4FA', color: '#475569' },
 }
 
 function Pill({ map, value, style }) {
-  const cfg = map[value] || { bg: '#F8FAFC', color: '#475569' }
+  const cfg = map[value] || { bg: '#EEF4FA', color: '#475569' }
   return <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: cfg.bg, color: cfg.color, ...style }}>{(value || '').replace(/_/g, ' ')}</span>
 }
 
@@ -112,7 +112,7 @@ export default function SupportPage() {
           { key: 'priority', options: ['', 'low', 'medium', 'high', 'critical'],                   label: 'All Priorities' },
         ].map(f => (
           <select key={f.key} value={filter[f.key]} onChange={e => changeFilter(f.key, e.target.value)}
-            style={{ height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid #E2E8F0', background: 'white', fontSize: 13.5, color: '#0F172A', fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
+            style={{ height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid #C0D5E9', background: 'white', fontSize: 13.5, color: '#0F172A', fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
             <option value="">{f.label}</option>
             {f.options.slice(1).map(o => <option key={o} value={o}>{o.replace(/_/g, ' ')}</option>)}
           </select>
@@ -121,10 +121,10 @@ export default function SupportPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1fr' : '1fr', gap: 20 }}>
         {/* Ticket list */}
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(26,58,96,0.08)' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '48px 0' }}>
-              <div style={{ width: 24, height: 24, border: '2.5px solid #E2E8F0', borderTop: '2.5px solid #3B82F6', borderRadius: '50%', margin: '0 auto' }} className="animate-spin" />
+              <div style={{ width: 24, height: 24, border: '2.5px solid #C0D5E9', borderTop: '2.5px solid #3B82F6', borderRadius: '50%', margin: '0 auto' }} className="animate-spin" />
             </div>
           ) : tickets.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8' }}>
@@ -136,11 +136,11 @@ export default function SupportPage() {
               key={t.id}
               onClick={() => openTicket(t)}
               style={{
-                padding: '14px 18px', borderBottom: '1px solid #F1F5F9', cursor: 'pointer',
+                padding: '14px 18px', borderBottom: '1px solid #DDE9F5', cursor: 'pointer',
                 background: selected?.id === t.id ? '#F0F7FF' : 'white',
                 transition: 'background 0.12s',
               }}
-              onMouseEnter={e => { if (selected?.id !== t.id) e.currentTarget.style.background = '#F8FAFC' }}
+              onMouseEnter={e => { if (selected?.id !== t.id) e.currentTarget.style.background = '#EEF4FA' }}
               onMouseLeave={e => { if (selected?.id !== t.id) e.currentTarget.style.background = 'white' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -163,9 +163,9 @@ export default function SupportPage() {
 
         {/* Thread panel */}
         {selected && (
-          <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 180px)', overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 180px)', overflow: 'hidden', boxShadow: '0 1px 4px rgba(26,58,96,0.08)' }}>
             {/* Thread header */}
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #DDE9F5' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: '0 0 4px' }}>{selected.subject}</p>
@@ -182,7 +182,7 @@ export default function SupportPage() {
                 {['open','in_progress','waiting','resolved','closed'].map(st => (
                   <button key={st} onClick={() => updateStatus(st)}
                     style={{
-                      padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, border: '1px solid #E2E8F0',
+                      padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, border: '1px solid #C0D5E9',
                       background: selected.status === st ? '#EFF6FF' : 'white', color: selected.status === st ? '#1D4ED8' : '#64748B',
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}>{st.replace(/_/g, ' ')}</button>
@@ -199,8 +199,8 @@ export default function SupportPage() {
                     <div key={m.id} style={{ display: 'flex', justifyContent: isCompany ? 'flex-end' : 'flex-start' }}>
                       <div style={{
                         maxWidth: '75%', padding: '10px 14px', borderRadius: isCompany ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                        background: isCompany ? '#EFF6FF' : '#F8FAFC',
-                        border: `1px solid ${isCompany ? '#BFDBFE' : '#E8EDF4'}`,
+                        background: isCompany ? '#EFF6FF' : '#EEF4FA',
+                        border: `1px solid ${isCompany ? '#BFDBFE' : '#C0D5E9'}`,
                       }}>
                         <p style={{ fontSize: 11.5, fontWeight: 700, color: isCompany ? '#1D4ED8' : '#64748B', margin: '0 0 4px' }}>{m.sender_name}</p>
                         <p style={{ fontSize: 13, color: '#0F172A', margin: '0 0 4px', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{m.message}</p>
@@ -211,13 +211,13 @@ export default function SupportPage() {
                 })
               ) : (
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <div style={{ width: 20, height: 20, border: '2px solid #E2E8F0', borderTop: '2px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
+                  <div style={{ width: 20, height: 20, border: '2px solid #C0D5E9', borderTop: '2px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
                 </div>
               )}
             </div>
 
             {/* Reply */}
-            <div style={{ padding: '12px 16px', borderTop: '1px solid #F1F5F9', display: 'flex', gap: 8 }}>
+            <div style={{ padding: '12px 16px', borderTop: '1px solid #DDE9F5', display: 'flex', gap: 8 }}>
               <textarea
                 value={reply}
                 onChange={e => setReply(e.target.value)}
@@ -225,7 +225,7 @@ export default function SupportPage() {
                 placeholder="Type a reply… (Ctrl+Enter to send)"
                 rows={2}
                 style={{
-                  flex: 1, padding: '10px 12px', border: '1px solid #E2E8F0', borderRadius: 10,
+                  flex: 1, padding: '10px 12px', border: '1px solid #C0D5E9', borderRadius: 10,
                   fontSize: 13.5, fontFamily: 'inherit', color: '#0F172A', resize: 'none', outline: 'none',
                 }}
               />

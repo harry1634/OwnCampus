@@ -16,6 +16,11 @@ export async function GET(req) {
     const institutionId = profile?.institution_id || null
     if (!institutionId) return Response.json({ error: 'Institution not found.' }, { status: 404 })
 
+    const { searchParams } = new URL(req.url)
+    const days   = Math.min(Math.max(parseInt(searchParams.get('days') || '180'), 30), 365)
+    const months = Math.ceil(days / 30)
+    const since  = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
     // ── Parallel queries ────────────────────────────────────────────────
     const [
       { count: totalStudents },
@@ -44,11 +49,11 @@ export async function GET(req) {
         .select('total_fee, paid_amount, fee_status')
         .eq('institution_id', institutionId).eq('status', 'active').is('deleted_at', null),
 
-      // Attendance (last 30 days)
+      // Attendance (dynamic window)
       admin.from('attendance')
         .select('date, status')
         .eq('institution_id', institutionId)
-        .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))
+        .gte('date', since)
         .order('date', { ascending: true }),
 
       // Exams (no row limit — use date filter instead of truncated count)
@@ -64,12 +69,12 @@ export async function GET(req) {
         .eq('institution_id', institutionId)
         .gte('start_date', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)),
 
-      // Recent fee payments (last 6 months for trend)
+      // Recent fee payments (dynamic window for trend)
       admin.from('fee_payments')
         .select('amount, payment_date, status')
         .eq('institution_id', institutionId)
         .eq('status', 'paid')
-        .gte('payment_date', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))
+        .gte('payment_date', since)
         .order('payment_date', { ascending: true }),
 
       // Exam marks with subject info (for subject performance + pass rate)
@@ -84,11 +89,11 @@ export async function GET(req) {
         .select('source')
         .eq('institution_id', institutionId),
 
-      // Book issues (last 6 months)
+      // Book issues (dynamic window)
       admin.from('book_issues')
         .select('issued_date, status')
         .eq('institution_id', institutionId)
-        .gte('issued_date', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)),
+        .gte('issued_date', since),
     ])
 
     // ── KPI Calculations ────────────────────────────────────────────────
@@ -144,10 +149,11 @@ export async function GET(req) {
       monthlyFee[k] = (monthlyFee[k] || 0) + Number(p.amount || 0)
     })
 
-    // Build last 6 months labels
+    // Build last N months labels (capped at 12)
     const now         = new Date()
-    const feeChartData= Array.from({ length: 6 }, (_, i) => {
-      const d   = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+    const chartMonths = Math.min(months, 12)
+    const feeChartData= Array.from({ length: chartMonths }, (_, i) => {
+      const d   = new Date(now.getFullYear(), now.getMonth() - (chartMonths - 1) + i, 1)
       const lbl = MONTHS[d.getMonth()]
       return { month: lbl, collected: Math.round((monthlyFee[lbl] || 0) / 1000) } // in thousands
     })
@@ -203,8 +209,8 @@ export async function GET(req) {
       const k   = MONTHS[d.getMonth()]
       libMonthMap[k] = (libMonthMap[k] || 0) + 1
     })
-    const libraryTrend = Array.from({ length: 6 }, (_, i) => {
-      const d   = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+    const libraryTrend = Array.from({ length: chartMonths }, (_, i) => {
+      const d   = new Date(now.getFullYear(), now.getMonth() - (chartMonths - 1) + i, 1)
       const lbl = MONTHS[d.getMonth()]
       return { month: lbl, issued: libMonthMap[lbl] || 0 }
     })

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import Link from 'next/link'
@@ -7,12 +7,12 @@ import { Search, Building2, ChevronRight, RefreshCw, Plus, X, Copy, Check } from
 import { toast } from 'sonner'
 
 const STATUS_CONFIG = {
-  '':          { label: 'All',       bg: '#F8FAFC', color: '#475569' },
+  '':          { label: 'All',       bg: '#EEF4FA', color: '#475569' },
   pending:     { label: 'Pending',   bg: '#FFF7ED', color: '#C2410C' },
   trial:       { label: 'Trial',     bg: '#EFF6FF', color: '#1D4ED8' },
   active:      { label: 'Active',    bg: '#F0FDF4', color: '#15803D' },
   suspended:   { label: 'Suspended', bg: '#FEF2F2', color: '#B91C1C' },
-  cancelled:   { label: 'Cancelled', bg: '#F8FAFC', color: '#475569' },
+  cancelled:   { label: 'Cancelled', bg: '#EEF4FA', color: '#475569' },
 }
 
 function Badge({ status }) {
@@ -63,7 +63,7 @@ function AddInstitutionModal({ onClose, onCreated }) {
 
   const iStyle = {
     width: '100%', height: 42, boxSizing: 'border-box', padding: '0 12px',
-    border: '1.5px solid #E2E8F0', borderRadius: 9, fontSize: 13.5,
+    border: '1.5px solid #C0D5E9', borderRadius: 9, fontSize: 13.5,
     color: '#0F172A', fontFamily: 'inherit', outline: 'none', background: '#FAFCFF',
   }
   const L = (t) => <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748B', marginBottom: 6 }}>{t}</label>
@@ -116,7 +116,7 @@ function AddInstitutionModal({ onClose, onCreated }) {
             </div>
             <button onClick={onClose} style={{
               width: '100%', marginTop: 16, height: 42, borderRadius: 9, border: 'none',
-              background: '#F1F5F9', color: '#475569', fontSize: 13.5, fontWeight: 600,
+              background: '#DDE9F5', color: '#475569', fontSize: 13.5, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>Close</button>
           </div>
@@ -165,7 +165,7 @@ function AddInstitutionModal({ onClose, onCreated }) {
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button type="button" onClick={onClose} style={{
-                flex: 1, height: 42, borderRadius: 9, border: '1.5px solid #E2E8F0',
+                flex: 1, height: 42, borderRadius: 9, border: '1.5px solid #C0D5E9',
                 background: '#FFFFFF', color: '#64748B', fontSize: 13.5, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>Cancel</button>
@@ -268,7 +268,7 @@ function InstitutionsInner() {
               placeholder="Search institutions…"
               style={{
                 width: '100%', height: 38, boxSizing: 'border-box',
-                padding: '0 12px 0 36px', borderRadius: 9, border: '1px solid #E2E8F0',
+                padding: '0 12px 0 36px', borderRadius: 9, border: '1px solid #C0D5E9',
                 background: '#FFFFFF', fontSize: 13.5, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
               }}
             />
@@ -284,7 +284,7 @@ function InstitutionsInner() {
               onClick={() => changeStatus(val)}
               style={{
                 padding: '5px 14px', borderRadius: 99, fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
-                border: `1.5px solid ${status === val ? cfg.color + '80' : '#E2E8F0'}`,
+                border: `1.5px solid ${status === val ? cfg.color + '80' : '#C0D5E9'}`,
                 background: status === val ? cfg.bg : '#FFFFFF',
                 color: status === val ? cfg.color : '#64748B',
                 fontFamily: 'inherit', transition: 'all 0.15s',
@@ -294,15 +294,15 @@ function InstitutionsInner() {
           ))}
         </div>
 
-        <button onClick={() => load()} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 8, border: '1px solid #E2E8F0', background: 'white', cursor: 'pointer', fontSize: 12.5, color: '#64748B', fontFamily: 'inherit' }}>
+        <button onClick={() => load()} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 8, border: '1px solid #C0D5E9', background: 'white', cursor: 'pointer', fontSize: 12.5, color: '#64748B', fontFamily: 'inherit' }}>
           <RefreshCw size={13} /> Refresh
         </button>
       </div>
 
       {/* Table */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, boxShadow: '0 1px 4px rgba(15,23,42,0.04)', overflow: 'hidden' }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, boxShadow: '0 1px 4px rgba(26,58,96,0.08)', overflow: 'hidden' }}>
         {/* Table header */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto', gap: 12, padding: '12px 20px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto', gap: 12, padding: '12px 20px', borderBottom: '1px solid #DDE9F5', background: '#EEF4FA' }}>
           {['Institution', 'Type', 'Status', 'MRR', 'Joined', ''].map(h => (
             <span key={h} style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
           ))}
@@ -310,7 +310,7 @@ function InstitutionsInner() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <div style={{ width: 24, height: 24, border: '2.5px solid #E2E8F0', borderTop: '2.5px solid #3B82F6', borderRadius: '50%', margin: '0 auto' }} className="animate-spin" />
+            <div style={{ width: 24, height: 24, border: '2.5px solid #C0D5E9', borderTop: '2.5px solid #3B82F6', borderRadius: '50%', margin: '0 auto' }} className="animate-spin" />
           </div>
         ) : institutions.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8' }}>
@@ -333,7 +333,7 @@ function InstitutionsInner() {
                   textDecoration: 'none', alignItems: 'center',
                   transition: 'background 0.12s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                onMouseEnter={e => e.currentTarget.style.background = '#EEF4FA'}
                 onMouseLeave={e => e.currentTarget.style.background = ''}>
                 <div>
                   <p style={{ fontSize: 13.5, fontWeight: 600, color: '#0F172A', margin: '0 0 2px' }}>{inst.name}</p>
@@ -376,7 +376,7 @@ function InstitutionsInner() {
 
 export default function InstitutionsPage() {
   return (
-    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}><div style={{ width: 24, height: 24, border: '2.5px solid #E2E8F0', borderTop: '2.5px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" /></div>}>
+    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}><div style={{ width: 24, height: 24, border: '2.5px solid #C0D5E9', borderTop: '2.5px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" /></div>}>
       <InstitutionsInner />
     </Suspense>
   )

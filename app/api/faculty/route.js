@@ -73,52 +73,45 @@ export async function GET(req) {
     }
 
     if (!facError && facRows && facRows.length > 0) {
-      // Manually resolve user_profiles by user_id (avoids FK-to-auth.users join issue)
-      const userIds = [...new Set(facRows.map(f => f.user_id).filter(Boolean))]
-      const { data: profiles } = userIds.length
-        ? await admin.from('user_profiles').select('id, email, first_name, last_name, phone, role, metadata').in('id', userIds)
-        : { data: [] }
-      const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]))
+      // Pre-compute all ID arrays synchronously so all 4 lookups can run in parallel
+      const userIds      = [...new Set(facRows.map(f => f.user_id).filter(Boolean))]
+      const facIds       = facRows.map(r => r.id)
+      const branchIds    = [...new Set(facRows.map(f => f.branch_id).filter(Boolean))]
+      const since        = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-      // Optional: enrich with migration-005 columns if they exist
-      const { data: extRows } = await admin
-        .from('faculty')
-        .select('id, employment_type, joining_date, experience_years, employee_code, salary')
-        .in('id', facRows.map(r => r.id))
-      const extMap = {}
-      if (extRows) extRows.forEach(r => { extMap[r.id] = r })
+      let attQ = userIds.length > 0
+        ? admin.from('attendance').select('faculty_id, status').in('faculty_id', userIds).gte('date', since)
+        : null
+      if (attQ && institutionId) attQ = attQ.eq('institution_id', institutionId)
 
-      // Resolve branch names from branch_ids
-      const branchIds = [...new Set(facRows.map(f => f.branch_id).filter(Boolean))]
-      const branchMap = {}
-      if (branchIds.length > 0) {
-        const { data: branchRows } = await admin.from('branches').select('id, name').in('id', branchIds)
-        if (branchRows) branchRows.forEach(b => { branchMap[b.id] = b.name })
-      }
+      // Parallel: 4 independent lookups (was 4 sequential awaits)
+      const [profilesResult, extResult, branchResult, attResult] = await Promise.all([
+        userIds.length > 0
+          ? admin.from('user_profiles').select('id, email, first_name, last_name, phone, role, metadata').in('id', userIds)
+          : Promise.resolve({ data: [] }),
+        admin.from('faculty').select('id, employment_type, joining_date, experience_years, employee_code, salary').in('id', facIds),
+        branchIds.length > 0
+          ? admin.from('branches').select('id, name').in('id', branchIds)
+          : Promise.resolve({ data: [] }),
+        attQ || Promise.resolve({ data: null }),
+      ])
 
-      // Compute real attendance percentages from attendance table (last 90 days)
-      const facultyUserIds = [...new Set(facRows.map(f => f.user_id).filter(Boolean))]
-      const attPctMap = {}
-      if (facultyUserIds.length > 0) {
-        const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-        let attQ = admin
-          .from('attendance')
-          .select('faculty_id, status')
-          .in('faculty_id', facultyUserIds)
-          .gte('date', since)
-        if (institutionId) attQ = attQ.eq('institution_id', institutionId)
-        const { data: attRows } = await attQ
-        if (attRows) {
-          const totals  = {}
-          const present = {}
-          attRows.forEach(r => {
-            totals[r.faculty_id]  = (totals[r.faculty_id]  || 0) + 1
-            if (r.status === 'present') present[r.faculty_id] = (present[r.faculty_id] || 0) + 1
-          })
-          facultyUserIds.forEach(id => {
-            if (totals[id]) attPctMap[id] = Math.round((present[id] || 0) / totals[id] * 100)
-          })
-        }
+      const profileMap = Object.fromEntries((profilesResult.data || []).map(p => [p.id, p]))
+      const extMap     = {}
+      ;(extResult.data || []).forEach(r => { extMap[r.id] = r })
+      const branchMap  = {}
+      ;(branchResult.data || []).forEach(b => { branchMap[b.id] = b.name })
+      const attPctMap  = {}
+      if (attResult.data) {
+        const totals  = {}
+        const present = {}
+        attResult.data.forEach(r => {
+          totals[r.faculty_id]  = (totals[r.faculty_id]  || 0) + 1
+          if (r.status === 'present') present[r.faculty_id] = (present[r.faculty_id] || 0) + 1
+        })
+        userIds.forEach(id => {
+          if (totals[id]) attPctMap[id] = Math.round((present[id] || 0) / totals[id] * 100)
+        })
       }
 
       let faculty = facRows.map((f, i) => {

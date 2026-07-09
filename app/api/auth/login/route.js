@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimitResponse } from '@/lib/rateLimit'
 
 const ADMIN_ROLES = ['admin','administrator','super_admin','chairman','director','owner','principal','vice_principal','academic_coordinator']
 const FACULTY_ROLES = ['teacher','faculty','trainer','hod','staff','librarian','counsellor','driver','helper']
@@ -15,6 +16,9 @@ function resolvePortalRole(role) {
 
 export async function POST(request) {
   try {
+    const limited = await rateLimitResponse(request, 5, 60_000)  // 5 attempts/min per IP
+    if (limited) return limited
+
     const { email, password } = await request.json()
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 })

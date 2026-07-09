@@ -1,12 +1,17 @@
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient }      from '@/lib/supabase/server'
-import { cookies }           from 'next/headers'
+import { createAdminClient }  from '@/lib/supabase/admin'
+import { createClient }       from '@/lib/supabase/server'
+import { cookies }            from 'next/headers'
+import { rateLimitResponse }  from '@/lib/rateLimit'
+import logger                 from '@/lib/logger'
 
 // POST /api/control/auth/login
 // Body: { email, password }
 // Validates Supabase auth → checks company_users → sets cc_uid cookie
 export async function POST(req) {
   try {
+    const limited = await rateLimitResponse(req, 3, 60_000)  // 3 attempts/min per IP (CC is higher-value target)
+    if (limited) return limited
+
     const { email, password } = await req.json()
     if (!email || !password) {
       return Response.json({ error: 'Email and password are required.' }, { status: 400 })
@@ -55,7 +60,7 @@ export async function POST(req) {
 
     return Response.json({ user: { id: cu.id, name: cu.name, email: cu.email, role: cu.role } })
   } catch (err) {
-    console.error('[control/auth/login]', err)
+    logger.error({ err, route: '/api/control/auth/login' }, 'Login handler threw')
     return Response.json({ error: err.message || 'Login failed.' }, { status: 500 })
   }
 }

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -11,9 +11,9 @@ import {
 function StatCard({ label, value, sub, icon: Icon, color, bg }) {
   return (
     <div style={{
-      background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16,
+      background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16,
       padding: '20px 22px',
-      boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+      boxShadow: '0 1px 4px rgba(26,58,96,0.08)',
       display: 'flex', alignItems: 'flex-start', gap: 14,
     }}>
       <div style={{
@@ -37,7 +37,7 @@ const STATUS_BADGE = {
   trial:     { bg: '#EFF6FF', color: '#1D4ED8', label: 'Trial'   },
   active:    { bg: '#F0FDF4', color: '#15803D', label: 'Active'  },
   suspended: { bg: '#FEF2F2', color: '#B91C1C', label: 'Suspended' },
-  cancelled: { bg: '#F8FAFC', color: '#475569', label: 'Cancelled' },
+  cancelled: { bg: '#EEF4FA', color: '#475569', label: 'Cancelled' },
 }
 
 function StatusBadge({ status }) {
@@ -69,7 +69,7 @@ export default function ControlDashboard() {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-      <div style={{ width: 28, height: 28, border: '3px solid #E2E8F0', borderTop: '3px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
+      <div style={{ width: 28, height: 28, border: '3px solid #C0D5E9', borderTop: '3px solid #3B82F6', borderRadius: '50%' }} className="animate-spin" />
     </div>
   )
 
@@ -97,7 +97,7 @@ export default function ControlDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
         {/* Pending institutions */}
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22, boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, padding: 22, boxShadow: '0 1px 4px rgba(26,58,96,0.08)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Pending Approvals</h2>
             <Link href="/control/institutions?status=pending" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: '#3B82F6', fontWeight: 600, textDecoration: 'none' }}>
@@ -116,11 +116,11 @@ export default function ControlDashboard() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '10px 12px', borderRadius: 10, textDecoration: 'none',
-                background: '#F8FAFC', marginBottom: 6,
-                border: '1px solid #E8EDF4', transition: 'all 0.15s',
+                background: '#EEF4FA', marginBottom: 6,
+                border: '1px solid #C0D5E9', transition: 'all 0.15s',
               }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#3B82F6'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = '#E8EDF4'}>
+              onMouseLeave={e => e.currentTarget.style.borderColor = '#C0D5E9'}>
               <div>
                 <p style={{ fontSize: 13.5, fontWeight: 600, color: '#0F172A', margin: '0 0 2px' }}>{inst.name}</p>
                 <p style={{ fontSize: 11.5, color: '#94A3B8', margin: 0, textTransform: 'capitalize' }}>
@@ -133,7 +133,7 @@ export default function ControlDashboard() {
         </div>
 
         {/* Recent audit log */}
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, padding: 22, boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, padding: 22, boxShadow: '0 1px 4px rgba(26,58,96,0.08)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Recent Activity</h2>
             <Link href="/control/audit" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: '#3B82F6', fontWeight: 600, textDecoration: 'none' }}>
@@ -142,10 +142,10 @@ export default function ControlDashboard() {
           </div>
           {(data?.recentAudit || []).length === 0 ? (
             <p style={{ fontSize: 13, color: '#94A3B8', textAlign: 'center', padding: '24px 0', margin: 0 }}>No activity yet</p>
-          ) : (data?.recentAudit || []).map(log => (
+          ) : (data?.recentAudit || []).slice(0, 5).map(log => (
             <div key={log.id} style={{
               display: 'flex', alignItems: 'flex-start', gap: 10,
-              padding: '9px 0', borderBottom: '1px solid #F1F5F9',
+              padding: '9px 0', borderBottom: '1px solid #DDE9F5',
             }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                 <Activity size={12} color="#3B82F6" />

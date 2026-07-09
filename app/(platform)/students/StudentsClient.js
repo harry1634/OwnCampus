@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Search, Filter, Plus, Download, Upload, UserCheck, AlertCircle, TrendingUp, Eye, EyeOff, Edit, Phone, CheckCircle, X, FileText, ArrowLeftRight, Building2, Trash2, GraduationCap, Mail, Save, Copy } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/SkeletonLoader'
@@ -613,25 +613,25 @@ export default function StudentsClient() {
     reader.readAsText(file)
   }
 
-  const stats = [
+  const stats = useMemo(() => [
     { label: 'Total Students', value: students.length.toLocaleString(),                                          icon: Users,       iconColor: '#2563EB', iconBg: '#EFF6FF' },
     { label: 'Active',         value: students.filter(s => s.status === 'active').length.toLocaleString(),       icon: UserCheck,   iconColor: '#10B981', iconBg: '#F0FDF4' },
     { label: 'Low Attendance', value: students.filter(s => s.attendance !== null && s.attendance !== undefined && s.attendance < 75).length.toLocaleString(), icon: AlertCircle, iconColor: '#F59E0B', iconBg: '#FFFBEB' },
     { label: 'Fee Defaulters', value: students.filter(s => s.fees === 'overdue').length.toLocaleString(),        icon: TrendingUp,  iconColor: '#EF4444', iconBg: '#FEF2F2' },
-  ]
+  ], [students])
 
-  const filtered = students.filter(s => {
+  const filtered = useMemo(() => students.filter(s => {
     const matchSearch  = s.name.toLowerCase().includes(search.toLowerCase()) || s.roll.toLowerCase().includes(search.toLowerCase())
     const matchClass   = selectedClass  === 'all' || s.class  === selectedClass
     const matchFee     = selectedFee    === 'all' || s.fees   === selectedFee
     const matchBranch  = selectedBranch === 'all' || s.branch === selectedBranch || (!s.branch && selectedBranch === '__none__')
     return matchSearch && matchClass && matchFee && matchBranch
-  })
+  }), [students, search, selectedClass, selectedFee, selectedBranch])
 
   useEffect(() => { setPage(1); setSelectedIds(new Set()) }, [search, selectedClass, selectedFee, selectedBranch])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)), [filtered.length])
+  const paginated  = useMemo(() => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filtered, page])
 
   // Sync header checkbox indeterminate state
   useEffect(() => {

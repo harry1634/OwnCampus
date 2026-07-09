@@ -29,16 +29,20 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url)
     const q = searchParams.get('q') || ''
 
+    const page     = Math.max(1, parseInt(searchParams.get('page')  || '1'))
+    const pageSize = Math.min(100, parseInt(searchParams.get('limit') || '50'))
+
     let query = admin.from('alumni')
-      .select('*')
+      .select('id, name, batch, program, company, role, location, email, phone, linkedin_url, is_mentor, avatar_url, created_at')
       .eq('institution_id', institutionId)
       .order('created_at', { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize - 1)
 
     if (q) query = query.ilike('name', `%${q}%`)
 
     const { data, error } = await query
     if (error) return Response.json({ error: error.message }, { status: 400 })
-    return Response.json({ alumni: data || [] })
+    return Response.json({ alumni: data || [], page, pageSize })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }

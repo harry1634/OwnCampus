@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Briefcase, Users, Clock, CheckCircle, XCircle, AlertCircle, Plus, Download, Calendar, CreditCard, ChevronDown, CalendarClock, DollarSign, UserPlus } from 'lucide-react'
 import Link from 'next/link'
@@ -56,27 +56,21 @@ export default function HRMSPage() {
   const cycle = new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 
   const loadAll = () => {
-    fetch('/api/hrms?type=employees')
-      .then(r => r.ok ? r.json() : {})
-      .then(d => {
-        if (Array.isArray(d.employees)) setEmployees(d.employees)
-        if (d.kpis) setEmpKpis(d.kpis)
-      })
-      .catch(() => {})
-
-    fetch('/api/hrms?type=leaves')
-      .then(r => r.ok ? r.json() : { leaves: [] })
-      .then(d => {
-        if (Array.isArray(d.leaves)) {
-          setLeaves(d.leaves.map((l, i) => ({
-            ...l,
-            initials: getInits(l.name),
-            color:    pickClr(i),
-            fromApi:  true,
-          })))
-        }
-      })
-      .catch(() => {})
+    Promise.all([
+      fetch('/api/hrms?type=employees').then(r => r.ok ? r.json() : {}).catch(() => ({})),
+      fetch('/api/hrms?type=leaves').then(r => r.ok ? r.json() : { leaves: [] }).catch(() => ({ leaves: [] })),
+    ]).then(([empData, leaveData]) => {
+      if (Array.isArray(empData.employees)) setEmployees(empData.employees)
+      if (empData.kpis) setEmpKpis(empData.kpis)
+      if (Array.isArray(leaveData.leaves)) {
+        setLeaves(leaveData.leaves.map((l, i) => ({
+          ...l,
+          initials: getInits(l.name),
+          color:    pickClr(i),
+          fromApi:  true,
+        })))
+      }
+    })
   }
 
   useEffect(() => {
@@ -103,9 +97,20 @@ export default function HRMSPage() {
     }
   }
 
-  const pendingCount  = leaves.filter(l => l.status === 'pending').length
-  const approvedToday = leaves.filter(l => l.status === 'approved').length
-  const filteredLeaves = leaveFilter === 'all' ? leaves : leaves.filter(l => l.status === leaveFilter)
+  const { pendingCount, approvedToday, rejectedCount, filteredLeaves, statusCountMap, typeCountMap } = useMemo(() => {
+    let pendingCount = 0, approvedToday = 0, rejectedCount = 0
+    const typeCountMap = {}
+    for (const l of leaves) {
+      if (l.status === 'pending') pendingCount++
+      else if (l.status === 'approved') approvedToday++
+      else if (l.status === 'rejected') rejectedCount++
+      const t = (l.type || '').toLowerCase()
+      typeCountMap[t] = (typeCountMap[t] || 0) + 1
+    }
+    const filteredLeaves = leaveFilter === 'all' ? leaves : leaves.filter(l => l.status === leaveFilter)
+    const statusCountMap = { pending: pendingCount, approved: approvedToday, rejected: rejectedCount }
+    return { pendingCount, approvedToday, rejectedCount, filteredLeaves, statusCountMap, typeCountMap }
+  }, [leaves, leaveFilter])
 
   if (!mounted) return null
 
@@ -217,9 +222,9 @@ export default function HRMSPage() {
               <div style={{ display: 'flex', gap: 4, background: '#F8FAFC', borderRadius: 9, padding: 3 }}>
                 {[
                   { key: 'all',      label: `All (${leaves.length})` },
-                  { key: 'pending',  label: `Pending (${leaves.filter(l=>l.status==='pending').length})` },
-                  { key: 'approved', label: `Approved (${leaves.filter(l=>l.status==='approved').length})` },
-                  { key: 'rejected', label: `Rejected (${leaves.filter(l=>l.status==='rejected').length})` },
+                  { key: 'pending',  label: `Pending (${pendingCount})` },
+                  { key: 'approved', label: `Approved (${approvedToday})` },
+                  { key: 'rejected', label: `Rejected (${rejectedCount})` },
                 ].map(f => (
                   <button key={f.key} onClick={() => setLeaveFilter(f.key)}
                     style={{ flex: 1, padding: '5px 8px', borderRadius: 7, border: 'none', fontSize: 11, fontWeight: leaveFilter === f.key ? 700 : 500, cursor: 'pointer', background: leaveFilter === f.key ? '#FFFFFF' : 'transparent', color: leaveFilter === f.key ? '#0F172A' : '#64748B', boxShadow: leaveFilter === f.key ? '0 1px 3px rgba(0,0,0,0.10)' : 'none', transition: 'all 0.15s', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
@@ -308,7 +313,7 @@ export default function HRMSPage() {
               <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 16 }}>Leave Summary</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {Object.entries(leaveStatusConfig).map(([key, cfg]) => {
-                  const count = leaves.filter(l => l.status === key).length
+                  const count = statusCountMap[key] || 0
                   const Icon  = cfg.icon
                   return (
                     <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 10, background: cfg.bg }}>
@@ -327,7 +332,7 @@ export default function HRMSPage() {
             <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, boxShadow: '0 1px 4px rgba(15,23,42,0.05)', padding: '18px 20px' }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 16 }}>By Leave Type</p>
               {Object.keys(LEAVE_TYPE_MAP).map(typeKey => {
-                const count = leaves.filter(l => (l.type||'').toLowerCase() === typeKey).length
+                const count = typeCountMap[typeKey] || 0
                 if (count === 0) return null
                 const total = Math.max(leaves.length, 1)
                 const tc = LEAVE_TYPE_MAP[typeKey]

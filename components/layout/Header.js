@@ -142,7 +142,6 @@ export default function Header({ user, profile, institution }) {
   )
 
   const pageName = currentPage?.name || 'Dashboard'
-  const PageIcon = currentPage?.icon || null
 
   const userName = user?.user_metadata?.first_name
     ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim()
@@ -202,11 +201,6 @@ export default function Header({ user, profile, institution }) {
 
         {/* Page identity */}
         <div className="hidden md:flex" style={{ alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          {PageIcon && (
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <PageIcon size={15} style={{ color: '#2563EB' }} />
-            </div>
-          )}
           <span style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
             {pageName}
           </span>

@@ -187,11 +187,17 @@ export default function AttendancePage() {
     if (Array.isArray(faculty)) setAllFaculty(faculty)
   }, [])
 
-  // Load students, faculty, and classes from API on mount.
+  // Load students, faculty, and classes from API on mount — all 3 in parallel.
   useEffect(() => {
-    fetch('/api/students').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setAllStudents(d) }).catch(() => {})
-    fetch('/api/faculty').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setAllFaculty(d) }).catch(() => {})
-    fetch('/api/classes').then(r => r.ok ? r.json() : {}).then(d => setDbClasses((d.classes || []).map(c => c.name))).catch(() => {})
+    Promise.all([
+      fetch('/api/students').then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/faculty').then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/classes').then(r => r.ok ? r.json() : {}).catch(() => ({})),
+    ]).then(([students, faculty, classData]) => {
+      if (Array.isArray(students)) setAllStudents(students)
+      if (Array.isArray(faculty)) setAllFaculty(faculty)
+      setDbClasses((classData?.classes || []).map(c => c.name))
+    })
   }, [])
 
   // Load saved attendance from DB whenever date or tab changes
@@ -245,10 +251,17 @@ export default function AttendancePage() {
 
   /* ── Student computations ── */
   const classStudents = useMemo(() => allStudents.filter(s => s.class === currentClass), [allStudents, currentClass])
-  const sPresent = classStudents.filter(s => getStudentStatus(s.id) === 'present').length
-  const sAbsent  = classStudents.filter(s => getStudentStatus(s.id) === 'absent').length
-  const sLate    = classStudents.filter(s => getStudentStatus(s.id) === 'late').length
-  const sTotal   = classStudents.length
+  const { sPresent, sAbsent, sLate, sTotal } = useMemo(() => {
+    const dayMap = studentAttByDate[dateKey] || {}
+    let sPresent = 0, sAbsent = 0, sLate = 0
+    for (const s of classStudents) {
+      const st = dayMap[s.id] || 'present'
+      if (st === 'present') sPresent++
+      else if (st === 'absent') sAbsent++
+      else sLate++
+    }
+    return { sPresent, sAbsent, sLate, sTotal: classStudents.length }
+  }, [classStudents, studentAttByDate, dateKey])
 
   const toggleStudent = id => setStudentAttByDate(prev => {
     const day = prev[dateKey] || {}
@@ -266,10 +279,17 @@ export default function AttendancePage() {
     () => currentDept === 'All Faculty' ? allFaculty : allFaculty.filter(f => f.dept === currentDept),
     [allFaculty, currentDept]
   )
-  const fPresent = deptFaculty.filter(f => getFacultyStatus(f.id) === 'present').length
-  const fAbsent  = deptFaculty.filter(f => getFacultyStatus(f.id) === 'absent').length
-  const fLate    = deptFaculty.filter(f => getFacultyStatus(f.id) === 'late').length
-  const fTotal   = deptFaculty.length
+  const { fPresent, fAbsent, fLate, fTotal } = useMemo(() => {
+    const dayMap = facultyAttByDate[dateKey] || {}
+    let fPresent = 0, fAbsent = 0, fLate = 0
+    for (const f of deptFaculty) {
+      const st = dayMap[f.id] || 'present'
+      if (st === 'present') fPresent++
+      else if (st === 'absent') fAbsent++
+      else fLate++
+    }
+    return { fPresent, fAbsent, fLate, fTotal: deptFaculty.length }
+  }, [deptFaculty, facultyAttByDate, dateKey])
 
   const toggleFaculty = id => setFacultyAttByDate(prev => {
     const day = prev[dateKey] || {}

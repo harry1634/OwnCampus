@@ -111,10 +111,19 @@ export async function POST(req) {
 
     const admin = createAdminClient()
 
-    // Resolve institution
+    // Resolve institution + role
     const { data: profile } = await admin
-      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+      .from('user_profiles').select('institution_id, role').eq('id', user.id).single()
     const institutionId = profile?.institution_id || null
+
+    const ATTENDANCE_WRITE_ROLES = new Set([
+      'owner','super_admin','principal','vice_principal','academic_coordinator',
+      'chairman','director','administrator',
+      'teacher','faculty','trainer','hod','coordinator','tutor','instructor','professor','dean',
+    ])
+    if (!ATTENDANCE_WRITE_ROLES.has(profile?.role || '')) {
+      return Response.json({ error: 'Insufficient permissions to record attendance.' }, { status: 403 })
+    }
 
     const type = body.type || 'student'
 

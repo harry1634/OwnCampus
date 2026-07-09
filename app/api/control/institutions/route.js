@@ -1,10 +1,11 @@
+import { randomBytes }                       from 'crypto'
 import { requireControlUser, writeAuditLog } from '@/lib/control/auth'
 import { createAdminClient }                 from '@/lib/supabase/admin'
 
 function generateCode(name) {
   const prefix = (name || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4).padEnd(4, 'X')
   const chars  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  const suffix = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  const suffix = Array.from({ length: 4 }, () => chars[randomBytes(1)[0] % chars.length]).join('')
   return prefix + suffix
 }
 

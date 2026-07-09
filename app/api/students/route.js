@@ -51,42 +51,39 @@ export async function GET(req) {
     // Build from students table (may be empty)
     const tableRows = (!stuError && stuRows) ? stuRows : []
 
-    // Manual user_profiles lookup for all student user_ids (PostgREST join unreliable)
+    // Pre-compute all IDs synchronously so both lookups can run in parallel
     const tableUserIdsArr = [...new Set(tableRows.map(s => s.user_id).filter(Boolean))]
-    let profileMap = {}
-    if (tableUserIdsArr.length > 0) {
-      const { data: profiles } = await admin
-        .from('user_profiles')
-        .select('id, email, first_name, last_name, phone, metadata')
-        .in('id', tableUserIdsArr)
-      ;(profiles || []).forEach(p => { profileMap[p.id] = p })
-    }
-
-    // Fetch attendance percentages — keyed by both students.id and user_id
-    // so the lookup works regardless of which ID was stored in attendance.student_id
     const studentTableIds = tableRows.map(s => s.id).filter(Boolean)
-    const studentUserIds  = tableRows.map(s => s.user_id).filter(Boolean)
-    const allLookupIds    = [...new Set([...studentTableIds, ...studentUserIds])]
-    const attPctMap       = {}  // id → percentage
-    if (allLookupIds.length > 0) {
-      let attQ = admin
-        .from('attendance')
-        .select('student_id, status')
-        .in('student_id', allLookupIds)
-        .gte('date', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))
-      if (institutionId) attQ = attQ.eq('institution_id', institutionId)
-      const { data: attRows } = await attQ
-      if (attRows) {
-        const totals  = {}
-        const present = {}
-        attRows.forEach(r => {
-          totals[r.student_id]  = (totals[r.student_id]  || 0) + 1
-          if (r.status === 'present') present[r.student_id] = (present[r.student_id] || 0) + 1
-        })
-        allLookupIds.forEach(id => {
-          if (totals[id]) attPctMap[id] = Math.round((present[id] || 0) / totals[id] * 100)
-        })
-      }
+    const allLookupIds    = [...new Set([...studentTableIds, ...tableUserIdsArr])]
+    const since90         = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
+    // Parallel: user_profiles lookup + attendance (was sequential)
+    let attBaseQ = allLookupIds.length > 0
+      ? admin.from('attendance').select('student_id, status').in('student_id', allLookupIds).gte('date', since90)
+      : null
+    if (attBaseQ && institutionId) attBaseQ = attBaseQ.eq('institution_id', institutionId)
+
+    const [profilesResult, attResult] = await Promise.all([
+      tableUserIdsArr.length > 0
+        ? admin.from('user_profiles').select('id, email, first_name, last_name, phone, metadata').in('id', tableUserIdsArr)
+        : Promise.resolve({ data: [] }),
+      attBaseQ || Promise.resolve({ data: null }),
+    ])
+
+    const profileMap = {}
+    ;(profilesResult.data || []).forEach(p => { profileMap[p.id] = p })
+
+    const attPctMap = {}  // id → percentage
+    if (attResult.data) {
+      const totals  = {}
+      const present = {}
+      attResult.data.forEach(r => {
+        totals[r.student_id]  = (totals[r.student_id]  || 0) + 1
+        if (r.status === 'present') present[r.student_id] = (present[r.student_id] || 0) + 1
+      })
+      allLookupIds.forEach(id => {
+        if (totals[id]) attPctMap[id] = Math.round((present[id] || 0) / totals[id] * 100)
+      })
     }
 
     // Map students-table rows using manually fetched profiles

@@ -11,7 +11,7 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
 } from 'recharts'
-import { downloadCSV } from '@/lib/exportUtils'
+import { downloadCSV, openPrintWindow } from '@/lib/exportUtils'
 
 const tooltipStyle = {
   background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 12,
@@ -19,6 +19,7 @@ const tooltipStyle = {
 }
 
 const DATE_RANGES = ['Last 30 days', 'Last 3 months', 'Last 6 months', 'This year']
+const RANGE_DAYS  = { 'Last 30 days': 30, 'Last 3 months': 90, 'Last 6 months': 180, 'This year': 365 }
 
 function fmtRs(n) {
   if (n >= 10000000) return `₹${(n / 10000000).toFixed(2)} Cr`
@@ -36,11 +37,16 @@ export default function AnalyticsPage() {
   const [dateRange,  setDateRange ] = useState('Last 6 months')
 
   useEffect(() => {
-    fetch('/api/analytics')
+    setLoading(true)
+    const days = RANGE_DAYS[dateRange] || 180
+    fetch(`/api/analytics?days=${days}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d && !d.error) setStats(d) })
       .catch(() => {})
       .finally(() => setLoading(false))
+  }, [dateRange])
+
+  useEffect(() => {
     fetch('/api/students').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setStudents(d) }).catch(() => {})
     fetch('/api/faculty').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setFaculty(d) }).catch(() => {})
   }, [])
@@ -142,13 +148,16 @@ export default function AnalyticsPage() {
   const admissionTotal = admissionSourceData.reduce((a, b) => a + b.count, 0)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
       {/* Page Header */}
       <div className="page-header">
         <div>
           <h1 className="page-header-title">Analytics &amp; Reports</h1>
-          <p className="page-header-sub">Institution-wide intelligence &amp; performance insights</p>
+          <p className="page-header-sub">
+            Institution-wide intelligence &amp; performance insights
+            {!showFilter && <span style={{ marginLeft: 8, padding: '2px 8px', borderRadius: 6, background: '#EFF6FF', color: '#2563EB', fontSize: 11, fontWeight: 700 }}>{dateRange}</span>}
+          </p>
         </div>
         <div className="page-actions">
           <button
@@ -164,7 +173,45 @@ export default function AnalyticsPage() {
             <Filter size={14} /> Filter
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => {
+              const reportDate = new Date().toLocaleDateString('en-IN', { dateStyle: 'long' })
+              const body = `
+                <div style="max-width:700px;margin:0 auto;padding:40px 24px;font-family:Arial,sans-serif">
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;border-bottom:2.5px solid #2563EB;padding-bottom:16px">
+                    <div>
+                      <h1 style="font-size:22px;font-weight:800;color:#0F172A;margin:0 0 4px">Analytics Report</h1>
+                      <p style="font-size:13px;color:#64748B;margin:0">${dateRange} &nbsp;·&nbsp; Generated ${reportDate}</p>
+                    </div>
+                    <div style="font-size:11px;color:#94A3B8;text-align:right;padding-top:4px">OwnCampus ERP</div>
+                  </div>
+
+                  <h2 style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px">Key Performance Indicators</h2>
+                  <table style="width:100%;border-collapse:collapse;margin-bottom:28px">
+                    <thead>
+                      <tr style="background:#F1F5F9">
+                        <th style="padding:9px 12px;text-align:left;font-size:11px;color:#64748B;font-weight:600;border:1px solid #E2E8F0">Metric</th>
+                        <th style="padding:9px 12px;text-align:right;font-size:11px;color:#64748B;font-weight:600;border:1px solid #E2E8F0">Value</th>
+                        <th style="padding:9px 12px;text-align:left;font-size:11px;color:#64748B;font-weight:600;border:1px solid #E2E8F0">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td style="padding:9px 12px;font-size:13px;color:#374151;border:1px solid #E2E8F0">Fee Collected</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0F172A;text-align:right;border:1px solid #E2E8F0">${fmtRs(kpi.feeCollected||0)}</td><td style="padding:9px 12px;font-size:12px;color:#64748B;border:1px solid #E2E8F0">${kpi.feeCollection||0}% of total fees billed</td></tr>
+                      <tr style="background:#F8FAFC"><td style="padding:9px 12px;font-size:13px;color:#374151;border:1px solid #E2E8F0">Fee Outstanding</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#DC2626;text-align:right;border:1px solid #E2E8F0">${fmtRs(kpi.feeOutstanding||0)}</td><td style="padding:9px 12px;font-size:12px;color:#64748B;border:1px solid #E2E8F0">${kpi.feePending||0} pending, ${kpi.feePartial||0} partial</td></tr>
+                      <tr><td style="padding:9px 12px;font-size:13px;color:#374151;border:1px solid #E2E8F0">Total Students</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0F172A;text-align:right;border:1px solid #E2E8F0">${(kpi.students||0).toLocaleString('en-IN')}</td><td style="padding:9px 12px;font-size:12px;color:#64748B;border:1px solid #E2E8F0">${kpi.faculty||0} faculty members</td></tr>
+                      <tr style="background:#F8FAFC"><td style="padding:9px 12px;font-size:13px;color:#374151;border:1px solid #E2E8F0">Avg Attendance</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0F172A;text-align:right;border:1px solid #E2E8F0">${kpi.attendance||0}%</td><td style="padding:9px 12px;font-size:12px;color:#64748B;border:1px solid #E2E8F0">Student attendance rate</td></tr>
+                      <tr><td style="padding:9px 12px;font-size:13px;color:#374151;border:1px solid #E2E8F0">Pass Rate</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0F172A;text-align:right;border:1px solid #E2E8F0">${kpi.passRate!=null?kpi.passRate+'%':'—'}</td><td style="padding:9px 12px;font-size:12px;color:#64748B;border:1px solid #E2E8F0">Based on exam marks</td></tr>
+                      <tr style="background:#F8FAFC"><td style="padding:9px 12px;font-size:13px;color:#374151;border:1px solid #E2E8F0">Exams Scheduled</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0F172A;text-align:right;border:1px solid #E2E8F0">${kpi.examsUpcoming||0} upcoming</td><td style="padding:9px 12px;font-size:12px;color:#64748B;border:1px solid #E2E8F0">${kpi.examsCompleted||0} completed, ${kpi.examsPublished||0} published</td></tr>
+                      <tr><td style="padding:9px 12px;font-size:13px;color:#374151;border:1px solid #E2E8F0">Leaves This Month</td><td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0F172A;text-align:right;border:1px solid #E2E8F0">${kpi.leavesPending||0} pending</td><td style="padding:9px 12px;font-size:12px;color:#64748B;border:1px solid #E2E8F0">${kpi.leavesApproved||0} approved</td></tr>
+                    </tbody>
+                  </table>
+
+                  <p style="font-size:11px;color:#94A3B8;text-align:center;margin-top:32px;border-top:1px solid #E2E8F0;padding-top:14px">
+                    Generated by OwnCampus &nbsp;·&nbsp; ${reportDate}
+                  </p>
+                </div>
+              `
+              openPrintWindow('Analytics Report — OwnCampus', body)
+            }}
             className="btn-secondary">
             <Download size={15} /> Export PDF
           </button>
@@ -202,90 +249,66 @@ export default function AnalyticsPage() {
       </AnimatePresence>
 
       {/* KPI Cards */}
-      <div className="rg-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 16 }}>
         {kpiData.map((card, i) => {
           const KpiIcon = card.icon
           return (
             <motion.div key={card.label}
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08, ease: 'easeOut' }}
-              whileHover={{ y: -5, boxShadow: `0 20px 48px ${card.iconColor}18` }}
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07, ease: 'easeOut' }}
+              whileHover={{ y: -4, boxShadow: `0 16px 40px ${card.iconColor}14` }}
               style={{
                 background: '#FFFFFF',
-                border: `1px solid ${card.iconColor}22`,
-                borderRadius: 18,
-                padding: '18px 18px 16px',
-                boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
-                display: 'flex', flexDirection: 'column', gap: 0,
-                position: 'relative', overflow: 'hidden',
+                border: '1px solid #E8EDF5',
+                borderRadius: 16,
+                padding: '20px',
+                boxShadow: '0 1px 4px rgba(15,23,42,0.06)',
+                display: 'flex', flexDirection: 'column', gap: 14,
+                position: 'relative',
               }}>
 
-              {/* Top accent bar */}
+              {/* Left accent stripe */}
               <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                position: 'absolute', top: 16, left: 0, width: 3, height: 32, borderRadius: '0 4px 4px 0',
                 background: card.iconColor,
-                borderRadius: '18px 18px 0 0',
               }} />
 
-              {/* Decorative circle bottom-right */}
-              <div style={{
-                position: 'absolute', bottom: -28, right: -28,
-                width: 90, height: 90, borderRadius: 99,
-                background: `${card.iconColor}07`, pointerEvents: 'none',
-              }} />
-
-              {/* Row 1: Icon + Badge — both short, no truncation risk */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              {/* Row 1: Icon left, badge right — both safe with nowrap badge */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{
-                  width: 42, height: 42, borderRadius: 12,
+                  width: 40, height: 40, borderRadius: 11, flexShrink: 0,
                   background: card.iconBg,
-                  border: `1.5px solid ${card.iconColor}25`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: `0 3px 10px ${card.iconColor}18`,
-                  flexShrink: 0,
                 }}>
-                  <KpiIcon size={19} style={{ color: card.iconColor }} />
+                  <KpiIcon size={18} style={{ color: card.iconColor }} />
                 </div>
-
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 3,
-                  padding: '4px 9px', borderRadius: 99,
-                  background: card.iconBg,
-                  border: `1px solid ${card.iconColor}30`,
-                  flexShrink: 0,
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: card.iconColor,
+                  background: card.iconBg, padding: '3px 9px', borderRadius: 99,
+                  whiteSpace: 'nowrap', flexShrink: 0,
                 }}>
-                  <ArrowUpRight size={10} style={{ color: card.iconColor }} />
-                  <span style={{ fontSize: 11, fontWeight: 700, color: card.iconColor, whiteSpace: 'nowrap' }}>
-                    {card.badge}
-                  </span>
-                </div>
+                  {card.badge}
+                </span>
               </div>
 
-              {/* Row 2: Hero value */}
-              <p style={{
-                fontSize: 26, fontWeight: 800, color: '#0F172A',
-                letterSpacing: '-0.02em', lineHeight: 1.1,
-                marginBottom: 4,
-              }}>
-                {card.value}
-              </p>
+              {/* Row 2: Value + label + sub stacked */}
+              <div>
+                <p style={{
+                  fontSize: 28, fontWeight: 800, color: '#0F172A',
+                  letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: 3,
+                }}>
+                  {card.value}
+                </p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 2 }}>
+                  {card.label}
+                </p>
+                <p style={{ fontSize: 11, color: '#94A3B8', lineHeight: 1.4 }}>
+                  {card.sub}
+                </p>
+              </div>
 
-              {/* Row 3: Label */}
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 3 }}>
-                {card.label}
-              </p>
-
-              {/* Row 4: Sub text — always 1 line, clamp to prevent overflow */}
-              <p style={{
-                fontSize: 11, color: '#94A3B8',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                marginBottom: card.pct != null ? 12 : 0,
-              }}>
-                {card.sub}
-              </p>
-
-              {/* Row 5: Progress bar — only for % metrics */}
+              {/* Row 3: Progress bar — only for % metrics */}
               {card.pct != null && (
-                <div style={{ height: 5, borderRadius: 99, background: `${card.iconColor}15`, overflow: 'hidden' }}>
+                <div style={{ height: 4, borderRadius: 99, background: `${card.iconColor}15` }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(card.pct, 100)}%` }}
@@ -299,16 +322,25 @@ export default function AnalyticsPage() {
         })}
       </div>
 
+      {/* Section divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>Trends</span>
+        <div style={{ flex: 1, height: 1, background: '#F1F5F9' }} />
+      </div>
+
       {/* Charts Row 1: Fee Collection + Attendance — equal halves */}
       <div className="rg-2">
 
         {/* Fee Collection Trend */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Fee Collection Trend</h3>
-            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>In Thousands (₹) · {dateRange}</p>
+          style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, padding: '22px 24px', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 8 }}>
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Fee Collection Trend</h3>
+              <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>In Thousands (₹)</p>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', padding: '3px 9px', borderRadius: 6, whiteSpace: 'nowrap', flexShrink: 0 }}>{dateRange}</span>
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={feeCollectionChart} margin={{ top: 4, right: 8, left: -18, bottom: 0 }} barCategoryGap="35%">
@@ -324,10 +356,13 @@ export default function AnalyticsPage() {
         {/* Attendance Trend */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
-          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Attendance Trend</h3>
-            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Student attendance (%) · {dateRange}</p>
+          style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, padding: '22px 24px', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 8 }}>
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Attendance Trend</h3>
+              <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>Student attendance (%)</p>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#0891B2', background: '#ECFEFF', padding: '3px 9px', borderRadius: 6, whiteSpace: 'nowrap', flexShrink: 0 }}>{dateRange}</span>
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={attendanceTrend} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
@@ -342,16 +377,25 @@ export default function AnalyticsPage() {
         </motion.div>
       </div>
 
+      {/* Section divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>Insights</span>
+        <div style={{ flex: 1, height: 1, background: '#F1F5F9' }} />
+      </div>
+
       {/* Charts Row 2: Admission Sources + Academic Radar — equal halves */}
       <div className="rg-2">
 
         {/* Admission Sources */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
-          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Admission Sources</h3>
-            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Lead source breakdown · {admissionTotal} total</p>
+          style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, padding: '22px 24px', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 8 }}>
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Admission Sources</h3>
+              <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>Lead source breakdown</p>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', padding: '3px 9px', borderRadius: 6, whiteSpace: 'nowrap', flexShrink: 0 }}>{admissionTotal} total</span>
           </div>
           {admissionSourceData.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 200, gap: 10 }}>
@@ -391,7 +435,7 @@ export default function AnalyticsPage() {
         {/* Academic Performance Radar */}
         <motion.div
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
-          style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
+          style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, padding: '22px 24px', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
             <div>
               <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Academic Performance</h3>
@@ -458,13 +502,22 @@ export default function AnalyticsPage() {
         </motion.div>
       </div>
 
+      {/* Section divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>Downloads</span>
+        <div style={{ flex: 1, height: 1, background: '#F1F5F9' }} />
+      </div>
+
       {/* Quick Reports — full-width grid */}
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
-        style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16, padding: '24px', boxShadow: '0 2px 6px rgba(15,23,42,0.05)' }}>
-        <div style={{ marginBottom: 20 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', margin: 0 }}>Quick Reports</h3>
-          <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Download ready-made reports as CSV</p>
+        style={{ background: '#FFFFFF', border: '1px solid #E8EDF5', borderRadius: 16, padding: '22px 24px', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Quick Reports</h3>
+            <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>Download ready-made reports as CSV</p>
+          </div>
+          <span style={{ fontSize: 11, color: '#94A3B8' }}>{reports.length} reports</span>
         </div>
         {/* auto-fill so it never overflows at any viewport width */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>

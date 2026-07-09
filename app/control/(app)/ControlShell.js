@@ -28,14 +28,14 @@ const ROLE_LABEL = {
 }
 
 const SB = {
-  bg:      '#1E40AF',
-  border:  'rgba(255,255,255,0.08)',
-  accent:  '#93C5FD',
+  bg:      '#1A3A60',
+  border:  'rgba(176,196,222,0.18)',
+  accent:  '#B0C4DE',
   text:    '#FFFFFF',
-  muted:   'rgba(255,255,255,0.48)',
-  hover:   'rgba(255,255,255,0.07)',
-  active:  'rgba(255,255,255,0.14)',
-  surface: 'rgba(255,255,255,0.08)',
+  muted:   'rgba(255,255,255,0.52)',
+  hover:   'rgba(176,196,222,0.12)',
+  active:  'rgba(176,196,222,0.22)',
+  surface: 'rgba(176,196,222,0.10)',
 }
 
 function NavItem({ item, current, onClick }) {
@@ -52,7 +52,7 @@ function NavItem({ item, current, onClick }) {
         color:       active ? '#FFFFFF'  : SB.muted,
         textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 700 : 500,
         transition: 'all 0.15s', marginBottom: 2,
-        borderLeft: active ? '3px solid rgba(255,255,255,0.7)' : '3px solid transparent',
+        borderLeft: 'none',
         boxShadow: active ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
       }}
       onMouseEnter={e => { if (!active) { e.currentTarget.style.background = SB.hover; e.currentTarget.style.color = 'rgba(255,255,255,0.85)' }}}
@@ -79,7 +79,6 @@ function Sidebar({ user, current, onClose, mobile }) {
   return (
     <div style={{
       width: 240, height: '100%', background: SB.bg,
-      borderRight: `1px solid ${SB.border}`,
       display: 'flex', flexDirection: 'column', flexShrink: 0,
       position: 'relative', overflow: 'hidden',
     }}>
@@ -174,10 +173,10 @@ export default function ControlShell({ user, children }) {
   return (
     <div style={{
       height: '100vh', display: 'flex', overflow: 'hidden',
-      background: '#F8FAFC', fontFamily: "'Inter', system-ui, sans-serif",
+      background: '#B0C4DE', fontFamily: "'Inter', system-ui, sans-serif",
     }}>
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex" style={{ height: '100%' }}>
+      <div className="cc-sidebar-desktop">
         <Sidebar user={user} current={pathname} />
       </div>
 
@@ -203,17 +202,17 @@ export default function ControlShell({ user, children }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
         {/* Header */}
         <div style={{
-          height: 56, background: '#FFFFFF', borderBottom: '1px solid #E8EDF4',
+          height: 56, background: '#EEF4FA', borderBottom: '1px solid #B8CCE0',
           display: 'flex', alignItems: 'center', padding: '0 20px', gap: 12, flexShrink: 0,
-          boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
+          boxShadow: '0 1px 4px rgba(26,58,96,0.10)',
         }}>
           {/* Mobile menu button */}
           <button
-            className="lg:hidden"
+            className="cc-menu-btn"
             onClick={() => setMobileOpen(true)}
             style={{
-              width: 34, height: 34, borderRadius: 8, border: '1px solid #E2E8F0',
-              background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 34, height: 34, borderRadius: 8, border: '1px solid #B8CCE0',
+              background: '#EEF4FA', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
             }}>
             <Menu size={16} color="#475569" />
@@ -227,16 +226,16 @@ export default function ControlShell({ user, children }) {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
               padding: '4px 10px', borderRadius: 99,
-              background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.18)',
+              background: 'rgba(26,58,96,0.08)', border: '1px solid rgba(26,58,96,0.18)',
             }}>
-              <Shield size={11} color="#3B82F6" />
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#3B82F6', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <Shield size={11} color="#1A3A60" />
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#1A3A60', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 {ROLE_LABEL[user.role] || user.role}
               </span>
             </div>
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
-              background: '#2563EB',
+              background: '#1A3A60',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>
@@ -253,6 +252,15 @@ export default function ControlShell({ user, children }) {
           </div>
         </main>
       </div>
+
+      <style>{`
+        .cc-sidebar-desktop { display: none; height: 100%; }
+        .cc-menu-btn        { display: flex; }
+        @media (min-width: 1024px) {
+          .cc-sidebar-desktop { display: flex !important; }
+          .cc-menu-btn        { display: none  !important; }
+        }
+      `}</style>
     </div>
   )
 }

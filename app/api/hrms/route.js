@@ -38,39 +38,30 @@ export async function GET(req) {
       const { data: facRows, error: facErr } = await q
       if (facErr) return Response.json({ error: facErr.message }, { status: 400 })
 
-      // Fetch current-month payroll records for these faculty
-      const facIds = (facRows || []).map(f => f.id)
-      const now = new Date()
-      let payrollRows = []
-      if (facIds.length > 0) {
-        const { data: pr } = await admin
-          .from('payroll')
-          .select('faculty_id, gross_salary, net_salary, pf_deduction, tax_deduction, status')
-          .in('faculty_id', facIds)
-          .eq('month', now.getMonth() + 1)
-          .eq('year', now.getFullYear())
-        payrollRows = pr || []
-      }
-      const payrollMap = {}
-      payrollRows.forEach(p => { payrollMap[p.faculty_id] = p })
+      // Pre-compute all IDs synchronously so payroll + leaves run in parallel
+      const facIds     = (facRows || []).map(f => f.id)
+      const now        = new Date()
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+      const userIds    = (facRows || []).map(f => f.user_profiles?.id).filter(Boolean)
 
-      // Leave balance: approved leaves this month per faculty
-      let leaveRows = []
-      if (facRows && facRows.length > 0) {
-        const userIds = facRows.map(f => f.user_profiles?.id).filter(Boolean)
-        if (userIds.length > 0) {
-          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
-          const { data: lr } = await admin
-            .from('leaves')
+      // Parallel: payroll + leave balance (was sequential)
+      const [payrollResult, leaveResult] = await Promise.all([
+        facIds.length > 0
+          ? admin.from('payroll')
+            .select('faculty_id, gross_salary, net_salary, pf_deduction, tax_deduction, status')
+            .in('faculty_id', facIds).eq('month', now.getMonth() + 1).eq('year', now.getFullYear())
+          : Promise.resolve({ data: [] }),
+        userIds.length > 0
+          ? admin.from('leaves')
             .select('user_id, days_count, leave_type')
-            .in('user_id', userIds)
-            .eq('status', 'approved')
-            .gte('start_date', monthStart)
-          leaveRows = lr || []
-        }
-      }
+            .in('user_id', userIds).eq('status', 'approved').gte('start_date', monthStart)
+          : Promise.resolve({ data: [] }),
+      ])
+
+      const payrollMap = {}
+      ;(payrollResult.data || []).forEach(p => { payrollMap[p.faculty_id] = p })
       const leaveMap = {}
-      leaveRows.forEach(l => {
+      ;(leaveResult.data || []).forEach(l => {
         leaveMap[l.user_id] = (leaveMap[l.user_id] || 0) + (l.days_count || 1)
       })
 

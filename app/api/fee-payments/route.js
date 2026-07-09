@@ -127,10 +127,18 @@ export async function POST(req) {
 
     const admin = createAdminClient()
 
-    // Resolve the calling admin's institution
+    // Resolve the calling admin's institution + verify role
     const { data: adminProfile } = await admin
-      .from('user_profiles').select('institution_id').eq('id', user.id).single()
+      .from('user_profiles').select('institution_id, role').eq('id', user.id).single()
     const institutionId = adminProfile?.institution_id || null
+
+    const FEE_WRITE_ROLES = new Set([
+      'owner','super_admin','principal','vice_principal','academic_coordinator',
+      'chairman','director','administrator','hr','admission_officer',
+    ])
+    if (!FEE_WRITE_ROLES.has(adminProfile?.role || '')) {
+      return Response.json({ error: 'Insufficient permissions to record fee payments.' }, { status: 403 })
+    }
 
     // Resolve student record
     let resolvedStudentId = student_id

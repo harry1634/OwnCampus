@@ -603,7 +603,7 @@ export default function FacultyPage() {
               </div>
 
               {/* Subjects */}
-              <div style={{ padding: '12px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', flexWrap: 'wrap', gap: 6, minHeight: 44 }}>
+              <div style={{ padding: '12px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', flexWrap: 'wrap', gap: 6, minHeight: 44, flex: 1, alignContent: 'flex-start' }}>
                 {(f.subjects || []).length > 0
                   ? f.subjects.map(s => <span key={s} style={{ fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 6, background: '#F8FAFC', color: '#64748B', border: '1px solid #E2E8F0' }}>{s}</span>)
                   : <span style={{ fontSize: 11, color: '#CBD5E1' }}>No subjects assigned</span>}
@@ -638,32 +638,36 @@ export default function FacultyPage() {
               </div>
 
               {/* Actions */}
-              <div style={{ padding: '14px 22px', display: 'flex', gap: 8 }}>
+              <div style={{ padding: '12px 16px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <button onClick={() => setViewFaculty(f)}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 9, border: '1px solid #BFDBFE', background: '#EFF6FF', color: '#2563EB', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.14s' }}
+                  style={{ flex: 1, minWidth: 0, height: 34, padding: 0, borderRadius: 9, border: '1px solid #BFDBFE', background: '#EFF6FF', color: '#2563EB', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.14s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = '#2563EB'; e.currentTarget.style.color = '#FFF' }}
                   onMouseLeave={e => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.color = '#2563EB' }}>
-                  <Eye size={13} /> View
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                    <Eye size={13} />View
+                  </span>
                 </button>
                 <button onClick={() => setEditFaculty(f)}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 9, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#64748B', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.14s' }}
+                  style={{ flex: 1, minWidth: 0, height: 34, padding: 0, borderRadius: 9, border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#64748B', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.14s' }}
                   onMouseEnter={e => e.currentTarget.style.background = '#E2E8F0'}
                   onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}>
-                  <Edit size={13} /> Edit
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                    <Edit size={13} />Edit
+                  </span>
                 </button>
                 <button onClick={() => { if (f.email) window.location.href = 'mailto:' + f.email }}
                   title="Send Email"
-                  style={{ width: 36, height: 36, borderRadius: 9, border: '1px solid #BBF7D0', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                  style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid #BBF7D0', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                   <Mail size={13} style={{ color: '#16A34A' }} />
                 </button>
                 {f.supabaseId && branches.length > 0 && (
                   <button title="Transfer Branch" onClick={() => { setTransferFaculty(f); setTransferBranchId(f.branchId || '') }}
-                    style={{ width: 36, height: 36, borderRadius: 9, border: '1px solid #BFDBFE', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                    style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid #BFDBFE', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                     <ArrowLeftRight size={13} style={{ color: '#2563EB' }} />
                   </button>
                 )}
                 <button title="Delete" onClick={() => setDeleteConfirm(f)}
-                  style={{ width: 36, height: 36, borderRadius: 9, border: '1px solid #FECACA', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                  style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid #FECACA', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                   <Trash2 size={13} style={{ color: '#DC2626' }} />
                 </button>
               </div>

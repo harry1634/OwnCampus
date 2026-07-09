@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { ClipboardList, Activity } from 'lucide-react'
@@ -67,15 +67,15 @@ export default function AuditPage() {
           onChange={e => applyFilter('action', e.target.value)}
           placeholder="Filter by action…"
           style={{
-            height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid #E2E8F0',
+            height: 38, padding: '0 12px', borderRadius: 9, border: '1px solid #C0D5E9',
             background: 'white', fontSize: 13.5, color: '#0F172A', fontFamily: 'inherit', outline: 'none', width: 240,
           }}
         />
       </div>
 
       {/* Table */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8EDF4', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, padding: '12px 20px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC' }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid #C0D5E9', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(26,58,96,0.08)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, padding: '12px 20px', borderBottom: '1px solid #DDE9F5', background: '#EEF4FA' }}>
           {['Time', 'User', 'Action', 'Target'].map(h => (
             <span key={h} style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
           ))}
@@ -83,7 +83,7 @@ export default function AuditPage() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <div style={{ width: 24, height: 24, border: '2.5px solid #E2E8F0', borderTop: '2.5px solid #3B82F6', borderRadius: '50%', margin: '0 auto' }} className="animate-spin" />
+            <div style={{ width: 24, height: 24, border: '2.5px solid #C0D5E9', borderTop: '2.5px solid #3B82F6', borderRadius: '50%', margin: '0 auto' }} className="animate-spin" />
           </div>
         ) : logs.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8' }}>

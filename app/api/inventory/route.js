@@ -34,18 +34,21 @@ export async function GET(req) {
     const { institutionId, admin } = ctx
 
     const { searchParams } = new URL(req.url)
-    const q = searchParams.get('q') || ''
+    const q        = searchParams.get('q') || ''
+    const page     = Math.max(1, parseInt(searchParams.get('page')  || '1'))
+    const pageSize = Math.min(100, parseInt(searchParams.get('limit') || '50'))
 
     let query = admin.from('inventory_items')
-      .select('*')
+      .select('id, name, category, quantity, unit, min_stock, status, unit_value, created_at')
       .eq('institution_id', institutionId)
       .order('created_at', { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize - 1)
 
     if (q) query = query.ilike('name', `%${q}%`)
 
     const { data, error } = await query
     if (error) return Response.json({ error: error.message }, { status: 400 })
-    return Response.json({ items: data || [] })
+    return Response.json({ items: data || [], page, pageSize })
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 })
   }
